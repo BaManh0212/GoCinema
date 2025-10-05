@@ -24,6 +24,12 @@ return new class extends Migration
             $table->date('ngay_bat_dau')->nullable();
             $table->date('ngay_ket_thuc')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+
+            // Indexes
+            $table->index('ma');
+            $table->index('kich_hoat');
+            $table->index(['kich_hoat', 'ngay_bat_dau', 'ngay_ket_thuc']);
         });
     }
 

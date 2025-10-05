@@ -13,12 +13,19 @@ return new class extends Migration
     {
         Schema::create('ghe_giu_tam', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('suat_chieu_id')->constrained('suat_chieu');
-            $table->foreignId('ghe_id')->constrained('ghe');
-            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung');
+            $table->foreignId('suat_chieu_id')->constrained('suat_chieu')->onDelete('cascade');
+            $table->foreignId('ghe_id')->constrained('ghe')->onDelete('cascade');
+            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->onDelete('cascade');
             $table->dateTime('het_han');
+            $table->enum('trang_thai', ['dang_giu', 'da_xac_nhan', 'da_huy', 'het_han'])->default('dang_giu');
             $table->timestamps();
-            $table->unique(['ghe_id','suat_chieu_id']);
+
+            // Unique constraint - một ghế chỉ được giữ bởi 1 người trong 1 suất
+            $table->unique(['ghe_id', 'suat_chieu_id']);
+
+            // Indexes
+            $table->index('het_han');
+            $table->index(['het_han', 'trang_thai']);
         });
     }
 

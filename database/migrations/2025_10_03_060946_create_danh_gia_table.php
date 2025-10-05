@@ -13,11 +13,18 @@ return new class extends Migration
     {
         Schema::create('danh_gia', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('phim_id')->constrained('phim');
-            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung');
+            $table->foreignId('phim_id')->constrained('phim')->onDelete('cascade');
+            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->onDelete('cascade');
             $table->tinyInteger('so_sao')->check('so_sao BETWEEN 1 AND 5');
             $table->text('binh_luan')->nullable();
             $table->timestamps();
+
+            // Unique constraint - mỗi user chỉ đánh giá 1 lần cho 1 phim
+            $table->unique(['phim_id', 'nguoi_dung_id']);
+
+            // Indexes
+            $table->index('phim_id');
+            $table->index('so_sao');
         });
     }
 

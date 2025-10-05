@@ -14,12 +14,19 @@ return new class extends Migration
         Schema::create('don_dat_ve', function (Blueprint $table) {
             $table->id();
             $table->string('ma_don')->unique();
-            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung');
-            $table->foreignId('suat_chieu_id')->constrained('suat_chieu');
-            $table->foreignId('ma_giam_gia_id')->nullable()->constrained('ma_giam_gia');
+            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->onDelete('restrict');
+            $table->foreignId('suat_chieu_id')->constrained('suat_chieu')->onDelete('restrict');
+            $table->foreignId('ma_giam_gia_id')->nullable()->constrained('ma_giam_gia')->onDelete('set null');
             $table->decimal('tong_tien', 12, 2);
-            $table->enum('trang_thai', ['cho_thanh_toan','da_thanh_toan','da_huy','dat_coc']);
+            $table->enum('trang_thai', ['cho_thanh_toan','da_thanh_toan','da_huy','dat_coc'])->default('cho_thanh_toan');
             $table->timestamps();
+            $table->softDeletes();
+
+            // Indexes
+            $table->index('nguoi_dung_id');
+            $table->index('suat_chieu_id');
+            $table->index('trang_thai');
+            $table->index('created_at');
         });
     }
 

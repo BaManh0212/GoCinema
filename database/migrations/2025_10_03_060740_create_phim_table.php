@@ -21,10 +21,16 @@ return new class extends Migration
             $table->integer('thoi_luong')->nullable();
             $table->date('ngay_cong_chieu')->nullable();
             $table->integer('do_tuoi_gioi_han')->nullable();
-            $table->foreignId('danh_muc_id')->nullable()->constrained('danh_muc');
-            $table->foreignId('ngon_ngu_id')->nullable()->constrained('ngon_ngu');
+            $table->foreignId('danh_muc_id')->nullable()->constrained('danh_muc')->onDelete('set null');
+            $table->foreignId('ngon_ngu_id')->nullable()->constrained('ngon_ngu')->onDelete('set null');
             $table->timestamps();
-            $table->softDeletes(); // ngay_xoa
+            $table->softDeletes();
+
+            // Indexes
+            $table->index('tieu_de');
+            $table->index('ngay_cong_chieu');
+            $table->index('danh_muc_id');
+            $table->index(['ngay_cong_chieu', 'deleted_at']);
         });
     }
 
