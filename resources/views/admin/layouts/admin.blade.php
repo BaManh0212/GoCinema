@@ -6,14 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>@yield('title', 'Admin Dashboard')</title>
+    <title>Admin Dashboard - {{ config('app.name') }}</title>
 
     <!-- Custom fonts for this template-->
     <link href="{{ asset('assets/admins/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template-->
     <link href="{{ asset('assets/admins/css/sb-admin-2.min.css') }}" rel="stylesheet">
+
+    <style>
+        .chart-area,
+        .chart-pie {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -61,23 +71,18 @@
     <!-- Logout Modal-->
     @include('admin.layouts.logout-modal')
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
-    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Core JavaScript -->
+    <script src="{{ asset('assets/admins/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/admins/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/admins/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
 
-    <!-- Core plugin JavaScript-->
-    <script src="{{ asset('vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+    <!-- Custom scripts -->
+    <script src="{{ asset('assets/admins/js/sb-admin-2.min.js') }}"></script>
 
-    <!-- Custom scripts for all pages-->
-    <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
+    <!-- Chart.js -->
+    <script src="{{ asset('assets/admins/vendor/chart.js/Chart.min.js') }}"></script>
 
-    <!-- Page level plugins -->
-    <script src="{{ asset('vendor/chart.js/Chart.min.js') }}"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="{{ asset('js/demo/chart-area-demo.js') }}"></script>
-    <script src="{{ asset('js/demo/chart-pie-demo.js') }}"></script>
-
+    @stack('scripts')
 </body>
 
 </html>
