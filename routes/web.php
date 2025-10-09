@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
             'ho_ten' => $user->ho_ten ?? null,
             'loai_tai_khoan' => $user->loai_tai_khoan ?? null,
             'vai_tro_id' => $user->vai_tro_id ?? null,
+            'vai_tro_name' => optional($user->vaiTro)->ten,
         ]);
     })->name('me');
 });
