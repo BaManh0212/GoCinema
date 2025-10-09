@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\VaiTro;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -23,12 +24,16 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $vaiTro = VaiTro::where('ten', 'khach_hang')->first();
+        $vaiTroId = $vaiTro ? $vaiTro->id : 1;
+
         return [
-            'name' => fake()->name(),
+            // NguoiDung uses 'ho_ten' for the full name
+            'ho_ten' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            // set password attribute; model mutator will hash into mat_khau
+            'password' => static::$password ??= 'password',
+            'vai_tro_id' => $vaiTroId,
         ];
     }
 
