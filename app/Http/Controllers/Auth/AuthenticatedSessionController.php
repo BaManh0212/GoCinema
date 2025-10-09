@@ -30,14 +30,15 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // Check by explicit account type first
+        // If explicit account type says admin, go to admin dashboard
         if (!empty($user->loai_tai_khoan) && $user->loai_tai_khoan === 'quan_ly') {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        // Fallback: check related vaiTro name (if relation exists)
+        // Robust fallback: check the id of the role named 'quan_ly'
         try {
-            if ($user->relationLoaded('vaiTro') ? ($user->vaiTro?->ten === 'quan_ly') : ($user->vaiTro()->exists() && $user->vaiTro->ten === 'quan_ly')) {
+            $managerRoleId = \App\Models\VaiTro::where('ten', 'quan_ly')->value('id');
+            if ($managerRoleId && $user->vai_tro_id == $managerRoleId) {
                 return redirect()->intended(route('admin.dashboard', absolute: false));
             }
         } catch (\Throwable $e) {
