@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -54,6 +55,28 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
+
+        // Remove the remember-me cookie so the user isn't automatically
+        // re-authenticated when they visit the login page.
+        try {
+            // forget the auth recaller cookie
+            $recaller = Auth::getRecallerName();
+            if ($recaller) {
+                Cookie::queue(Cookie::forget($recaller));
+            }
+
+            // also forget the session cookie (config name)
+            $sessionCookie = config('session.cookie');
+            if ($sessionCookie) {
+                Cookie::queue(Cookie::forget($sessionCookie));
+            }
+
+            // common fallback names
+            Cookie::queue(Cookie::forget('remember_web_'.md5(config('app.key'))));
+            Cookie::queue(Cookie::forget('laravel_session'));
+        } catch (\Throwable $e) {
+            // ignore if cookie facade not available for any reason
+        }
 
         $request->session()->invalidate();
 

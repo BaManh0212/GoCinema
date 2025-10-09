@@ -12,7 +12,10 @@
             <div class="modal-body">Chọn "Đăng xuất" nếu bạn thực sự muốn thoát khỏi phiên làm việc này.</div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" type="button" data-dismiss="modal">Hủy</button>
-                <a class="btn btn-primary" href="{{ url('/') }}">Đăng xuất</a>
+                <form action="{{ route('logout') }}" method="POST" style="display:inline">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">Đăng xuất</button>
+                </form>
             </div>
         </div>
     </div>
