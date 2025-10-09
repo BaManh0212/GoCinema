@@ -28,16 +28,54 @@
 
     <!-- Nav Items -->
     <li class="nav-item">
-        <a class="nav-link" href="{{ route('rap.index') }}">
-            <i class="fas fa-fw fa-building"></i>
-            <span>Danh sách rạp</span>
+    <a class="nav-link" href="{{ route('admin.rap.index') }}">
+        <i class="fas fa-fw fa-building"></i>
+        <span>Danh sách rạp</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('admin.rap.create') }}">
+        <i class="fas fa-fw fa-plus-circle"></i>
+        <span>Thêm rạp mới</span>
+    </a>
+</li>
+
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">Quản lý phim</div>
+
+    <!-- Quản lý Danh mục -->
+    <li class="nav-item {{ request()->is('admin/danhmuc*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.danhmuc.index') }}">
+            <i class="fas fa-fw fa-list"></i>
+            <span>Danh mục phim</span>
         </a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="{{ route('rap.create') }}">
+    <li class="nav-item {{ request()->is('admin/danhmuc/create') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.danhmuc.create') }}">
+
             <i class="fas fa-fw fa-plus-circle"></i>
-            <span>Thêm rạp mới</span>
+            <span>Thêm danh mục</span>
+        </a>
+    </li>
+
+    <!-- Quản lý Phim -->
+    <li class="nav-item {{ request()->is('admin/phim*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.phim.index') }}">
+            <i class="fas fa-fw fa-video"></i>
+            <span>Danh sách phim</span>
+        </a>
+    </li>
+
+    <li class="nav-item {{ request()->is('admin/phim/create') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.phim.create') }}">
+            <i class="fas fa-fw fa-plus-circle"></i>
+            <span>Thêm phim mới</span>
         </a>
     </li>
 

@@ -11,7 +11,8 @@
                 <div class="card-body">
                     <h5 class="card-title">Rạp chiếu</h5>
                     <p>Quản lý thông tin các rạp.</p>
-                    <a href="{{ route('rap.index') }}" class="btn btn-primary">Vào quản lý</a>
+                    <a href="{{ route('admin.rap.index') }}" class="btn btn-primary">Vào quản lý</a>
+
                 </div>
             </div>
         </div>
