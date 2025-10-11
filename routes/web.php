@@ -38,13 +38,15 @@ Route::get('/admin-only', function () {
 // Admin routes (dashboard, rap management)
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RapController;
+use App\Http\Controllers\Admin\SanPhamController;
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth','role:quan_ly'])
+    ->middleware(['auth', 'role:quan_ly'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('rap', RapController::class)->names('rap');
+        Route::resource('san_pham', SanPhamController::class)->names('san_pham');
     });
 
 require __DIR__.'/auth.php';
