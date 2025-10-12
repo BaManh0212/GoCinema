@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RapController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,7 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Debug route: show current authenticated user relevant fields
     Route::get('/me', function () {
         $user = auth()->user();
@@ -35,16 +38,12 @@ Route::get('/admin-only', function () {
     return 'Trang chỉ dành cho quản lý';
 })->middleware(['auth', 'role:quan_ly'])->name('admin.only');
 
-// Admin routes (dashboard, rap management)
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\RapController;
-
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth','role:quan_ly'])
+    ->middleware(['auth', 'role:quan_ly'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('rap', RapController::class)->names('rap');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
