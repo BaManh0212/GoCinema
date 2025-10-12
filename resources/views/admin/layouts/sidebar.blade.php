@@ -151,16 +151,10 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSanPham">
-            <i class="fas fa-fw fa-candy-cane"></i>
+        <a class="nav-link" href="{{ route('admin.san_pham.index') }}">
+            <i class="fas fa-box"></i>
             <span>Sản phẩm</span>
         </a>
-        <div id="menuSanPham" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách sản phẩm</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm sản phẩm</a>
-            </div>
-        </div>
     </li>
 
     <!-- Divider -->
