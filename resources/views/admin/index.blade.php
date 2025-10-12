@@ -1,9 +1,6 @@
 @extends('admin.layouts.admin')
 
-@section('content')
-<div class="container mt-4">
-    <h2 class="mb-4">Chào mừng đến với trang quản trị 🎬</h2>
-    <p>Chọn một chức năng bên trái để bắt đầu quản lý:</p>
+@extends('admin.dashboard.index')
 
     <div class="row mt-4">
         <div class="col-md-4 mb-3">
@@ -39,3 +36,4 @@
     </div>
 </div>
 @endsection
+

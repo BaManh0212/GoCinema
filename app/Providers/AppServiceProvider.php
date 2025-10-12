@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Routing\Router;
+use App\Http\Middleware\CheckVaiTro;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register route middleware alias for role checks
+        $this->app->make(Router::class)->aliasMiddleware('role', CheckVaiTro::class);
     }
 }

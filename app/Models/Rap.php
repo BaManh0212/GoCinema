@@ -13,7 +13,6 @@ class Rap extends Model
 
     protected $fillable = [
         'ten',
-        'dia_chi',
-        'sdt',
+        'dia_chi'
     ];
 }
