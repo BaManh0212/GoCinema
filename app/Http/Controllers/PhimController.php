@@ -80,6 +80,9 @@ class PhimController extends Controller
     public function update(Request $request, $id)
     {
         $phim = Phim::findOrFail($id);
+
+        $phim->update($request->all());
+        $phim = Phim::findOrFail($id);
         $phim->theLoais()->sync($request->the_loai_id);
         $phim->dinhDangs()->sync($request->dinh_dang_id);
 

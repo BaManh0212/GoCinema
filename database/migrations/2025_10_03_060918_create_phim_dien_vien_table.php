@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('phim_dien_vien', function (Blueprint $table) {
-            $table->foreignId('phim_id')->constrained('phim');
-            $table->foreignId('dien_vien_id')->constrained('dien_vien');
-            $table->primary(['phim_id','dien_vien_id']);
-        });
+Schema::create('phim_dien_vien', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('phim_id')->constrained('phim')->onDelete('cascade');
+    $table->foreignId('dien_vien_id')->constrained('dien_vien')->onDelete('cascade');
+    $table->timestamps();
+});
+
     }
 
     /**

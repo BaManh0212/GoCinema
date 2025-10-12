@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RapController;
 use App\Http\Controllers\PhongChieuController;
 use App\Http\Controllers\GheController;
-use App\Http\Controllers\PhimController;
 use App\Http\Controllers\Admin\DanhMucController;
+use App\Http\Controllers\Admin\PhimController;
 
 // === Trang chính của admin ===
 Route::get('/admin', function () {

@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Phim extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'phim';
-    public $timestamps = false;
     protected $fillable = [
         'tieu_de',
         'mo_ta',
@@ -22,9 +22,6 @@ class Phim extends Model
         'do_tuoi_gioi_han',
         'danh_muc_id',
         'ngon_ngu_id',
-        'ngay_tao',
-        'ngay_cap_nhat',
-        'ngay_xoa'
     ];
 
     public function danhMuc()

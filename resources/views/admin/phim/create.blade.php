@@ -9,9 +9,9 @@
     <form action="{{ route('admin.phim.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        {{-- Tên phim --}}
+        {{-- Tiêu đề phim --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Tên phim</label>
+            <label class="form-label fw-bold">Tiêu đề phim</label>
             <input type="text" name="tieu_de" class="form-control" placeholder="Nhập tên phim..." required>
         </div>
 
@@ -21,19 +21,40 @@
             <textarea name="mo_ta" class="form-control" rows="4" placeholder="Nhập mô tả phim..."></textarea>
         </div>
 
+        {{-- Trailer --}}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Trailer (link YouTube)</label>
+            <input type="url" name="trailer" class="form-control" placeholder="https://youtube.com/...">
+        </div>
+
+        {{-- Phụ đề --}}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Phụ đề</label>
+            <select name="phu_de" class="form-select" required>
+                <option value="0">Không</option>
+                <option value="1">Có</option>
+            </select>
+        </div>
+
         {{-- Thời lượng --}}
         <div class="mb-3">
             <label class="form-label fw-bold">Thời lượng (phút)</label>
             <input type="number" name="thoi_luong" class="form-control" placeholder="120" required>
         </div>
 
-        {{-- Ngày khởi chiếu --}}
+        {{-- Ngày công chiếu --}}
         <div class="mb-3">
-            <label class="form-label fw-bold">Ngày khởi chiếu</label>
-            <input type="date" name="ngay_khoi_chieu" class="form-control" required>
+            <label class="form-label fw-bold">Ngày công chiếu</label>
+            <input type="date" name="ngay_cong_chieu" class="form-control" required>
         </div>
 
-        {{-- Chọn danh mục --}}
+        {{-- Giới hạn tuổi --}}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Giới hạn độ tuổi</label>
+            <input type="text" name="do_tuoi_gioi_han" class="form-control" placeholder="VD: 13+, 18+, P">
+        </div>
+
+        {{-- Danh mục --}}
         <div class="mb-3">
             <label class="form-label fw-bold">Danh mục</label>
             <select name="danh_muc_id" class="form-select" required>
@@ -42,17 +63,6 @@
                     <option value="{{ $dm->id }}">{{ $dm->ten }}</option>
                 @endforeach
             </select>
-        </div>
-
-        {{-- Chọn thể loại --}}
-        <div class="mb-3">
-            <label class="form-label fw-bold">Thể loại</label>
-            <select name="the_loai_id[]" class="form-select" multiple>
-                @foreach($theLoais as $tl)
-                    <option value="{{ $tl->id }}">{{ $tl->ten }}</option>
-                @endforeach
-            </select>
-            <small class="text-muted">Giữ Ctrl để chọn nhiều thể loại</small>
         </div>
 
         {{-- Ngôn ngữ --}}
@@ -66,23 +76,12 @@
             </select>
         </div>
 
-        {{-- Định dạng --}}
-        <div class="mb-3">
-            <label class="form-label fw-bold">Định dạng</label>
-            <select name="dinh_dang_id" class="form-select" required>
-                <option value="">-- Chọn định dạng --</option>
-                @foreach($dinhDangs as $dd)
-                    <option value="{{ $dd->id }}">{{ $dd->ten }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        {{-- Upload ảnh poster --}}
+        {{-- Upload poster --}}
         <div class="mb-3">
             <label class="form-label fw-bold">Poster phim</label>
-            <input type="file" name="poster" class="form-control" accept="image/*" onchange="previewImage(event)">
+            <input type="file" name="anh_poster" class="form-control" accept="image/*" onchange="previewImage(event)">
             <div class="mt-3">
-                <img id="preview" src="#" alt="Xem trước ảnh" class="img-fluid rounded d-none" style="max-height: 250px;">
+                <img id="preview" src="#" alt="Xem trước poster" class="img-fluid rounded d-none" style="max-height: 250px;">
             </div>
         </div>
 
@@ -92,7 +91,6 @@
     </form>
 </div>
 
-{{-- Preview ảnh --}}
 <script>
 function previewImage(event) {
     const reader = new FileReader();
