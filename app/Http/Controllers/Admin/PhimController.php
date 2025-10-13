@@ -13,8 +13,18 @@ class PhimController extends Controller
 {
     public function index()
     {
-        $phims = Phim::with(['danhMuc', 'ngonNgu'])->withTrashed()->paginate(10);
+        // Show only non-deleted records
+        $phims = Phim::with(['danhMuc', 'ngonNgu'])->paginate(10);
         return view('admin.phim.index', compact('phims'));
+    }
+
+    /**
+     * Show trashed (soft-deleted) phim
+     */
+    public function trashed()
+    {
+        $phims = Phim::onlyTrashed()->with(['danhMuc', 'ngonNgu'])->paginate(10);
+        return view('admin.phim.trashed', compact('phims'));
     }
 
     public function create()
@@ -68,6 +78,15 @@ class PhimController extends Controller
         return view('admin.phim.edit', compact('phim', 'danhMucs', 'ngonNgus'));
     }
 
+    /**
+     * Minimal show handler so resource routes don't error if called.
+     * Redirects to edit page for convenience.
+     */
+    public function show($id)
+    {
+        return redirect()->route('admin.phim.edit', $id);
+    }
+
     public function update(Request $request, $id)
     {
         $phim = Phim::withTrashed()->findOrFail($id);
@@ -105,5 +124,18 @@ class PhimController extends Controller
         $phim = Phim::withTrashed()->findOrFail($id);
         $phim->restore();
         return redirect()->route('admin.phim.index')->with('success', 'Khôi phục phim thành công!');
+    }
+
+    /**
+     * Permanently delete a trashed phim
+     */
+    public function forceDelete($id)
+    {
+        $phim = Phim::withTrashed()->findOrFail($id);
+        if ($phim->anh_poster && Storage::disk('public')->exists($phim->anh_poster)) {
+            Storage::disk('public')->delete($phim->anh_poster);
+        }
+        $phim->forceDelete();
+        return redirect()->route('admin.phim.trashed')->with('success', 'Đã xóa vĩnh viễn phim.');
     }
 }

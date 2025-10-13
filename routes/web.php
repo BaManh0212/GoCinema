@@ -58,6 +58,10 @@ Route::prefix('admin')
 
         // Quản lý danh mục & phim
         Route::resource('danhmuc', DanhMucController::class)->names('danhmuc');
+        // Thùng rác / restore / force delete cho phim (đặt trước resource để không bị trùng route 'show')
+        Route::get('phim/thung-rac', [PhimController::class, 'trashed'])->name('phim.trashed');
+        Route::put('phim/{id}/khoi-phuc', [PhimController::class, 'restore'])->name('phim.restore');
+        Route::delete('phim/{id}/xoa-vinh-vien', [PhimController::class, 'forceDelete'])->name('phim.forceDelete');
         Route::resource('phim', PhimController::class)->names('phim');
 
         // Quản lý sản phẩm

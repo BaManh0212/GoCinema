@@ -6,8 +6,11 @@
     <div class="container mt-4">
         <h2 class="text-center mb-4">🎬 Danh sách phim</h2>
 
-        {{-- Nút thêm phim mới --}}
-        <div class="d-flex justify-content-end mb-3">
+        {{-- Nút thêm phim mới và Thùng rác --}}
+        <div class="d-flex justify-content-end mb-3 gap-2">
+            <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-secondary">
+                🗑️ Thùng rác
+            </a>
             <a href="{{ route('admin.phim.create') }}" class="btn btn-success">
                 ➕ Thêm phim mới
             </a>
@@ -32,7 +35,6 @@
                             <th>Ngôn ngữ</th>
                             <th>Ngày tạo</th>
                             <th>Ngày cập nhật</th>
-                            <th>Ngày xóa</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -106,10 +108,6 @@
                                     {{ $phim->updated_at ? \Carbon\Carbon::parse($phim->updated_at)->format('d/m/Y H:i') : '—' }}
                                 </td>
 
-                                {{-- Ngày xóa --}}
-                                <td>
-                                    {{ $phim->deleted_at ? \Carbon\Carbon::parse($phim->deleted_at)->format('d/m/Y H:i') : '—' }}
-                                </td>
 
                                 {{-- Hành động --}}
                                 <td>
@@ -129,7 +127,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="15" class="text-muted">Không có phim nào trong hệ thống</td>
+                                <td colspan="14" class="text-muted">Không có phim nào trong hệ thống</td>
                             </tr>
                         @endforelse
                     </tbody>
