@@ -10,7 +10,7 @@ class RapController extends Controller
 {
     public function index()
     {
-        $raps = Rap::all();
+        $raps = Rap::orderBy('id', 'asc')->paginate(10); 
         return view('admin.rap_chieu.index', compact('raps'));
     }
 
