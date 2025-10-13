@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('phim_dien_vien', function (Blueprint $table) {
+        Schema::create('phim_dinh_dang', function (Blueprint $table) {
     $table->id();
     $table->foreignId('phim_id')->constrained('phim')->onDelete('cascade');
-    $table->foreignId('dien_vien_id')->constrained('dien_vien')->onDelete('cascade');
+    $table->foreignId('dinh_dang_id')->constrained('dinh_dang')->onDelete('cascade');
     $table->timestamps();
 });
 
@@ -25,6 +25,6 @@ Schema::create('phim_dien_vien', function (Blueprint $table) {
      */
     public function down(): void
     {
-        Schema::dropIfExists('phim_dien_vien');
+        Schema::dropIfExists('phim_dinh_dang');
     }
 };
