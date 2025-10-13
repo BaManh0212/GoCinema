@@ -16,6 +16,6 @@ class SanPham extends Model
         'gia',
         'so_luong',
     ];
-
+    public $timestamps = true;
     protected $dates = ['deleted_at'];
 }
