@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RapController;
 use App\Http\Controllers\Admin\SanPhamController;
+use App\Http\Controllers\Admin\ComboController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -65,6 +66,23 @@ Route::prefix('admin')
 
         Route::delete('san_pham/{id}/xoa-vinh-vien', [SanPhamController::class, 'forceDelete'])
             ->name('san_pham.forceDelete');
+
+
+        
+        // =========================
+        // Quản lý Combo
+        Route::resource('combo', ComboController::class)->except(['show'])->names('combo');
+
+        // 🗑️ Các route riêng cho Thùng rác Combo
+        Route::get('combo/thung-rac', [ComboController::class, 'trashed'])
+            ->name('combo.trashed');
+
+        Route::post('combo/{id}/restore', [ComboController::class, 'restore'])
+            ->name('combo.restore');
+            
+        Route::delete('combo/{id}/force-delete', [ComboController::class, 'forceDelete'])
+            ->name('combo.forceDelete');
+
     });
 
 require __DIR__.'/auth.php';

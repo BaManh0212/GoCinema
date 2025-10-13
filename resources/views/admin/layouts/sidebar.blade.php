@@ -138,16 +138,10 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuCombo">
-            <i class="fas fa-fw fa-box"></i>
+        <a class="nav-link" href="{{ route('admin.combo.index') }}">
+            <i class="fas fa-box"></i>
             <span>Combo</span>
         </a>
-        <div id="menuCombo" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách combo</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm combo</a>
-            </div>
-        </div>
     </li>
 
     <li class="nav-item">
