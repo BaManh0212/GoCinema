@@ -9,15 +9,11 @@ class SanPham extends Model
     use HasFactory;
 
     protected $table = 'san_pham';
-    const CREATED_AT = 'ngay_tao';
-    const UPDATED_AT = 'ngay_cap_nhat';
 
     protected $fillable = [
         'ten',
         'gia',
-        'so_luong',
-        'ngay_tao',
-        'ngay_cap_nhat',
+        'so_luong'
     ];
 
     public $timestamps = false;
