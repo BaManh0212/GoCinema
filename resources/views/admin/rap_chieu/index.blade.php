@@ -13,6 +13,8 @@
         <th>STT</th>
         <th>Tên rạp</th>
         <th>Địa chỉ</th>
+        <th>Số điện thoại</th>
+        <th>Email</th>
         <th>Hành động</th>
       </tr>
     </thead>
@@ -22,6 +24,8 @@
           <td>{{ $key + 1 }}</td>
           <td>{{ $r->ten }}</td>
           <td>{{ $r->dia_chi }}</td>
+          <td>{{ $r->so_dien_thoai }}</td>
+          <td>{{ $r->email }}</td>
           <td>
             <a href="{{ route('admin.rap.edit', $r->id) }}" class="btn btn-sm btn-warning">Sửa</a>
             <form action="{{ route('admin.rap.destroy', $r->id) }}" method="POST" style="display:inline">
