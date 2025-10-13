@@ -6,9 +6,6 @@
         <h2 class="fw-bold text-primary">
             <i class="bi bi-building"></i> 🎬 Danh sách rạp chiếu
         </h2>
-        <a href="{{ route('admin.rap.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Thêm rạp
-        </a>
     </div>
 
     @if(session('success'))
