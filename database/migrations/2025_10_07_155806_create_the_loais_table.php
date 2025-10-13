@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('phim_the_loai', function (Blueprint $table) {
-            $table->foreignId('phim_id')->constrained('phim');
-            $table->foreignId('the_loai_id')->constrained('the_loai');
-            $table->primary(['phim_id','the_loai_id']);
+        Schema::create('the_loais', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
 
@@ -23,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('phim_the_loai');
+        Schema::dropIfExists('the_loais');
     }
 };

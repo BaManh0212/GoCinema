@@ -18,6 +18,16 @@ class DatabaseSeeder extends Seeder
         // Seed roles first
         $this->call(VaiTroSeeder::class);
 
+
+        $this->call([
+            VaiTroSeeder::class,
+            AdminSeeder::class,
+            NgonNguSeeder::class,
+            DinhDangSeeder::class,
+            TheLoaiSeeder::class
+        ]);
+
+
         // Create some users using the User factory (Breeze)
         $users = User::factory(10)->create();
         // assign default role 'khach_hang' if exists
@@ -41,5 +51,6 @@ class DatabaseSeeder extends Seeder
                 'vai_tro_id' => $manager->id,
             ]);
         }
+
     }
 }

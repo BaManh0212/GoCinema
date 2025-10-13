@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('phim', function (Blueprint $table) {
@@ -21,16 +18,17 @@ return new class extends Migration
             $table->integer('thoi_luong')->nullable();
             $table->date('ngay_cong_chieu')->nullable();
             $table->integer('do_tuoi_gioi_han')->nullable();
-            $table->foreignId('danh_muc_id')->nullable()->constrained('danh_muc');
-            $table->foreignId('ngon_ngu_id')->nullable()->constrained('ngon_ngu');
-            $table->timestamps();
-            $table->softDeletes(); // ngay_xoa
+            $table->unsignedBigInteger('danh_muc_id')->nullable();
+            $table->unsignedBigInteger('ngon_ngu_id')->nullable();
+
+            // 👇 Laravel chuẩn
+            $table->timestamps(); // created_at, updated_at
+            $table->softDeletes(); // deleted_at
+
+            $table->foreign('danh_muc_id')->references('id')->on('danh_muc')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('phim');
