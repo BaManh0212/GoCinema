@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RapController;
 use App\Http\Controllers\Admin\SanPhamController;
 use App\Http\Controllers\Admin\DanhMucController;
 use App\Http\Controllers\Admin\PhimController;
+use App\Http\Controllers\Admin\ComboController;
 
 // Trang welcome
 Route::get('/', function () {
@@ -56,9 +57,10 @@ Route::prefix('admin')
         // Quản lý rạp
         Route::resource('rap', RapController::class)->names('rap');
 
-        // Quản lý danh mục & phim
+        // Quản lý danh mục
         Route::resource('danhmuc', DanhMucController::class)->names('danhmuc');
-        // Thùng rác / restore / force delete cho phim (đặt trước resource để không bị trùng route 'show')
+
+        // Phim: routes đặc biệt trước resource để tránh trùng với route show
         Route::get('phim/thung-rac', [PhimController::class, 'trashed'])->name('phim.trashed');
         Route::put('phim/{id}/khoi-phuc', [PhimController::class, 'restore'])->name('phim.restore');
         Route::delete('phim/{id}/xoa-vinh-vien', [PhimController::class, 'forceDelete'])->name('phim.forceDelete');
@@ -66,9 +68,16 @@ Route::prefix('admin')
 
         // Quản lý sản phẩm
         Route::resource('san_pham', SanPhamController::class)->except(['show']);
+        // Thùng rác / restore / forceDelete cho sản phẩm
         Route::get('san_pham/thung-rac', [SanPhamController::class, 'trashed'])->name('san_pham.trashed');
         Route::put('san_pham/{id}/khoi-phuc', [SanPhamController::class, 'restore'])->name('san_pham.restore');
         Route::delete('san_pham/{id}/xoa-vinh-vien', [SanPhamController::class, 'forceDelete'])->name('san_pham.forceDelete');
+
+        // Quản lý Combo
+        Route::resource('combo', ComboController::class)->except(['show'])->names('combo');
+        Route::get('combo/thung-rac', [ComboController::class, 'trashed'])->name('combo.trashed');
+        Route::post('combo/{id}/restore', [ComboController::class, 'restore'])->name('combo.restore');
+        Route::delete('combo/{id}/force-delete', [ComboController::class, 'forceDelete'])->name('combo.forceDelete');
     });
 
 require __DIR__ . '/auth.php';

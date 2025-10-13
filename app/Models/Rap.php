@@ -13,6 +13,8 @@ class Rap extends Model
 
     protected $fillable = [
         'ten',
-        'dia_chi'
+        'dia_chi',
+        'so_dien_thoai',
+        'email'
     ];
 }

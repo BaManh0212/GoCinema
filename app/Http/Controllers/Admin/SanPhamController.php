@@ -31,12 +31,13 @@ class SanPhamController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ten' => 'required|string|max:255',
+            'ten' => 'required|string|max:255|unique:san_pham,ten',
             'gia' => 'required|numeric|min:0',
             'so_luong' => 'required|integer|min:0',
         ], [
             'ten.required' => 'Bắt buộc điền tên sản phẩm.',
             'ten.max' => 'Tên sản phẩm không được vượt quá 255 ký tự.',
+            'ten.unique' => 'Tên sản phẩm đã tồn tại.',
             'gia.required' => 'Bắt buộc nhập giá sản phẩm.',
             'gia.numeric' => 'Giá sản phẩm phải là số.',
             'gia.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
@@ -65,12 +66,13 @@ class SanPhamController extends Controller
     public function update(Request $request, SanPham $sanPham)
     {
         $request->validate([
-            'ten' => 'required|string|max:255',
+            'ten' => 'required|string|max:255|unique:san_pham,ten,' . $sanPham->id,
             'gia' => 'required|numeric|min:0',
             'so_luong' => 'required|integer|min:0',
         ], [
             'ten.required' => 'Bắt buộc điền tên sản phẩm.',
             'ten.max' => 'Tên sản phẩm không được vượt quá 255 ký tự.',
+            'ten.unique' => 'Tên sản phẩm đã tồn tại.',
             'gia.required' => 'Bắt buộc nhập giá sản phẩm.',
             'gia.numeric' => 'Giá sản phẩm phải là số.',
             'gia.min' => 'Giá sản phẩm không được nhỏ hơn 0.',
