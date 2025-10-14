@@ -13,8 +13,8 @@ class DanhMuc extends Model
     protected $fillable = ['ten'];
 
     // Quan hệ 1-nhiều với Phim
-    public function phims()
-    {
-        return $this->hasMany(Phim::class, 'danh_muc_id');
-    }
+   public function phims()
+{
+    return $this->belongsToMany(Phim::class, 'phim_danh_muc', 'danh_muc_id', 'phim_id');
+}
 }

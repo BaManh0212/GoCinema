@@ -43,8 +43,15 @@
                         @endif
                     </p>
                     <p><strong>📁 Danh mục:</strong> 
-                        <span class="badge bg-warning text-dark">{{ $phim->danhMuc->ten ?? '—' }}</span>
-                    </p>
+                        @if($phim->danhMucs && $phim->danhMucs->count())
+                        @foreach($phim->danhMucs as $dm)
+                            <span class="badge bg-warning text-dark">{{ $dm->ten }}</span>
+                        @endforeach
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                        </p>
+
                     <p><strong>🗣️ Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</p>
                     <p><strong>🎬 Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</p>
                     <p><strong>👥 Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</p>
