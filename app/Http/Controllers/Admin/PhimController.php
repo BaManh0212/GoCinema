@@ -33,7 +33,7 @@ class PhimController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tieu_de' => 'required|string|max:255|unique:phims,tieu_de',
+            'tieu_de' => 'required|string|max:255|unique:phim,tieu_de',
             'mo_ta' => 'nullable|string',
             'dao_dien' => 'required|string|max:255',
             'dien_vien' => 'required|string',
@@ -103,7 +103,7 @@ class PhimController extends Controller
         $phim = Phim::findOrFail($id);
 
         $validated = $request->validate([
-            'tieu_de' => 'required|string|max:255|unique:phims,tieu_de,' . $phim->id,
+            'tieu_de' => 'required|string|max:255|unique:phim,tieu_de,' . $phim->id,
             'mo_ta' => 'nullable|string',
             'dao_dien' => 'required|string|max:255',
             'dien_vien' => 'required|string',
