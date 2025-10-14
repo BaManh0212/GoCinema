@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RapController;
 use App\Http\Controllers\Admin\SanPhamController;
@@ -39,6 +40,16 @@ Route::middleware('auth')->group(function () {
             'vai_tro_name' => optional($user->vaiTro)->ten,
         ]);
     })->name('me');
+
+    // Quản lý tài khoản và điểm thưởng
+    Route::prefix('account')->name('account.')->group(function () {
+        Route::get('/', [AccountController::class, 'index'])->name('index');
+        Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
+        Route::get('/point-history', [AccountController::class, 'pointHistory'])->name('point-history');
+        Route::put('/update-profile', [AccountController::class, 'updateProfile'])->name('update-profile');
+        Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
+        Route::post('/redeem-combo/{comboId}', [AccountController::class, 'redeemCombo'])->name('redeem-combo');
+    });
 });
 
 // Route chỉ dành cho quản lý
