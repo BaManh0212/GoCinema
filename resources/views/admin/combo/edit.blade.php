@@ -12,7 +12,7 @@
                 @method('PUT')
 
                 {{-- Tên Combo --}}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="ten">Tên Combo</label>
                     <input type="text" name="ten" id="ten" class="form-control @error('ten') is-invalid @enderror" value="{{ old('ten', $combo->ten) }}">
                     @error('ten')
@@ -21,7 +21,7 @@
                 </div>
 
                 {{-- Giá --}}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="gia">Giá Combo</label>
                     <input type="number" name="gia" id="gia" class="form-control @error('gia') is-invalid @enderror" value="{{ old('gia', $combo->gia) }}">
                     @error('gia')
@@ -30,7 +30,7 @@
                 </div>
 
                 {{-- Mô tả --}}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="mo_ta">Mô tả</label>
                     <textarea name="mo_ta" id="mo_ta" class="form-control @error('mo_ta') is-invalid @enderror">{{ old('mo_ta', $combo->mo_ta) }}</textarea>
                     @error('mo_ta')
@@ -42,33 +42,23 @@
                 <div id="combo-chi-tiet">
                     <h4 class="fw-bold">Chi tiết Combo</h4>
                     @foreach ($combo->chiTiet as $index => $chiTiet)
-                        <div class="combo-item mb-3">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="san_pham_id" class="form-label">Sản phẩm</label>
-                                    <select name="chi_tiet[{{ $index }}][san_pham_id]" id="chi_tiet_{{ $index }}_san_pham_id" class="form-control @error("chi_tiet.$index.san_pham_id") is-invalid @enderror">
-                                        <option value="">Chọn sản phẩm</option>
-                                        @foreach ($sanPhams as $sanPham)
-                                            <option value="{{ $sanPham->id }}" {{ old("chi_tiet.$index.san_pham_id", $chiTiet->san_pham_id) == $sanPham->id ? 'selected' : '' }}>
-                                                {{ $sanPham->ten }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error("chi_tiet.$index.san_pham_id")
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="so_luong" class="form-label">Số lượng</label>
-                                    <input type="number" name="chi_tiet[{{ $index }}][so_luong]" id="chi_tiet_{{ $index }}_so_luong" class="form-control @error("chi_tiet.$index.so_luong") is-invalid @enderror" value="{{ old("chi_tiet.$index.so_luong", $chiTiet->so_luong) }}">
-                                    @error("chi_tiet.$index.so_luong")
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button type="button" class="btn btn-danger remove-combo-item" data-index="{{ $index }}">Xóa</button>
-                                </div>
+                        <div class="combo-item mb-3 d-flex align-items-center">
+                            <div class="flex-grow-1 me-3">
+                                <label for="san_pham_id_{{ $index }}" class="form-label">Sản phẩm</label>
+                                <select name="chi_tiet[{{ $index }}][san_pham_id]" id="san_pham_id_{{ $index }}" class="form-select">
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    @foreach ($sanPhams as $sanPham)
+                                        <option value="{{ $sanPham->id }}" {{ old("chi_tiet.$index.san_pham_id", $chiTiet->san_pham_id) == $sanPham->id ? 'selected' : '' }}>
+                                            {{ $sanPham->ten }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+                            <div class="flex-grow-1 me-3">
+                                <label for="so_luong_{{ $index }}" class="form-label">Số lượng</label>
+                                <input type="number" name="chi_tiet[{{ $index }}][so_luong]" id="so_luong_{{ $index }}" class="form-control" value="{{ old("chi_tiet.$index.so_luong", $chiTiet->so_luong) }}">
+                            </div>
+                            <button type="button" class="btn btn-danger remove-combo-item" data-index="{{ $index }}">Xóa</button>
                         </div>
                     @endforeach
                 </div>
@@ -86,25 +76,21 @@
     document.getElementById('add-combo-item').addEventListener('click', function () {
         const comboChiTiet = document.getElementById('combo-chi-tiet');
         const newItem = `
-            <div class="combo-item mb-3">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="san_pham_id" class="form-label">Sản phẩm</label>
-                        <select name="chi_tiet[${comboIndex}][san_pham_id]" class="form-select">
-                            <option value="">-- Chọn sản phẩm --</option>
-                            @foreach ($sanPhams as $sanPham)
-                                <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="so_luong" class="form-label">Số lượng</label>
-                        <input type="number" name="chi_tiet[${comboIndex}][so_luong]" class="form-control" value="1">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger remove-combo-item">Xóa</button>
-                    </div>
+            <div class="combo-item mb-3 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <label for="san_pham_id_${comboIndex}" class="form-label">Sản phẩm</label>
+                    <select name="chi_tiet[${comboIndex}][san_pham_id]" id="san_pham_id_${comboIndex}" class="form-select">
+                        <option value="">-- Chọn sản phẩm --</option>
+                        @foreach ($sanPhams as $sanPham)
+                            <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="flex-grow-1 me-3">
+                    <label for="so_luong_${comboIndex}" class="form-label">Số lượng</label>
+                    <input type="number" name="chi_tiet[${comboIndex}][so_luong]" id="so_luong_${comboIndex}" class="form-control" value="1">
+                </div>
+                <button type="button" class="btn btn-danger remove-combo-item" data-index="${comboIndex}">Xóa</button>
             </div>
         `;
         comboChiTiet.insertAdjacentHTML('beforeend', newItem);

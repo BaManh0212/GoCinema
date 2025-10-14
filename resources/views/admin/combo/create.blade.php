@@ -5,13 +5,13 @@
     <h2 class="fw-bold text-primary">➕ Thêm Combo</h2>
     <a href="{{ route('admin.combo.index') }}" class="btn btn-secondary mb-3">⬅ Quay lại danh sách</a>
 
-
     <div class="card shadow-sm">
         <div class="card-body">
             <form action="{{ route('admin.combo.store') }}" method="POST" novalidate>
                 @csrf
 
-                <div class="form-group">
+                {{-- Tên Combo --}}
+                <div class="form-group mb-3">
                     <label for="ten">Tên Combo</label>
                     <input type="text" name="ten" id="ten" class="form-control @error('ten') is-invalid @enderror" value="{{ old('ten') }}">
                     @error('ten')
@@ -19,7 +19,8 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
+                {{-- Giá --}}
+                <div class="form-group mb-3">
                     <label for="gia">Giá Combo</label>
                     <input type="number" name="gia" id="gia" class="form-control @error('gia') is-invalid @enderror" value="{{ old('gia') }}">
                     @error('gia')
@@ -28,8 +29,8 @@
                 </div>
 
                 {{-- Mô tả --}}
-                <div class="mb-3">
-                    <label for="mo_ta" class="form-label">Mô tả</label>
+                <div class="form-group mb-3">
+                    <label for="mo_ta">Mô tả</label>
                     <textarea name="mo_ta" id="mo_ta" class="form-control @error('mo_ta') is-invalid @enderror">{{ old('mo_ta') }}</textarea>
                     @error('mo_ta')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -39,39 +40,27 @@
                 {{-- Chi tiết Combo --}}
                 <div id="combo-chi-tiet">
                     <h4 class="fw-bold">Chi tiết Combo</h4>
-                    <div class="combo-item mb-3">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="san_pham_id" class="form-label">Sản phẩm</label>
-                                <select name="chi_tiet[0][san_pham_id]" id="chi_tiet_0_san_pham_id" class="form-control @error('chi_tiet.0.san_pham_id') is-invalid @enderror">
-                                    <option value="">Chọn sản phẩm</option>
-                                    @foreach ($sanPhams as $sanPham)
-                                        <option value="{{ $sanPham->id }}" {{ old('chi_tiet.0.san_pham_id') == $sanPham->id ? 'selected' : '' }}>
-                                            {{ $sanPham->ten }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('chi_tiet.0.san_pham_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label for="so_luong" class="form-label">Số lượng</label>
-                                <input type="number" name="chi_tiet[0][so_luong]" id="chi_tiet_0_so_luong" class="form-control" value="{{ old('chi_tiet.0.so_luong') }}">
-                                @error('chi_tiet.0.so_luong')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger remove-combo-item">Xóa</button>
-                            </div>
+                    <div class="combo-item mb-3 d-flex align-items-center">
+                        <div class="flex-grow-1 me-3">
+                            <label for="san_pham_id_0" class="form-label">Sản phẩm</label>
+                            <select name="chi_tiet[0][san_pham_id]" id="san_pham_id_0" class="form-select">
+                                <option value="">-- Chọn sản phẩm --</option>
+                                @foreach ($sanPhams as $sanPham)
+                                    <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
+                                @endforeach
+                            </select>
                         </div>
+                        <div class="flex-grow-1 me-3">
+                            <label for="so_luong_0" class="form-label">Số lượng</label>
+                            <input type="number" name="chi_tiet[0][so_luong]" id="so_luong_0" class="form-control" value="1">
+                        </div>
+                        <button type="button" class="btn btn-danger remove-combo-item" data-index="0">Xóa</button>
                     </div>
                 </div>
                 <button type="button" id="add-combo-item" class="btn btn-primary mb-3">➕ Thêm sản phẩm</button>
 
                 {{-- Nút Submit --}}
-                <button type="submit" class="btn btn-success">Lưu</button>
+                <button type="submit" class="btn btn-success">Thêm mới</button>
             </form>
         </div>
     </div>
@@ -82,25 +71,21 @@
     document.getElementById('add-combo-item').addEventListener('click', function () {
         const comboChiTiet = document.getElementById('combo-chi-tiet');
         const newItem = `
-            <div class="combo-item mb-3">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="san_pham_id" class="form-label">Sản phẩm</label>
-                        <select name="chi_tiet[${comboIndex}][san_pham_id]" class="form-select">
-                            <option value="">-- Chọn sản phẩm --</option>
-                            @foreach ($sanPhams as $sanPham)
-                                <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="so_luong" class="form-label">Số lượng</label>
-                        <input type="number" name="chi_tiet[${comboIndex}][so_luong]" class="form-control">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger remove-combo-item">Xóa</button>
-                    </div>
+            <div class="combo-item mb-3 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <label for="san_pham_id_${comboIndex}" class="form-label">Sản phẩm</label>
+                    <select name="chi_tiet[${comboIndex}][san_pham_id]" id="san_pham_id_${comboIndex}" class="form-select">
+                        <option value="">-- Chọn sản phẩm --</option>
+                        @foreach ($sanPhams as $sanPham)
+                            <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="flex-grow-1 me-3">
+                    <label for="so_luong_${comboIndex}" class="form-label">Số lượng</label>
+                    <input type="number" name="chi_tiet[${comboIndex}][so_luong]" id="so_luong_${comboIndex}" class="form-control" value="1">
+                </div>
+                <button type="button" class="btn btn-danger remove-combo-item" data-index="${comboIndex}">Xóa</button>
             </div>
         `;
         comboChiTiet.insertAdjacentHTML('beforeend', newItem);
@@ -109,7 +94,13 @@
 
     document.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-combo-item')) {
-            e.target.closest('.combo-item').remove();
+            const index = e.target.getAttribute('data-index');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `chi_tiet[${index}][_delete]`;
+            input.value = '1';
+            e.target.closest('.combo-item').appendChild(input);
+            e.target.closest('.combo-item').style.display = 'none';
         }
     });
 </script>
