@@ -19,12 +19,13 @@ class NguoiDung extends Authenticatable
 		'ho_ten',
 		'email',
 		'mat_khau',
+		'so_dien_thoai',
 		// allow mass assignment of 'password' so mutator setPasswordAttribute runs
 		'password',
 		'vai_tro_id',
 		'kich_hoat',
 		'loai_tai_khoan',
-		'diem',
+		'diem_tich_luy',
 	];
 
 	protected $hidden = [
@@ -63,5 +64,61 @@ class NguoiDung extends Authenticatable
 	public function vaiTro(): BelongsTo
 	{
 		return $this->belongsTo(VaiTro::class, 'vai_tro_id');
+	}
+
+	/**
+	 * Relationship to LichSuDiem
+	 */
+	public function lichSuDiem()
+	{
+		return $this->hasMany(LichSuDiem::class, 'nguoi_dung_id');
+	}
+
+	/**
+	 * Thêm điểm cho người dùng
+	 */
+	public function themDiem($diem, $moTa = '')
+	{
+		$this->diem_tich_luy += $diem;
+		$this->save();
+
+		LichSuDiem::create([
+			'nguoi_dung_id' => $this->id,
+			'diem' => $diem,
+			'hanh_dong' => 'tich_luy',
+			'mo_ta' => $moTa,
+		]);
+
+		return $this;
+	}
+
+	/**
+	 * Trừ điểm của người dùng
+	 */
+	public function truDiem($diem, $moTa = '')
+	{
+		if ($this->diem_tich_luy < $diem) {
+			throw new \Exception('Không đủ điểm để thực hiện giao dịch này');
+		}
+
+		$this->diem_tich_luy -= $diem;
+		$this->save();
+
+		LichSuDiem::create([
+			'nguoi_dung_id' => $this->id,
+			'diem' => $diem,
+			'hanh_dong' => 'su_dung',
+			'mo_ta' => $moTa,
+		]);
+
+		return $this;
+	}
+
+	/**
+	 * Accessor để có thể dùng $user->diem
+	 */
+	public function getDiemAttribute()
+	{
+		return $this->diem_tich_luy ?? 0;
 	}
 }
