@@ -8,15 +8,16 @@ class ComboChiTiet extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; 
     protected $table = 'combo_chi_tiet';
+    protected $primaryKey = null;
+    public $incrementing = false;
 
     protected $fillable = [
         'combo_id',
         'san_pham_id',
         'so_luong',
     ];
-
-    public $timestamps = false;
 
     // Quan hệ với combo
     public function combo()
