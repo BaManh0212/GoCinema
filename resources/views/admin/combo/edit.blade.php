@@ -12,8 +12,8 @@
                 @method('PUT')
 
                 {{-- Tên Combo --}}
-                <div class="mb-3">
-                    <label for="ten" class="form-label">Tên Combo</label>
+                <div class="form-group">
+                    <label for="ten">Tên Combo</label>
                     <input type="text" name="ten" id="ten" class="form-control @error('ten') is-invalid @enderror" value="{{ old('ten', $combo->ten) }}">
                     @error('ten')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -21,8 +21,8 @@
                 </div>
 
                 {{-- Giá --}}
-                <div class="mb-3">
-                    <label for="gia" class="form-label">Giá (VNĐ)</label>
+                <div class="form-group">
+                    <label for="gia">Giá Combo</label>
                     <input type="number" name="gia" id="gia" class="form-control @error('gia') is-invalid @enderror" value="{{ old('gia', $combo->gia) }}">
                     @error('gia')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -30,8 +30,8 @@
                 </div>
 
                 {{-- Mô tả --}}
-                <div class="mb-3">
-                    <label for="mo_ta" class="form-label">Mô tả</label>
+                <div class="form-group">
+                    <label for="mo_ta">Mô tả</label>
                     <textarea name="mo_ta" id="mo_ta" class="form-control @error('mo_ta') is-invalid @enderror">{{ old('mo_ta', $combo->mo_ta) }}</textarea>
                     @error('mo_ta')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -40,34 +40,37 @@
 
                 {{-- Chi tiết Combo --}}
                 <div id="combo-chi-tiet">
-                    @if ($combo->chiTiet->isEmpty())
-                        <p class="text-muted">Không có chi tiết combo nào.</p>
-                    @else
-                        @foreach ($combo->chiTiet as $index => $chiTiet)
-                            <div class="combo-item mb-3">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="san_pham_id" class="form-label">Sản phẩm</label>
-                                        <select name="chi_tiet[{{ $index }}][san_pham_id]" class="form-select">
-                                            <option value="">-- Chọn sản phẩm --</option>
-                                            @foreach ($sanPhams as $sanPham)
-                                                <option value="{{ $sanPham->id }}" {{ $sanPham->id == $chiTiet->san_pham_id ? 'selected' : '' }}>
-                                                    {{ $sanPham->ten }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="so_luong" class="form-label">Số lượng</label>
-                                        <input type="number" name="chi_tiet[{{ $index }}][so_luong]" class="form-control" value="{{ $chiTiet->so_luong }}">
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-danger remove-combo-item" data-index="{{ $index }}">Xóa</button>
-                                    </div>
+                    <h4 class="fw-bold">Chi tiết Combo</h4>
+                    @foreach ($combo->chiTiet as $index => $chiTiet)
+                        <div class="combo-item mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="san_pham_id" class="form-label">Sản phẩm</label>
+                                    <select name="chi_tiet[{{ $index }}][san_pham_id]" id="chi_tiet_{{ $index }}_san_pham_id" class="form-control @error("chi_tiet.$index.san_pham_id") is-invalid @enderror">
+                                        <option value="">Chọn sản phẩm</option>
+                                        @foreach ($sanPhams as $sanPham)
+                                            <option value="{{ $sanPham->id }}" {{ old("chi_tiet.$index.san_pham_id", $chiTiet->san_pham_id) == $sanPham->id ? 'selected' : '' }}>
+                                                {{ $sanPham->ten }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error("chi_tiet.$index.san_pham_id")
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="so_luong" class="form-label">Số lượng</label>
+                                    <input type="number" name="chi_tiet[{{ $index }}][so_luong]" id="chi_tiet_{{ $index }}_so_luong" class="form-control @error("chi_tiet.$index.so_luong") is-invalid @enderror" value="{{ old("chi_tiet.$index.so_luong", $chiTiet->so_luong) }}">
+                                    @error("chi_tiet.$index.so_luong")
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger remove-combo-item" data-index="{{ $index }}">Xóa</button>
                                 </div>
                             </div>
-                        @endforeach
-                    @endif
+                        </div>
+                    @endforeach
                 </div>
                 <button type="button" id="add-combo-item" class="btn btn-primary mb-3">➕ Thêm sản phẩm</button>
 
