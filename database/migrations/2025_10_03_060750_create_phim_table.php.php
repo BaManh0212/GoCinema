@@ -17,7 +17,7 @@ return new class extends Migration
             $table->boolean('phu_de')->default(false);
             $table->integer('thoi_luong')->nullable();
             $table->date('ngay_cong_chieu')->nullable();
-            $table->integer('do_tuoi_gioi_han')->nullable();
+            $table->string('do_tuoi_gioi_han', 10)->nullable();
             $table->unsignedBigInteger('danh_muc_id')->nullable();
             $table->unsignedBigInteger('ngon_ngu_id')->nullable();
 
