@@ -105,9 +105,12 @@
         <div class="mb-3 mt-3">
             <label class="form-label fw-bold">Danh mục</label>
             <select name="danh_muc_ids[]" multiple class="form-select @error('danh_muc_ids') is-invalid @enderror">
+                @php
+                    // Use the belongsToMany relation 'danhMucs' (collection). If it's missing, fall back to empty array.
+                    $currentDanhMucIds = collect(old('danh_muc_ids', optional($phim->danhMucs)->pluck('id') ?? []));
+                @endphp
                 @foreach($danhMucs as $dm)
-                    <option value="{{ $dm->id }}" 
-                        {{ (collect(old('danh_muc_ids', $phim->danhMuc->pluck('id')))->contains($dm->id)) ? 'selected':'' }}>
+                    <option value="{{ $dm->id }}" {{ $currentDanhMucIds->contains($dm->id) ? 'selected' : '' }}>
                         {{ $dm->ten }}
                     </option>
                 @endforeach
