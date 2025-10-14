@@ -33,7 +33,7 @@ class PhimController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tieu_de' => 'required|string|max:255',
+            'tieu_de' => 'required|string|max:255|unique:phims,tieu_de',
             'mo_ta' => 'nullable|string',
             'dao_dien' => 'required|string|max:255',
             'dien_vien' => 'required|string',
@@ -48,6 +48,7 @@ class PhimController extends Controller
             'anh_poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'tieu_de.required' => 'Vui lòng nhập tiêu đề phim.',
+            'tieu_de.unique' => 'Tiêu đề phim đã tồn tại.',
             'tieu_de.max' => 'Tiêu đề phim không được vượt quá 255 ký tự.',
             'dao_dien.required' => 'Vui lòng nhập tên đạo diễn.',
             'dao_dien.max' => 'Tên đạo diễn không được vượt quá 255 ký tự.',
@@ -102,7 +103,7 @@ class PhimController extends Controller
         $phim = Phim::findOrFail($id);
 
         $validated = $request->validate([
-            'tieu_de' => 'required|string|max:255',
+            'tieu_de' => 'required|string|max:255|unique:phims,tieu_de,' . $phim->id,
             'mo_ta' => 'nullable|string',
             'dao_dien' => 'required|string|max:255',
             'dien_vien' => 'required|string',
@@ -117,6 +118,7 @@ class PhimController extends Controller
             'anh_poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ], [
             'tieu_de.required' => 'Vui lòng nhập tiêu đề phim.',
+            'tieu_de.unique' => 'Tiêu đề phim đã tồn tại.',
             'dao_dien.required' => 'Vui lòng nhập tên đạo diễn.',
             'dien_vien.required' => 'Vui lòng nhập tên diễn viên.',
             'phu_de.required' => 'Vui lòng chọn phụ đề.',
