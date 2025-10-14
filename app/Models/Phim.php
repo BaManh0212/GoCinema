@@ -11,18 +11,21 @@ class Phim extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'phim';
-    protected $fillable = [
-        'tieu_de',
-        'mo_ta',
-        'anh_poster',
-        'trailer',
-        'phu_de',
-        'thoi_luong',
-        'ngay_cong_chieu',
-        'do_tuoi_gioi_han',
-        'danh_muc_id',
-        'ngon_ngu_id',
-    ];
+   protected $fillable = [
+    'tieu_de',
+    'mo_ta',
+    'anh_poster',
+    'trailer',
+    'phu_de',
+    'thoi_luong',
+    'ngay_cong_chieu',
+    'do_tuoi_gioi_han',
+    'danh_muc_id',
+    'ngon_ngu_id',
+    'dao_dien',
+    'dien_vien',
+];
+
 
     public function danhMuc()
     {

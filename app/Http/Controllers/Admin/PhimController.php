@@ -27,90 +27,134 @@ class PhimController extends Controller
         return view('admin.phim.trashed', compact('phims'));
     }
 
-    public function create()
-{
-    $danhMucs = DanhMuc::all();
-    $ngonNgus = NgonNgu::all();
-    return view('admin.phim.create', compact('danhMucs', 'ngonNgus'));
-}
+   public function create()
+    {
+        $danhMucs = DanhMuc::all();
+        $ngonNgus = NgonNgu::all();
+        return view('admin.phim.create', compact('danhMucs', 'ngonNgus'));
+    }
 
-
+    /**
+     * Lưu phim mới
+     */
     public function store(Request $request)
     {
-        $request->validate([
+        // 🧩 VALIDATE DỮ LIỆU
+        $validated = $request->validate([
             'tieu_de' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
+            'dao_dien' => 'required|string|max:255',
+            'dien_vien' => 'required|string',
             'thoi_luong' => 'required|numeric|min:1',
             'danh_muc_id' => 'required|exists:danh_muc,id',
             'ngon_ngu_id' => 'required|exists:ngon_ngu,id',
-            'trailer' => 'nullable|string',
+            'trailer' => 'nullable|string|max:255',
             'phu_de' => 'boolean',
-            'ngay_cong_chieu' => 'nullable|date',
-            'do_tuoi_gioi_han' => 'nullable|integer',
+            'ngay_cong_chieu' => 'required|date',
+            'do_tuoi_gioi_han' => 'nullable|string|max:10',
             'anh_poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'tieu_de.required' => 'Vui lòng nhập tiêu đề phim.',
+            'tieu_de.max' => 'Tiêu đề phim không được vượt quá 255 ký tự.',
+            'dao_dien.required' => 'Vui lòng nhập tên đạo diễn.',
+            'dao_dien.max' => 'Tên đạo diễn không được vượt quá 255 ký tự.',
+            'dien_vien.required' => 'Vui lòng nhập tên diễn viên.',
+            'thoi_luong.required' => 'Vui lòng nhập thời lượng phim.',
+            'thoi_luong.numeric' => 'Thời lượng phải là số.',
+            'thoi_luong.min' => 'Thời lượng phải lớn hơn 0.',
+            'danh_muc_id.required' => 'Vui lòng chọn danh mục phim.',
+            'danh_muc_id.exists' => 'Danh mục không hợp lệ.',
+            'ngon_ngu_id.required' => 'Vui lòng chọn ngôn ngữ.',
+            'ngon_ngu_id.exists' => 'Ngôn ngữ không hợp lệ.',
+            'ngay_cong_chieu.required' => 'Vui lòng chọn ngày công chiếu.',
+            'anh_poster.image' => 'File tải lên phải là hình ảnh.',
+            'anh_poster.mimes' => 'Ảnh phải có định dạng jpeg, png, jpg hoặc gif.',
+            'anh_poster.max' => 'Ảnh không được vượt quá 2MB.',
         ]);
 
-        $posterPath = $request->hasFile('anh_poster')
-            ? $request->file('anh_poster')->store('posters', 'public')
-            : null;
+        // 🖼️ LƯU ẢNH POSTER (nếu có)
+        $posterPath = null;
+        if ($request->hasFile('anh_poster')) {
+            $posterPath = $request->file('anh_poster')->store('posters', 'public');
+        }
 
+        // 🧠 TẠO MỚI PHIM
         Phim::create([
-            'tieu_de' => $request->tieu_de,
-            'mo_ta' => $request->mo_ta,
-            'thoi_luong' => $request->thoi_luong,
-            'danh_muc_id' => $request->danh_muc_id,
-            'ngon_ngu_id' => $request->ngon_ngu_id,
+            'tieu_de' => $validated['tieu_de'],
+            'mo_ta' => $validated['mo_ta'] ?? null,
+            'thoi_luong' => $validated['thoi_luong'],
+            'danh_muc_id' => $validated['danh_muc_id'],
+            'ngon_ngu_id' => $validated['ngon_ngu_id'],
             'anh_poster' => $posterPath,
-            'trailer' => $request->trailer,
-            'phu_de' => $request->phu_de ?? false,
-            'ngay_cong_chieu' => $request->ngay_cong_chieu,
-            'do_tuoi_gioi_han' => $request->do_tuoi_gioi_han,
+            'trailer' => $validated['trailer'] ?? null,
+            'phu_de' => $validated['phu_de'] ?? false,
+            'ngay_cong_chieu' => $validated['ngay_cong_chieu'] ?? null,
+            'do_tuoi_gioi_han' => $validated['do_tuoi_gioi_han'] ?? null,
+            'dao_dien' => $validated['dao_dien'] ?? null,
+            'dien_vien' => $validated['dien_vien'] ?? null,
         ]);
 
-        return redirect()->route('admin.phim.index')->with('success', 'Thêm phim thành công!');
+        return redirect()->route('admin.phim.index')->with('success', '🎬 Thêm phim thành công!');
     }
 
+    /**
+     * Form sửa phim
+     */
     public function edit($id)
     {
-        $phim = Phim::withTrashed()->findOrFail($id);
+        $phim = Phim::findOrFail($id);
         $danhMucs = DanhMuc::all();
         $ngonNgus = NgonNgu::all();
         return view('admin.phim.edit', compact('phim', 'danhMucs', 'ngonNgus'));
     }
 
     /**
-     * Minimal show handler so resource routes don't error if called.
-     * Redirects to edit page for convenience.
+     * Cập nhật phim
      */
-    public function show($id)
+     public function update(Request $request, $id)
     {
-        return redirect()->route('admin.phim.edit', $id);
-    }
+        $phim = Phim::findOrFail($id);
 
-    public function update(Request $request, $id)
-    {
-        $phim = Phim::withTrashed()->findOrFail($id);
-
-        $request->validate([
+        $validated = $request->validate([
             'tieu_de' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
-            'thoi_luong' => 'required|numeric|min:1',
+            'dao_dien' => 'required|string|max:255',
+            'dien_vien' => 'required|string',
+            'trailer' => 'nullable|url',
+            'phu_de' => 'required|boolean',
+            'thoi_luong' => 'required|integer|min:1',
+            'ngay_cong_chieu' => 'required|date',
+            'do_tuoi_gioi_han' => 'nullable|string|max:10',
             'danh_muc_id' => 'required|exists:danh_muc,id',
             'ngon_ngu_id' => 'required|exists:ngon_ngu,id',
-            'anh_poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'anh_poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'tieu_de.required' => 'Vui lòng nhập tiêu đề phim.',
+            'dao_dien.required' => 'Vui lòng nhập tên đạo diễn.',
+            'dien_vien.required' => 'Vui lòng nhập tên diễn viên.',
+            'phu_de.required' => 'Vui lòng chọn phụ đề.',
+            'thoi_luong.required' => 'Vui lòng nhập thời lượng phim.',
+            'ngay_cong_chieu.required' => 'Vui lòng chọn ngày công chiếu.',
+            'danh_muc_id.required' => 'Vui lòng chọn danh mục phim.',
+            'ngon_ngu_id.required' => 'Vui lòng chọn ngôn ngữ phim.',
         ]);
-
         if ($request->hasFile('anh_poster')) {
-            if ($phim->anh_poster && Storage::disk('public')->exists($phim->anh_poster)) {
+            if ($phim->anh_poster) {
                 Storage::disk('public')->delete($phim->anh_poster);
             }
-            $phim->anh_poster = $request->file('anh_poster')->store('posters', 'public');
+            $validated['anh_poster'] = $request->file('anh_poster')->store('phims', 'public');
         }
 
-        $phim->update($request->except('anh_poster'));
+        $phim->update($validated);
 
         return redirect()->route('admin.phim.index')->with('success', 'Cập nhật phim thành công!');
     }
+    public function show($id)
+{
+    $phim = Phim::with(['danhMuc', 'ngonNgu'])->findOrFail($id);
+    return view('admin.phim.show', compact('phim'));
+}
+
 
     public function destroy($id)
     {
