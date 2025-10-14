@@ -15,6 +15,20 @@ class DanhMucSeeder extends Seeder
             ['ten' => 'Hài hước'],
             ['ten' => 'Tình cảm'],
             ['ten' => 'Hoạt hình'],
+            ['ten' => 'Phiêu lưu'],
+            ['ten' => 'Khoa học viễn tưởng'],
+            ['ten' => 'Tài liệu'],
+            ['ten' => 'Thể thao'],
+            ['ten' => 'Âm nhạc'],
+            ['ten' => 'Lịch sử'],
+            ['ten' => 'Chiến tranh'],
+            ['ten' => 'Tâm lý'],
+            ['ten' => 'Gia đình'],
+            ['ten' => 'Học đường'],
+            ['ten' => 'Siêu nhiên'],
+            ['ten' => 'Võ thuật'],
+            ['ten' => 'Phim bộ'],
+            ['ten' => 'Phim lẻ'],
         ]);
     }
 }
