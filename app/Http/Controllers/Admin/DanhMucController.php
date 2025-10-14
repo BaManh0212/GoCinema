@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DanhMuc;
+use App\Models\Phim;
 use Illuminate\Http\Request;
 
 class DanhMucController extends Controller
 {
     public function index()
     {
-        $danhmucs = DanhMuc::all();
+        // Lấy danh sách danh mục kèm số lượng phim
+        $danhmucs = DanhMuc::withCount('phims')->get();
         return view('admin.danhmuc.index', compact('danhmucs'));
     }
 
@@ -21,8 +23,18 @@ class DanhMucController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['ten' => 'required']);
-        DanhMuc::create($request->all());
+        $request->validate([
+            'ten' => 'required|string|max:255|unique:danh_muc,ten',
+        ], [
+            'ten.required' => 'Tên danh mục không được để trống.',
+            'ten.unique' => 'Tên danh mục này đã tồn tại.',
+        ]);
+
+        DanhMuc::create([
+            'ten' => $request->ten,
+            'mo_ta' => $request->mo_ta ?? null,
+        ]);
+
         return redirect()->route('admin.danhmuc.index')->with('success', 'Thêm danh mục thành công!');
     }
 
@@ -34,15 +46,35 @@ class DanhMucController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate(['ten' => 'required']);
         $danhmuc = DanhMuc::findOrFail($id);
-        $danhmuc->update($request->all());
-        return redirect()->route('admin.danhmuc.index')->with('success', 'Cập nhật thành công!');
+
+        $request->validate([
+            'ten' => 'required|string|max:255|unique:danh_muc,ten,' . $id,
+        ], [
+            'ten.required' => 'Tên danh mục không được để trống.',
+            'ten.unique' => 'Tên danh mục này đã tồn tại.',
+        ]);
+
+        $danhmuc->update([
+            'ten' => $request->ten,
+            'mo_ta' => $request->mo_ta ?? null,
+        ]);
+
+        return redirect()->route('admin.danhmuc.index')->with('success', 'Cập nhật danh mục thành công!');
     }
 
     public function destroy($id)
     {
-        DanhMuc::destroy($id);
-        return redirect()->route('admin.danhmuc.index')->with('success', 'Xóa thành công!');
+        $danhmuc = DanhMuc::findOrFail($id);
+
+        // 🔒 Không cho phép xóa nếu danh mục đang có phim
+        if ($danhmuc->phims()->count() > 0) {
+            return redirect()->route('admin.danhmuc.index')
+                ->with('error', 'Không thể xóa danh mục vì vẫn còn phim bên trong!');
+        }
+
+        $danhmuc->delete();
+
+        return redirect()->route('admin.danhmuc.index')->with('success', 'Xóa danh mục thành công!');
     }
 }
