@@ -22,6 +22,9 @@ class SanPhamController extends Controller
      */
     public function create()
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
         return view('staff.san_pham.create');
     }
 
@@ -30,6 +33,9 @@ class SanPhamController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
         $request->validate([
             'ten' => 'required|string|max:255|unique:san_pham,ten',
             'gia' => 'required|numeric|min:0',
@@ -92,6 +98,9 @@ class SanPhamController extends Controller
      */
     public function destroy(SanPham $sanPham)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
         $sanPham->delete();
 
         return redirect()->route('staff.san_pham.index')

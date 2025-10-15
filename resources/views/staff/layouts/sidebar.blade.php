@@ -28,104 +28,71 @@
 
     <!-- Phim -->
     <li class="nav-item {{ request()->is('staff/phim*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhim" aria-expanded="false" aria-controls="menuPhim">
+        <a class="nav-link" href="{{ route('staff.phim.index') }}">
             <i class="fas fa-fw fa-film"></i>
             <span>Phim</span>
         </a>
-        <div id="menuPhim" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('staff/phim') ? 'active' : '' }}" href="{{ route('staff.phim.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách phim
-                </a>
-                <a class="collapse-item {{ request()->is('staff/phim/create') ? 'active' : '' }}" href="{{ route('staff.phim.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phim mới
-                </a>
-            </div>
-        </div>
     </li>
 
     <!-- Danh mục -->
     <li class="nav-item {{ request()->is('staff/danhmuc*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDanhMuc" aria-expanded="false" aria-controls="menuDanhMuc">
+        <a class="nav-link" href="{{ route('staff.danhmuc.index') }}">
             <i class="fas fa-fw fa-tags"></i>
             <span>Danh mục</span>
         </a>
-        <div id="menuDanhMuc" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('staff/danhmuc') ? 'active' : '' }}" href="{{ route('staff.danhmuc.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách danh mục
-                </a>
-                <a class="collapse-item {{ request()->is('staff/danhmuc/create') ? 'active' : '' }}" href="{{ route('staff.danhmuc.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm danh mục
-                </a>
-            </div>
-        </div>
     </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- QUẢN LÝ RẠP & SUẤT CHIẾU -->
-    <div class="sidebar-heading">🏢 Suất chiếu</div>
+    <!-- SUẤT CHIẾU -->
+    <div class="sidebar-heading">🎟️ Suất chiếu & Phòng</div>
 
-    <!-- Suất chiếu -->
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSuatChieu" aria-expanded="false" aria-controls="menuSuatChieu">
+        <a class="nav-link" href="#">
             <i class="fas fa-fw fa-clock"></i>
             <span>Suất chiếu</span>
         </a>
-        <div id="menuSuatChieu" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách suất chiếu</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm suất chiếu</a>
-            </div>
-        </div>
     </li>
 
-    <!-- Phòng chiếu -->
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhongChieu" aria-expanded="false" aria-controls="menuPhongChieu">
+        <a class="nav-link" href="#">
             <i class="fas fa-fw fa-tv"></i>
             <span>Phòng chiếu</span>
         </a>
-        <div id="menuPhongChieu" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách phòng chiếu</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phòng chiếu</a>
-            </div>
-        </div>
     </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- QUẢN LÝ BÁN HÀNG -->
-    <div class="sidebar-heading">💰 Bán hàng & Ưu đãi</div>
+    <!-- BÁN HÀNG -->
+    <div class="sidebar-heading">🍿 Bán hàng</div>
 
     <li class="nav-item {{ request()->is('staff/san_pham*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('staff.san_pham.index') }}">
             <i class="fas fa-box-open"></i>
-            <span>Sản phẩm</span>
+            <span>Combo & Sản phẩm</span>
         </a>
     </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- NGƯỜI DÙNG & ĐƠN -->
-    <div class="sidebar-heading">👥Đơn hàng</div>
+    <!-- ĐƠN HÀNG -->
+    <div class="sidebar-heading">📦 Đơn đặt vé</div>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDon" aria-expanded="false" aria-controls="menuDon">
+        <a class="nav-link" href="#">
             <i class="fas fa-fw fa-ticket-alt"></i>
             <span>Đơn đặt vé</span>
         </a>
-        <div id="menuDon" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách đơn</a>
-                <a class="collapse-item" href="#"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
-            </div>
-        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="fas fa-fw fa-check-circle"></i>
+            <span>Check-in vé</span>
+        </a>
     </li>
 
     <!-- Divider -->

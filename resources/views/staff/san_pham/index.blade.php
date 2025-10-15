@@ -8,9 +8,6 @@
             <a href="{{ route('staff.san_pham.create') }}" class="btn btn-success me-2">
                 ➕ Thêm sản phẩm
             </a>
-            <a href="{{ route('staff.san_pham.trashed') }}" class="btn btn-outline-warning">
-                🗑️ Thùng rác
-            </a>
         </div>
     </div>
 
