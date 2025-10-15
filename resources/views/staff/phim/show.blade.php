@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Chi tiết phim')
 
@@ -8,7 +8,7 @@
     <div class="card shadow-lg border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">🎬 {{ $phim->tieu_de }}</h4>
-            <a href="{{ route('admin.phim.index') }}" class="btn btn-light btn-sm">⬅ Quay lại</a>
+            <a href="{{ route('staff.phim.index') }}" class="btn btn-light btn-sm">⬅ Quay lại</a>
         </div>
 
         <div class="card-body">

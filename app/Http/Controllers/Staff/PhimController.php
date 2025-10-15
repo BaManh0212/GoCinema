@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Phim;
@@ -14,20 +14,20 @@ class PhimController extends Controller
     public function index()
     {
         $phims = Phim::with(['danhMucs', 'ngonNgu'])->paginate(10);
-        return view('admin.phim.index', compact('phims'));
+        return view('staff.phim.index', compact('phims'));
     }
 
     public function trashed()
     {
         $phims = Phim::onlyTrashed()->with(['danhMucs', 'ngonNgu'])->paginate(10);
-        return view('admin.phim.trashed', compact('phims'));
+        return view('staff.phim.trashed', compact('phims'));
     }
 
     public function create()
     {
         $danhMucs = DanhMuc::all();
         $ngonNgus = NgonNgu::all();
-        return view('admin.phim.create', compact('danhMucs', 'ngonNgus'));
+        return view('staff.phim.create', compact('danhMucs', 'ngonNgus'));
     }
 
     public function store(Request $request)
@@ -87,7 +87,7 @@ class PhimController extends Controller
 
         $phim->danhMucs()->sync($validated['danh_muc_ids']);
 
-        return redirect()->route('admin.phim.index')->with('success', '🎬 Thêm phim thành công!');
+        return redirect()->route('staff.phim.index')->with('success', '🎬 Thêm phim thành công!');
     }
 
     public function edit($id)
@@ -95,7 +95,7 @@ class PhimController extends Controller
         $phim = Phim::with('danhMucs')->findOrFail($id);
         $danhMucs = DanhMuc::all();
         $ngonNgus = NgonNgu::all();
-        return view('admin.phim.edit', compact('phim', 'danhMucs', 'ngonNgus'));
+        return view('staff.phim.edit', compact('phim', 'danhMucs', 'ngonNgus'));
     }
 
     public function update(Request $request, $id)
@@ -141,27 +141,27 @@ class PhimController extends Controller
         $phim->update($validated);
         $phim->danhMucs()->sync($validated['danh_muc_ids']);
 
-        return redirect()->route('admin.phim.index')->with('success', '🎬 Cập nhật phim thành công!');
+        return redirect()->route('staff.phim.index')->with('success', '🎬 Cập nhật phim thành công!');
     }
 
     public function show($id)
     {
         $phim = Phim::with(['danhMucs', 'ngonNgu'])->findOrFail($id);
-        return view('admin.phim.show', compact('phim'));
+        return view('staff.phim.show', compact('phim'));
     }
 
     public function destroy($id)
     {
         $phim = Phim::findOrFail($id);
         $phim->delete();
-        return redirect()->route('admin.phim.index')->with('success', 'Đã xóa phim!');
+        return redirect()->route('staff.phim.index')->with('success', 'Đã xóa phim!');
     }
 
     public function restore($id)
     {
         $phim = Phim::withTrashed()->findOrFail($id);
         $phim->restore();
-        return redirect()->route('admin.phim.index')->with('success', 'Khôi phục phim thành công!');
+        return redirect()->route('staff.phim.index')->with('success', 'Khôi phục phim thành công!');
     }
 
     public function forceDelete($id)
@@ -171,6 +171,6 @@ class PhimController extends Controller
             Storage::disk('public')->delete($phim->anh_poster);
         }
         $phim->forceDelete();
-        return redirect()->route('admin.phim.trashed')->with('success', 'Đã xóa vĩnh viễn phim.');
+        return redirect()->route('staff.phim.trashed')->with('success', 'Đã xóa vĩnh viễn phim.');
     }
 }

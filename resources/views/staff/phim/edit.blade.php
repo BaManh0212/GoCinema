@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Chỉnh sửa phim')
 
@@ -10,7 +10,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('admin.phim.update', $phim->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('staff.phim.update', $phim->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -136,7 +136,7 @@
         {{-- Nút lưu --}}
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary px-4">💾 Cập nhật</button>
-            <a href="{{ route('admin.phim.index') }}" class="btn btn-secondary px-4">⬅ Quay lại</a>
+            <a href="{{ route('staff.phim.index') }}" class="btn btn-secondary px-4">⬅ Quay lại</a>
         </div>
     </form>
 </div>

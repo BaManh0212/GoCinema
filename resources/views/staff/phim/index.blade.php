@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Quản lý phim')
 
@@ -10,10 +10,10 @@
 
     {{-- Nút thao tác --}}
     <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
-        <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('staff.phim.trashed') }}" class="btn btn-outline-secondary">
             🗑️ Thùng rác
         </a>
-        <a href="{{ route('admin.phim.create') }}" class="btn btn-success">
+        <a href="{{ route('staff.phim.create') }}" class="btn btn-success">
             ➕ Thêm phim mới
         </a>
     </div>
@@ -74,13 +74,13 @@
 
                         {{-- Hành động --}}
                         <div class="mt-auto d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.phim.show', $phim->id) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('staff.phim.show', $phim->id) }}" class="btn btn-sm btn-outline-primary">
                                 👁️ Xem chi tiết
                             </a>
-                            <a href="{{ route('admin.phim.edit', $phim->id) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('staff.phim.edit', $phim->id) }}" class="btn btn-sm btn-outline-primary">
                                 ✏️ Sửa
                             </a>
-                            <form action="{{ route('admin.phim.destroy', $phim->id) }}" method="POST" 
+                            <form action="{{ route('staff.phim.destroy', $phim->id) }}" method="POST" 
                                   onsubmit="return confirm('Xác nhận xóa phim này?');">
                                 @csrf
                                 @method('DELETE')

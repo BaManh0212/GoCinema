@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Thêm phim mới')
 
@@ -10,7 +10,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('admin.phim.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('staff.phim.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         {{-- Mô tả phim full width --}}
@@ -118,7 +118,7 @@
 
         {{-- Nút lưu --}}
         <button type="submit" class="btn btn-success px-4">💾 Lưu phim</button>
-        <a href="{{ route('admin.phim.index') }}" class="btn btn-secondary px-4">⬅ Quay lại</a>
+        <a href="{{ route('staff.phim.index') }}" class="btn btn-secondary px-4">⬅ Quay lại</a>
     </form>
 </div>
 
