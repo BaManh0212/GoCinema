@@ -5,35 +5,35 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\VaiTro;
 
 class CheckVaiTro
 {
     /**
-     * Handle an incoming request.
-     * Usage: ->middleware('role:quan_ly') or ->middleware('role:nhan_vien,quan_ly')
+     * Sử dụng: ->middleware('role:quan_ly') hoặc ->middleware('role:quan_ly,nhan_vien')
      */
-    public function handle(Request $request, Closure $next, $roles = null)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
         $user = Auth::user();
+
         if (!$user) {
             return redirect()->route('login');
         }
 
-        if (!$roles) {
+        // Lấy tên vai trò của người dùng từ quan hệ
+        $roleName = strtolower($user->vaiTro->ten ?? '');
+
+        // Nếu middleware không yêu cầu vai trò cụ thể → cho qua
+        if (empty($roles)) {
             return $next($request);
         }
 
-        $allowed = array_map('trim', explode(',', $roles));
+        // Chuẩn hóa mảng role yêu cầu
+        $allowed = array_map('strtolower', array_map('trim', $roles));
 
-        // load role name from DB
-        $role = VaiTro::find($user->vai_tro_id);
-        $roleName = $role? $role->ten : null;
-
-        if ($roleName && in_array($roleName, $allowed)) {
+        if (in_array($roleName, $allowed)) {
             return $next($request);
         }
 
-        abort(403, 'Bạn không có quyền truy cập');
+        abort(403, 'Bạn không có quyền truy cập vào trang này.');
     }
 }
