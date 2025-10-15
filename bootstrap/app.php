@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // ✅ Khai báo middleware tùy chỉnh ở đây
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckVaiTro::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -31,7 +31,33 @@ class ComboController extends Controller
             'mo_ta' => 'nullable|string',
             'chi_tiet.*.san_pham_id' => 'required|exists:san_pham,id',
             'chi_tiet.*.so_luong' => 'required|integer|min:1',
+        ], [
+            'ten.required' => 'Trường tên là bắt buộc.',
+            'gia.required' => 'Trường giá là bắt buộc.',
+            'gia.numeric' => 'Trường giá phải là số.',
+            'chi_tiet.*.san_pham_id.required' => 'Trường sản phẩm là bắt buộc.',
+            'chi_tiet.*.san_pham_id.exists' => 'Sản phẩm không hợp lệ.',
+            'chi_tiet.*.so_luong.required' => 'Trường số lượng là bắt buộc.',
+            'chi_tiet.*.so_luong.integer' => 'Trường số lượng phải là số nguyên.',
+            'chi_tiet.*.so_luong.min' => 'Trường số lượng phải lớn hơn hoặc bằng 1.',
         ]);
+
+        $errors = []; // Mảng lưu trữ lỗi
+
+        foreach ($request->chi_tiet as $index => $chiTiet) {
+            $sanPham = SanPham::findOrFail($chiTiet['san_pham_id']);
+
+            // Kiểm tra số lượng không vượt quá số lượng trong bảng sản phẩm
+            if ($chiTiet['so_luong'] > $sanPham->so_luong) {
+                $errors["chi_tiet.$index.so_luong"] = 
+                    'Số lượng sản phẩm "' . $sanPham->ten . '" không được vượt quá ' . $sanPham->so_luong;
+            }
+        }
+
+        // Nếu có lỗi, trả về thông báo
+        if (!empty($errors)) {
+            return redirect()->back()->withErrors($errors)->withInput();
+        }
 
         // Lưu combo
         $combo = Combo::create([
@@ -66,7 +92,33 @@ class ComboController extends Controller
             'mo_ta' => 'nullable|string',
             'chi_tiet.*.san_pham_id' => 'required|exists:san_pham,id',
             'chi_tiet.*.so_luong' => 'required|integer|min:1',
+        ], [
+            'ten.required' => 'Trường tên là bắt buộc.',
+            'gia.required' => 'Trường giá là bắt buộc.',
+            'gia.numeric' => 'Trường giá phải là số.',
+            'chi_tiet.*.san_pham_id.required' => 'Trường sản phẩm là bắt buộc.',
+            'chi_tiet.*.san_pham_id.exists' => 'Sản phẩm không hợp lệ.',
+            'chi_tiet.*.so_luong.required' => 'Trường số lượng là bắt buộc.',
+            'chi_tiet.*.so_luong.integer' => 'Trường số lượng phải là số nguyên.',
+            'chi_tiet.*.so_luong.min' => 'Trường số lượng phải lớn hơn hoặc bằng 1.',
         ]);
+
+        $errors = []; // Mảng lưu trữ lỗi
+
+        foreach ($request->chi_tiet as $index => $chiTiet) {
+            $sanPham = SanPham::findOrFail($chiTiet['san_pham_id']);
+
+            // Kiểm tra số lượng không vượt quá số lượng trong bảng sản phẩm
+            if ($chiTiet['so_luong'] > $sanPham->so_luong) {
+                $errors["chi_tiet.$index.so_luong"] = 
+                    'Số lượng sản phẩm "' . $sanPham->ten . '" không được vượt quá ' . $sanPham->so_luong;
+            }
+        }
+
+        // Nếu có lỗi, trả về thông báo và giữ lại dữ liệu
+        if (!empty($errors)) {
+            return redirect()->back()->withErrors($errors)->withInput();
+        }
 
         // Cập nhật combo
         $combo->update([
@@ -76,14 +128,14 @@ class ComboController extends Controller
         ]);
 
         // Xử lý chi tiết combo
-        foreach ($request->chi_tiet as $index => $chiTiet) {
+        foreach ($request->chi_tiet as $chiTiet) {
             if (isset($chiTiet['_delete']) && $chiTiet['_delete'] == '1') {
                 // Xóa sản phẩm khỏi combo
                 ComboChiTiet::where('combo_id', $combo->id)
                     ->where('san_pham_id', $chiTiet['san_pham_id'])
                     ->delete();
             } else {
-                // Cập nhật hoặc thêm mới sản phẩm
+                // Thêm mới hoặc cập nhật sản phẩm
                 ComboChiTiet::updateOrCreate(
                     [
                         'combo_id' => $combo->id,

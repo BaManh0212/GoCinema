@@ -7,13 +7,13 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Hiển thị trang đăng nhập
      */
     public function create(): View
     {
@@ -21,7 +21,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Xử lý đăng nhập
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -31,55 +31,49 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // If explicit account type says admin, go to admin dashboard
-        if (!empty($user->loai_tai_khoan) && $user->loai_tai_khoan === 'quan_ly') {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
-        }
+        // --- ✅ Xác định tên vai trò (từ quan hệ vaiTro hoặc cột loai_tai_khoan)
+        $roleName = strtolower($user->vaiTro->ten ?? $user->loai_tai_khoan ?? '');
 
-        // Robust fallback: check the id of the role named 'quan_ly'
-        try {
-            $managerRoleId = \App\Models\VaiTro::where('ten', 'quan_ly')->value('id');
-            if ($managerRoleId && $user->vai_tro_id == $managerRoleId) {
+        // --- ✅ Chuyển hướng theo vai trò
+        switch ($roleName) {
+            case 'quan_ly':
                 return redirect()->intended(route('admin.dashboard', absolute: false));
-            }
-        } catch (\Throwable $e) {
-            // ignore and continue to default
-        }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+            case 'nhan_vien':
+                return redirect()->intended(route('staff.dashboard', absolute: false));
+
+            default:
+                return redirect()->intended(route('dashboard', absolute: false));
+        }
     }
 
     /**
-     * Destroy an authenticated session.
+     * Đăng xuất
      */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
-        // Remove the remember-me cookie so the user isn't automatically
-        // re-authenticated when they visit the login page.
         try {
-            // forget the auth recaller cookie
+            // Xóa cookie ghi nhớ đăng nhập
             $recaller = Auth::getRecallerName();
             if ($recaller) {
                 Cookie::queue(Cookie::forget($recaller));
             }
 
-            // also forget the session cookie (config name)
+            // Xóa session cookie
             $sessionCookie = config('session.cookie');
             if ($sessionCookie) {
                 Cookie::queue(Cookie::forget($sessionCookie));
             }
 
-            // common fallback names
-            Cookie::queue(Cookie::forget('remember_web_'.md5(config('app.key'))));
+            Cookie::queue(Cookie::forget('remember_web_' . md5(config('app.key'))));
             Cookie::queue(Cookie::forget('laravel_session'));
         } catch (\Throwable $e) {
-            // ignore if cookie facade not available for any reason
+            // Bỏ qua nếu Cookie facade gặp lỗi
         }
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
