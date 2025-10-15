@@ -15,14 +15,6 @@
         </a>
     </div>
 
-    {{-- Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        </div>
-    @endif
-
     {{-- Danh sách phim --}}
     <div class="row g-3">
         @forelse($phims as $phim)

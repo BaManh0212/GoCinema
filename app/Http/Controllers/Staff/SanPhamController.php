@@ -23,7 +23,7 @@ class SanPhamController extends Controller
     public function create()
     {
         if (auth()->user()->vaiTro->ten !== 'quan_ly') {
-    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền thêm sản phẩm!');
         }
         return view('staff.san_pham.create');
     }
@@ -99,7 +99,7 @@ class SanPhamController extends Controller
     public function destroy(SanPham $sanPham)
     {
         if (auth()->user()->vaiTro->ten !== 'quan_ly') {
-    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền xóa sản phẩm!');
         }
         $sanPham->delete();
 

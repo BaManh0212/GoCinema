@@ -26,7 +26,7 @@ class PhimController extends Controller
     public function create()
     {
         if (auth()->user()->vaiTro->ten !== 'quan_ly') {
-    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền thêm phim!');
         }
         $danhMucs = DanhMuc::all();
         $ngonNgus = NgonNgu::all();
@@ -160,7 +160,7 @@ class PhimController extends Controller
     public function destroy($id)
     {
         if (auth()->user()->vaiTro->ten !== 'quan_ly') {
-    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền xóa phim!');
         }
         $phim = Phim::findOrFail($id);
         $phim->delete();

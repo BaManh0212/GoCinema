@@ -32,7 +32,6 @@ class DanhMucController extends Controller
 
         DanhMuc::create([
             'ten' => $request->ten,
-            'mo_ta' => $request->mo_ta ?? null,
         ]);
 
         return redirect()->route('admin.danhmuc.index')->with('success', 'Thêm danh mục thành công!');
@@ -57,7 +56,6 @@ class DanhMucController extends Controller
 
         $danhmuc->update([
             'ten' => $request->ten,
-            'mo_ta' => $request->mo_ta ?? null,
         ]);
 
         return redirect()->route('admin.danhmuc.index')->with('success', 'Cập nhật danh mục thành công!');

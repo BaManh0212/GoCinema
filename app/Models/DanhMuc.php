@@ -14,7 +14,6 @@ class DanhMuc extends Model
 
     protected $fillable = [
         'ten',
-        'mo_ta',
     ];
 
     protected $dates = ['deleted_at'];
