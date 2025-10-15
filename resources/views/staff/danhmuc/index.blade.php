@@ -8,15 +8,6 @@
         <i class="bi bi-plus-circle"></i> Thêm danh mục
     </a>
 
-@if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-@if (session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
-
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>

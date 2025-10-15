@@ -11,14 +11,6 @@
         </div>
     </div>
 
-    {{-- Hiển thị thông báo thành công --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        </div>
-    @endif
-
     {{-- Bảng danh sách sản phẩm --}}
     <div class="card shadow-sm">
         <div class="card-body p-0">
