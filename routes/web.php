@@ -98,7 +98,11 @@ Route::prefix('admin')
         Route::resource('rap', AdminRapController::class)->names('rap');
 
         // Quản lý danh mục
+        Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
+        Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');
+        Route::delete('danhmuc/{id}/xoa-vinh-vien', [AdminDanhMucController::class, 'forceDelete'])->name('danhmuc.forceDelete');
         Route::resource('danhmuc', AdminDanhMucController::class)->names('danhmuc');
+
 
         // Quản lý phim
         Route::get('phim/thung-rac', [AdminPhimController::class, 'trashed'])->name('phim.trashed');
