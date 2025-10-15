@@ -139,16 +139,10 @@ Route::prefix('staff')
         Route::resource('danhmuc', StaffDanhMucController::class)->names('danhmuc');
 
         // Quản lý phim
-        Route::get('phim/thung-rac', [StaffPhimController::class, 'trashed'])->name('phim.trashed');
-        Route::put('phim/{id}/khoi-phuc', [StaffPhimController::class, 'restore'])->name('phim.restore');
-        Route::delete('phim/{id}/xoa-vinh-vien', [StaffPhimController::class, 'forceDelete'])->name('phim.forceDelete');
         Route::resource('phim', StaffPhimController::class)->names('phim');
 
         // Quản lý sản phẩm
         Route::resource('san_pham', StaffSanPhamController::class)->except(['show']);
-        Route::get('san_pham/thung-rac', [StaffSanPhamController::class, 'trashed'])->name('san_pham.trashed');
-        Route::put('san_pham/{id}/khoi-phuc', [StaffSanPhamController::class, 'restore'])->name('san_pham.restore');
-        Route::delete('san_pham/{id}/xoa-vinh-vien', [StaffSanPhamController::class, 'forceDelete'])->name('san_pham.forceDelete');
     });
 
 /*
