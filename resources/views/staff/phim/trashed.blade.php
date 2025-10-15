@@ -1,4 +1,4 @@
-@extends('andmi.layouts.staff')
+@extends('staff.layouts.staff')
 
 @section('title', 'Thùng rác phim')
 

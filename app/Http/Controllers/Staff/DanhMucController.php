@@ -18,11 +18,17 @@ class DanhMucController extends Controller
 
     public function create()
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+    }
         return view('staff.danhmuc.create');
     }
 
     public function store(Request $request)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
         $request->validate([
             'ten' => 'required|string|max:255|unique:danh_muc,ten',
         ], [
@@ -65,6 +71,9 @@ class DanhMucController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
         $danhmuc = DanhMuc::findOrFail($id);
 
         // 🔒 Không cho phép xóa nếu danh mục đang có phim

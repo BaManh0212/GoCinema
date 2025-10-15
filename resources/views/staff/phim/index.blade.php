@@ -10,9 +10,6 @@
 
     {{-- Nút thao tác --}}
     <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
-        <a href="{{ route('staff.phim.trashed') }}" class="btn btn-outline-secondary">
-            🗑️ Thùng rác
-        </a>
         <a href="{{ route('staff.phim.create') }}" class="btn btn-success">
             ➕ Thêm phim mới
         </a>
