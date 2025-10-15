@@ -154,7 +154,7 @@
     <div class="sidebar-heading">👥 Người dùng & Đơn hàng</div>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuTaiKhoan" aria-expanded="false" aria-controls="menuTaiKhoan">
+        <a class="nav-link collapsed" href="/admin/nguoi-dung" data-toggle="collapse" data-target="#menuTaiKhoan" aria-expanded="false" aria-controls="menuTaiKhoan">
             <i class="fas fa-fw fa-user"></i>
             <span>Tài khoản</span>
         </a>

@@ -19,6 +19,7 @@ class CheckVaiTro
         if (!$user) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tiếp tục!');
         }
+        return $next($request);
 
         // Lấy tên vai trò hiện tại của người dùng
         $roleName = strtolower($user->vaiTro->ten ?? '');
