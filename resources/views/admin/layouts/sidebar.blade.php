@@ -66,10 +66,10 @@
     <hr class="sidebar-divider">
 
     <!-- QUẢN LÝ RẠP & SUẤT CHIẾU -->
-    <div class="sidebar-heading">🏢 Rạp & Suất chiếu</div>
+    <div class="sidebar-heading">🏢 Phòng chiếu & Suất chiếu</div>
 
     <!-- Rạp -->
-    <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
+    {{-- <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuRap" aria-expanded="false" aria-controls="menuRap">
             <i class="fas fa-fw fa-building"></i>
             <span>Rạp chiếu</span>
@@ -84,22 +84,7 @@
                 </a>
             </div>
         </div>
-    </li>
-
-    <!-- Suất chiếu -->
-    <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSuatChieu" aria-expanded="false" aria-controls="menuSuatChieu">
-            <i class="fas fa-fw fa-clock"></i>
-            <span>Suất chiếu</span>
-        </a>
-        <div id="menuSuatChieu" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách suất chiếu</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm suất chiếu</a>
-            </div>
-        </div>
-    </li>
-
+    </li> --}}
     <!-- Phòng chiếu -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhongChieu" aria-expanded="false" aria-controls="menuPhongChieu">
@@ -108,11 +93,36 @@
         </a>
         <div id="menuPhongChieu" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách phòng chiếu</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phòng chiếu</a>
+                <a class="collapse-item" href="{{ route('admin.phongchieu.index') }}">
+                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách phòng chiếu
+                </a>
+                <a class="collapse-item" href="{{ route('admin.phongchieu.create') }}">
+                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phòng chiếu
+                </a>
             </div>
         </div>
     </li>
+
+    <!-- Suất chiếu -->
+   <li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSuatChieu"
+        aria-expanded="false" aria-controls="menuSuatChieu">
+        <i class="fas fa-fw fa-clock"></i>
+        <span>Suất chiếu</span>
+    </a>
+    <div id="menuSuatChieu" class="collapse" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{{ route('admin.suatchieu.index') }}">
+                <i class="fas fa-list fa-sm mr-2"></i> Danh sách suất chiếu
+            </a>
+            <a class="collapse-item" href="{{ route('admin.suatchieu.create') }}">
+                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm suất chiếu
+            </a>
+        </div>
+    </div>
+</li>
+
+
 
     <!-- Divider -->
     <hr class="sidebar-divider">

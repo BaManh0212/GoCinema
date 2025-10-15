@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
-
+use App\Http\Controllers\Admin\AdminPhongChieuController;
+use App\Http\Controllers\Admin\AdminSuatChieuController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\RapController as AdminRapController;
@@ -14,7 +15,8 @@ use App\Http\Controllers\Admin\SanPhamController as AdminSanPhamController;
 use App\Http\Controllers\Admin\DanhMucController as AdminDanhMucController;
 use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
-
+use App\Http\Controllers\Admin\PhongChieuController;
+use App\Http\Controllers\Admin\SuatChieuController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -96,10 +98,14 @@ Route::prefix('admin')
 
         // Quản lý rạp
         Route::resource('rap', AdminRapController::class)->names('rap');
-
+        // Quản lý phòng chiếu
+        Route::resource('phongchieu', PhongChieuController::class)->names('phongchieu');
+        // Quản lý suất chiếu
+        Route::resource('suatchieu', SuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục
         Route::resource('danhmuc', AdminDanhMucController::class)->names('danhmuc');
-
+        // Quản lý ghế 
+        Route::get('admin/suatchieu/{id}/ghe', [SuatChieuController::class, 'gheIndex'])->name('suatchieu.ghe');
         // Quản lý phim
         Route::get('phim/thung-rac', [AdminPhimController::class, 'trashed'])->name('phim.trashed');
         Route::put('phim/{id}/khoi-phuc', [AdminPhimController::class, 'restore'])->name('phim.restore');

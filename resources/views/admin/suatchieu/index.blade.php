@@ -4,8 +4,11 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-primary">
-            <i class="bi bi-door-open"></i> 🪑 Danh sách phòng chiếu
+            <i class="bi bi-camera-reels"></i> 🎬 Danh sách suất chiếu
         </h2>
+        <a href="{{ route('admin.suatchieu.create') }}" class="btn btn-primary rounded-3 shadow-sm">
+            <i class="bi bi-plus-circle"></i> Thêm suất chiếu
+        </a>
     </div>
 
     {{-- Thông báo thành công --}}
@@ -22,36 +25,32 @@
                 <thead class="table-primary text-uppercase text-secondary">
                     <tr>
                         <th>STT</th>
-                        <th>Tên phòng</th>
-                       
-                        <th>Định dạng</th>
-                        <th>Tổng ghế</th>
-                        <th>Trạng thái</th>
+                        <th>Phim</th>
+                        <th>Phòng chiếu</th>
+                        <th>Giờ bắt đầu</th>
+                        <th>Giờ kết thúc</th>
+                        <th>Giá vé (VNĐ)</th>
                         <th width="200px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($phongchieus as $key => $p)
+                    @forelse($suatchieus as $key => $s)
                         <tr>
-                            <td>{{ $phongchieus->firstItem() + $key }}</td>
-                            <td class="text-start ps-4">{{ $p->ten }}</td>
-                            <td>{{ $p->dinhDang?->ten ?? 'Không có' }}</td>
-                            <td>{{ $p->tong_ghe }}</td>
+                            <td>{{ $suatchieus->firstItem() + $key }}</td>
+                            <td class="text-start ps-4">{{ $s->phim?->tieu_de ?? 'Không có' }}</td>
+                            <td>{{ $s->phong?->ten ?? 'Không có' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($s->gio_bat_dau)->format('H:i d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($s->gio_ket_thuc)->format('H:i d/m/Y') }}</td>
+                            <td>{{ number_format($s->gia_ve, 0, ',', '.') }}</td>
                             <td>
-                                @if($p->trang_thai == 'hoat_dong')
-                                    <span class="badge bg-success">Hoạt động</span>
-                                @elseif($p->trang_thai == 'bao_tri')
-                                    <span class="badge bg-warning text-dark">Bảo trì</span>
-                                @else
-                                    <span class="badge bg-danger">Ngừng sử dụng</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('admin.phongchieu.edit', $p->id) }}" class="btn btn-sm btn-outline-primary me-1">
+                                <a href="{{ route('admin.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-ui-checks"></i> Quản lý ghế
+                                </a>
+                                <a href="{{ route('admin.suatchieu.edit', $s->id) }}" class="btn btn-sm btn-outline-primary me-1">
                                     <i class="bi bi-pencil-square"></i> Sửa
                                 </a>
-                                <form action="{{ route('admin.phongchieu.destroy', $p->id) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa phòng này không?')">
+                                <form action="{{ route('admin.suatchieu.destroy', $s->id) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa suất chiếu này không?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -63,7 +62,7 @@
                     @empty
                         <tr>
                             <td colspan="7" class="text-muted py-5">
-                                Không có phòng chiếu nào.
+                                Không có suất chiếu nào.
                             </td>
                         </tr>
                     @endforelse
@@ -73,7 +72,7 @@
 
         {{-- Phân trang --}}
         <div class="card-footer d-flex justify-content-end">
-            {{ $phongchieus->links('pagination::bootstrap-5') }}
+            {{ $suatchieus->links('pagination::bootstrap-5') }}
         </div>
     </div>
 </div>

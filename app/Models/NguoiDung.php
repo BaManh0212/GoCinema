@@ -12,7 +12,7 @@ use App\Models\VaiTro;
 class NguoiDung extends Authenticatable
 {
 	use HasFactory, Notifiable;
-
+  public $timestamps = false;
 	protected $table = 'nguoi_dung';
 
 	protected $fillable = [
