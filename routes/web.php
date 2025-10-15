@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\SanPhamController as AdminSanPhamController;
 use App\Http\Controllers\Admin\DanhMucController as AdminDanhMucController;
 use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
+use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
+use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
 
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -121,6 +123,18 @@ Route::prefix('admin')
         Route::get('combo/thung-rac', [AdminComboController::class, 'trashed'])->name('combo.trashed');
         Route::post('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
+
+        // Quản lý người dùng
+        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
+        Route::post('nguoi-dung/{id}/toggle-status', [AdminNguoiDungController::class, 'toggleStatus'])->name('nguoi-dung.toggle-status');
+
+        // Quản lý điểm tích lũy
+        Route::get('diem-tich-luy', [AdminDiemTichLuyController::class, 'index'])->name('diem-tich-luy.index');
+        Route::get('diem-tich-luy/create', [AdminDiemTichLuyController::class, 'create'])->name('diem-tich-luy.create');
+        Route::post('diem-tich-luy', [AdminDiemTichLuyController::class, 'store'])->name('diem-tich-luy.store');
+        Route::get('diem-tich-luy/statistics', [AdminDiemTichLuyController::class, 'statistics'])->name('diem-tich-luy.statistics');
+        Route::get('diem-tich-luy/{nguoiDungId}', [AdminDiemTichLuyController::class, 'show'])->name('diem-tich-luy.show');
+        Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
     });
 
 /*
