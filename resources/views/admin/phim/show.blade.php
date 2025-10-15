@@ -32,16 +32,12 @@
 
                     <p><strong>🎬 Tiêu đề:</strong> {{ $phim->tieu_de }}</p>
                     <p><strong>📜 Mô tả:</strong> {{ $phim->mo_ta ?? '—' }}</p>
-                    <p><strong>📅 Ngày công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</p>
                     <p><strong>⏱️ Thời lượng:</strong> {{ $phim->thoi_luong }} phút</p>
+                    <p><strong>📅 Ngày công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</p>
+                    <p><strong>🎬 Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</p>
+                    <p><strong>👥 Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</p>
+                    <p><strong>🗣️ Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</p>
                     <p><strong>🔞 Giới hạn tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?? 'P' }}</p>
-                    <p><strong>🎞️ Trailer:</strong> 
-                        @if($phim->trailer)
-                            <a href="{{ $phim->trailer }}" target="_blank" class="text-decoration-none">Xem trailer</a>
-                        @else
-                            Không có
-                        @endif
-                    </p>
                     <p><strong>📁 Danh mục:</strong> 
                         @if($phim->danhMucs && $phim->danhMucs->count())
                         @foreach($phim->danhMucs as $dm)
@@ -51,10 +47,14 @@
                             <span class="text-muted">—</span>
                         @endif
                         </p>
-
-                    <p><strong>🗣️ Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</p>
-                    <p><strong>🎬 Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</p>
-                    <p><strong>👥 Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</p>
+                    <p><strong>🎞️ Trailer:</strong> 
+                        @if($phim->trailer)
+                            <a href="{{ $phim->trailer }}" target="_blank" class="text-decoration-none">Xem trailer</a>
+                        @else
+                            Không có
+                        @endif
+                    </p>
+                    
                 </div>
             </div>
         </div>
