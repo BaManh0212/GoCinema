@@ -61,7 +61,7 @@
                             <td>{{ $user->id }}</td>
                             <td class="fw-semibold">{{ ucfirst($user->ho_ten) }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->sdt ?? '—' }}</td>
+                            <td>{{ $user->so_dien_thoai ?? '—' }}</td>
                             <td>
                                 <span class="badge bg-{{ $user->vaiTro->ten == 'quan_ly' ? 'success' : ($user->vaiTro->ten == 'nhan_vien' ? 'info' : 'primary') }}">
                                     {{ $user->vaiTro->ten ?? '—' }}
