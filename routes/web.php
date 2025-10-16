@@ -3,11 +3,14 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+
+
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\RapController as AdminRapController;
 use App\Http\Controllers\Admin\SanPhamController as AdminSanPhamController;
 use App\Http\Controllers\Admin\DanhMucController as AdminDanhMucController;
@@ -29,6 +32,7 @@ use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
 | Trang chính
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -98,6 +102,34 @@ Route::prefix('admin')
     ->group(function () {
         // Dashboard
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Reports (drill-down cho dashboard)
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // Revenue
+            Route::get('/revenue/total',    [AdminReportController::class, 'revenueTotal'])->name('revenue.total');
+            Route::get('/revenue/tickets',  [AdminReportController::class, 'revenueTickets'])->name('revenue.tickets');
+            Route::get('/revenue/combos',   [AdminReportController::class, 'revenueCombos'])->name('revenue.combos');
+            Route::get('/revenue/products', [AdminReportController::class, 'revenueProducts'])->name('revenue.products');
+
+            // Tickets & Orders & Payments
+            Route::get('/tickets',          [AdminReportController::class, 'tickets'])->name('tickets');
+            Route::get('/orders',           [AdminReportController::class, 'orders'])->name('orders');
+            Route::get('/orders/canceled',  [AdminReportController::class, 'ordersCanceled'])->name('orders.canceled');
+            Route::get('/payments',         [AdminReportController::class, 'payments'])->name('payments');
+            Route::get('/refunds',          [AdminReportController::class, 'refunds'])->name('refunds');
+
+            // Movies / Customers / Cinemas
+            Route::get('/movies',           [AdminReportController::class, 'movies'])->name('movies');
+            Route::get('/movie/{id}',       [AdminReportController::class, 'movieDetail'])->whereNumber('id')->name('movie.detail');
+
+            Route::get('/customers',        [AdminReportController::class, 'customers'])->name('customers');
+            Route::get('/customer/{id}',    [AdminReportController::class, 'customerDetail'])->whereNumber('id')->name('customer.detail');
+
+            Route::get('/cinemas',          [AdminReportController::class, 'cinemas'])->name('cinemas');
+
+            // Order detail
+            Route::get('/order/{id}',       [AdminReportController::class, 'orderDetail'])->whereNumber('id')->name('order.detail');
+        });
 
         // Quản lý rạp
         Route::resource('rap', AdminRapController::class)->names('rap');
