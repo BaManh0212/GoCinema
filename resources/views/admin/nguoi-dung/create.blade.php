@@ -56,22 +56,7 @@
                             </div>
                         </div>
 
-                        <div class="row mb-3">
-                            <label class="col-sm-3 col-form-label">Vai trò <span class="text-danger">*</span></label>
-                            <div class="col-sm-9">
-                                <select name="vai_tro_id" class="form-select @error('vai_tro_id') is-invalid @enderror" required>
-                                    <option value="">-- Chọn vai trò --</option>
-                                    @foreach($vaiTros as $vt)
-                                        <option value="{{ $vt->id }}" {{ old('vai_tro_id') == $vt->id ? 'selected' : '' }}>
-                                            {{ $vt->ten }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('vai_tro_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
+                         <input type="hidden" name="vai_tro_id" value="2">
 
                         <div class="row mb-3">
                             <label class="col-sm-3 col-form-label">Điểm tích lũy</label>

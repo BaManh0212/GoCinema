@@ -188,12 +188,20 @@ class NguoiDungController extends Controller
     /**
      * Thay đổi trạng thái người dùng
      */
-    public function toggleStatus($id)
-    {
-        $nguoiDung = NguoiDung::findOrFail($id);
-        $nguoiDung->trang_thai = !$nguoiDung->trang_thai;
-        $nguoiDung->save();
+   public function toggleTrangThai($id)
+{
+    $nguoiDung = \App\Models\NguoiDung::findOrFail($id);
 
-        return back()->with('success', 'Cập nhật trạng thái thành công!');
-    }
+    // Đảo trạng thái: nếu 1 thì thành 0, nếu 0 thì thành 1
+    $nguoiDung->trang_thai = !$nguoiDung->trang_thai;
+    $nguoiDung->save();
+
+    // Thông báo phù hợp
+    $message = $nguoiDung->trang_thai 
+        ? '✅ Đã mở khóa tài khoản thành công.'
+        : '🔒 Đã khóa tài khoản thành công.';
+
+    return redirect()->route('admin.nguoi-dung.index')->with('success', $message);
+}
+
 }

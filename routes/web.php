@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Route;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\Admin\AdminPhongChieuController;
-use App\Http\Controllers\Admin\AdminSuatChieuController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\RapController as AdminRapController;
@@ -17,6 +15,8 @@ use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
+use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
+use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -100,9 +100,9 @@ Route::prefix('admin')
         // Quản lý rạp
         Route::resource('rap', AdminRapController::class)->names('rap');
         // Quản lý phòng chiếu
-        Route::resource('phongchieu', PhongChieuController::class)->names('phongchieu');
+        Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
         // Quản lý suất chiếu
-        Route::resource('suatchieu', SuatChieuController::class)->names('suatchieu');
+        Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
         Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');
@@ -130,7 +130,8 @@ Route::prefix('admin')
 
         // Quản lý người dùng
         Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
-        Route::post('nguoi-dung/{id}/toggle-status', [AdminNguoiDungController::class, 'toggleStatus'])->name('nguoi-dung.toggle-status');
+        Route::patch('/nguoi-dung/{id}/toggle', [AdminNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle');
+
 
         // Quản lý điểm tích lũy
         Route::get('diem-tich-luy', [AdminDiemTichLuyController::class, 'index'])->name('diem-tich-luy.index');
