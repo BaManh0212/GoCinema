@@ -25,6 +25,9 @@
                     <a href="{{ route('account.rewards') }}" class="list-group-item list-group-item-action">
                         <i class="fas fa-gift me-2"></i> Đổi điểm thưởng
                     </a>
+                    <a href="{{ route('account.my-vouchers') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-ticket-alt me-2"></i> Voucher của tôi
+                    </a>
                     <a href="{{ route('account.point-history') }}" class="list-group-item list-group-item-action active">
                         <i class="fas fa-history me-2"></i> Lịch sử điểm
                     </a>

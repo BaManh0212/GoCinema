@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
+use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 
@@ -69,10 +70,11 @@ Route::middleware('auth')->group(function () {
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'index'])->name('index');
         Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
+        Route::get('/my-vouchers', [AccountController::class, 'myVouchers'])->name('my-vouchers');
         Route::get('/point-history', [AccountController::class, 'pointHistory'])->name('point-history');
         Route::put('/update-profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
-        Route::post('/redeem-combo/{comboId}', [AccountController::class, 'redeemCombo'])->name('redeem-combo');
+        Route::post('/redeem-voucher/{voucherId}', [AccountController::class, 'redeemVoucher'])->name('redeem-voucher');
     });
 });
 
@@ -140,6 +142,11 @@ Route::prefix('admin')
         Route::get('diem-tich-luy/statistics', [AdminDiemTichLuyController::class, 'statistics'])->name('diem-tich-luy.statistics');
         Route::get('diem-tich-luy/{nguoiDungId}', [AdminDiemTichLuyController::class, 'show'])->name('diem-tich-luy.show');
         Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
+
+        // Quản lý voucher
+        Route::resource('voucher', AdminVoucherController::class)->names('voucher');
+        Route::post('voucher/{id}/toggle-status', [AdminVoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
+        Route::get('voucher-statistics', [AdminVoucherController::class, 'statistics'])->name('voucher.statistics');
     });
 
 /*

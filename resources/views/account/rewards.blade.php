@@ -25,6 +25,9 @@
                     <a href="{{ route('account.rewards') }}" class="list-group-item list-group-item-action active">
                         <i class="fas fa-gift me-2"></i> Đổi điểm thưởng
                     </a>
+                    <a href="{{ route('account.my-vouchers') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-ticket-alt me-2"></i> Voucher của tôi
+                    </a>
                     <a href="{{ route('account.point-history') }}" class="list-group-item list-group-item-action">
                         <i class="fas fa-history me-2"></i> Lịch sử điểm
                     </a>
@@ -52,24 +55,23 @@
             <!-- Header -->
             <div class="card mb-4 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-white text-center py-4">
-                    <h2 class="mb-3"><i class="fas fa-gift me-2"></i>Đổi điểm lấy ưu đãi</h2>
-                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Quy đổi: 1000đ = 1 điểm</p>
+                    <h2 class="mb-3"><i class="fas fa-gift me-2"></i>Đổi điểm lấy voucher</h2>
+                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Sử dụng điểm để đổi voucher ưu đãi</p>
                 </div>
             </div>
 
-            <!-- Danh sách combo -->
-            <h4 class="mb-4">Combo có thể đổi</h4>
+            <!-- Danh sách voucher -->
+            <h4 class="mb-4">Voucher có thể đổi</h4>
             
-            @if($combos->isEmpty())
+            @if($vouchers->isEmpty())
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>Hiện tại chưa có combo nào để đổi điểm.
+                    <i class="fas fa-info-circle me-2"></i>Hiện tại chưa có voucher nào để đổi điểm.
                 </div>
             @else
                 <div class="row">
-                    @foreach($combos as $combo)
+                    @foreach($vouchers as $voucher)
                         @php
-                            $diemCanThiet = ceil($combo->gia / 1000);
-                            $duDiem = $user->diem >= $diemCanThiet;
+                            $duDiem = $user->diem >= $voucher->diem_can;
                         @endphp
                         
                         <div class="col-md-6 mb-4">
@@ -77,29 +79,58 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title">
-                                            <i class="fas fa-box text-primary me-2"></i>{{ $combo->ten }}
+                                            <i class="fas fa-ticket-alt text-primary me-2"></i>{{ $voucher->ten }}
                                         </h5>
                                         <span class="badge {{ $duDiem ? 'bg-success' : 'bg-secondary' }} fs-6">
-                                            {{ number_format($diemCanThiet) }} điểm
+                                            {{ number_format($voucher->diem_can) }} điểm
                                         </span>
                                     </div>
                                     
-                                    @if($combo->mo_ta)
-                                        <p class="text-muted">{{ $combo->mo_ta }}</p>
+                                    @if($voucher->mo_ta)
+                                        <p class="text-muted">{{ $voucher->mo_ta }}</p>
                                     @endif
                                     
-                                    <!-- Chi tiết combo -->
-                                    @if($combo->chiTiet && $combo->chiTiet->count() > 0)
+                                    <!-- Chi tiết voucher -->
+                                    <div class="mb-3">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Loại voucher:</small>
+                                                <div class="fw-bold">
+                                                    @if($voucher->loai == 'giam_gia')
+                                                        <i class="fas fa-percent text-success"></i> Giảm giá
+                                                    @elseif($voucher->loai == 'mien_phi')
+                                                        <i class="fas fa-gift text-info"></i> Miễn phí
+                                                    @else
+                                                        <i class="fas fa-tag text-warning"></i> Khác
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Giá trị:</small>
+                                                <div class="fw-bold text-success">
+                                                    {{ $voucher->moTaGiaTri }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($voucher->ap_dung_cho)
                                         <div class="mb-3">
-                                            <strong>Bao gồm:</strong>
-                                            <ul class="list-unstyled ms-3 mt-2">
-                                                @foreach($combo->chiTiet as $ct)
-                                                    <li>
-                                                        <i class="fas fa-check-circle text-success me-2"></i>
-                                                        {{ $ct->so_luong }}x {{ $ct->sanPham->ten ?? 'Sản phẩm' }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                            <small class="text-muted">Áp dụng cho:</small>
+                                            <div>
+                                                <span class="badge bg-info">
+                                                    {{ $voucher->moTaApDung }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($voucher->ngay_ket_thuc)
+                                        <div class="mb-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>Hiệu lực đến: 
+                                                <span class="text-danger">{{ $voucher->ngay_ket_thuc->format('d/m/Y') }}</span>
+                                            </small>
                                         </div>
                                     @endif
                                     
@@ -107,13 +138,13 @@
                                     
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <small class="text-muted">Giá gốc:</small>
-                                            <div class="text-decoration-line-through">{{ number_format($combo->gia) }}đ</div>
+                                            <small class="text-muted">Điểm cần thiết:</small>
+                                            <div class="fw-bold text-primary">{{ number_format($voucher->diem_can) }} điểm</div>
                                         </div>
                                         
                                         @if($duDiem)
-                                            <form action="{{ route('account.redeem-combo', $combo->id) }}" method="POST" 
-                                                  onsubmit="return confirm('Bạn có chắc muốn đổi {{ number_format($diemCanThiet) }} điểm lấy combo này?')">
+                                            <form action="{{ route('account.redeem-voucher', $voucher->id) }}" method="POST" 
+                                                  onsubmit="return confirm('Bạn có chắc muốn đổi {{ number_format($voucher->diem_can) }} điểm lấy voucher này?')">
                                                 @csrf
                                                 <button type="submit" class="btn btn-primary">
                                                     <i class="fas fa-exchange-alt me-2"></i>Đổi ngay
@@ -135,12 +166,13 @@
             <!-- Hướng dẫn tích điểm -->
             <div class="card bg-light mt-4">
                 <div class="card-body">
-                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm</h5>
+                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm & sử dụng voucher</h5>
                     <ul class="mb-0">
                         <li>Mỗi lần đặt vé xem phim, bạn sẽ nhận được điểm thưởng</li>
                         <li>Điểm được quy đổi: 1000đ chi tiêu = 1 điểm tích lũy</li>
-                        <li>Sử dụng điểm để đổi lấy combo ưu đãi tại rạp</li>
-                        <li>Điểm tích lũy không có hạn sử dụng</li>
+                        <li>Sử dụng điểm để đổi lấy voucher ưu đãi</li>
+                        <li>Voucher sẽ được lưu trong mục "Voucher của tôi" sau khi đổi thành công</li>
+                        <li>Kiểm tra thời hạn sử dụng voucher trước khi đổi</li>
                     </ul>
                 </div>
             </div>
