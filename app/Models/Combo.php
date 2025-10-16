@@ -16,6 +16,7 @@ class Combo extends Model
         'ten',
         'gia',
         'mo_ta',
+        'so_luong',
     ];
 
     public $timestamps = true;

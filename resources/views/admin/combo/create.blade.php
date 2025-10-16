@@ -37,6 +37,15 @@
                     @enderror
                 </div>
 
+                {{-- Số lượng Combo --}}
+                <div class="form-group mb-3">
+                    <label for="so_luong">Số lượng Combo</label>
+                    <input type="number" name="so_luong" id="so_luong" class="form-control @error('so_luong') is-invalid @enderror" value="{{ old('so_luong', 1) }}">
+                    @error('so_luong')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- Chi tiết Combo --}}
                 <div id="combo-chi-tiet">
                     <h4 class="fw-bold">Chi tiết Combo</h4>
@@ -71,6 +80,13 @@
                     @endforeach
                 </div>
                 <button type="button" id="add-combo-item" class="btn btn-primary mb-3">➕ Thêm sản phẩm</button>
+
+                {{-- Hiển thị lỗi chi tiết combo --}}
+                @if ($errors->has('chi_tiet'))
+                    <div class="alert alert-danger">
+                        {{ $errors->first('chi_tiet') }}
+                    </div>
+                @endif
 
                 {{-- Nút Submit --}}
                 <button type="submit" class="btn btn-success">Thêm mới</button>
