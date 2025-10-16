@@ -25,6 +25,9 @@ class PhimController extends Controller
 
     public function create()
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền thêm phim!');
+        }
         $danhMucs = DanhMuc::all();
         $ngonNgus = NgonNgu::all();
         return view('staff.phim.create', compact('danhMucs', 'ngonNgus'));
@@ -32,6 +35,10 @@ class PhimController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+    }
+
         $validated = $request->validate([
             'tieu_de' => 'required|string|max:255|unique:phim,tieu_de',
             'mo_ta' => 'nullable|string',
@@ -152,6 +159,9 @@ class PhimController extends Controller
 
     public function destroy($id)
     {
+        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+            return redirect()->back()->with('error', '🚫 Bạn không có quyền xóa phim!');
+        }
         $phim = Phim::findOrFail($id);
         $phim->delete();
         return redirect()->route('staff.phim.index')->with('success', 'Đã xóa phim!');

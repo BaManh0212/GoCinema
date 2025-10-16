@@ -10,21 +10,10 @@
 
     {{-- Nút thao tác --}}
     <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
-        <a href="{{ route('staff.phim.trashed') }}" class="btn btn-outline-secondary">
-            🗑️ Thùng rác
-        </a>
         <a href="{{ route('staff.phim.create') }}" class="btn btn-success">
             ➕ Thêm phim mới
         </a>
     </div>
-
-    {{-- Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        </div>
-    @endif
 
     {{-- Danh sách phim --}}
     <div class="row g-3">

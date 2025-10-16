@@ -36,11 +36,6 @@
                                 @method('PUT')
                                 <button class="btn btn-success btn-sm">Khôi phục</button>
                             </form>
-                            <form action="{{ route('admin.san_pham.forceDelete', $sp->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn chắc chắn muốn xóa vĩnh viễn sản phẩm này?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm">Xóa vĩnh viễn</button>
-                            </form>
                         </td>
                     </tr>
                 @endforeach

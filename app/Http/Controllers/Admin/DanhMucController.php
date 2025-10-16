@@ -32,7 +32,6 @@ class DanhMucController extends Controller
 
         DanhMuc::create([
             'ten' => $request->ten,
-            'mo_ta' => $request->mo_ta ?? null,
         ]);
 
         return redirect()->route('admin.danhmuc.index')->with('success', 'Thêm danh mục thành công!');
@@ -57,7 +56,6 @@ class DanhMucController extends Controller
 
         $danhmuc->update([
             'ten' => $request->ten,
-            'mo_ta' => $request->mo_ta ?? null,
         ]);
 
         return redirect()->route('admin.danhmuc.index')->with('success', 'Cập nhật danh mục thành công!');
@@ -67,14 +65,38 @@ class DanhMucController extends Controller
     {
         $danhmuc = DanhMuc::findOrFail($id);
 
-        // 🔒 Không cho phép xóa nếu danh mục đang có phim
         if ($danhmuc->phims()->count() > 0) {
             return redirect()->route('admin.danhmuc.index')
                 ->with('error', 'Không thể xóa danh mục vì vẫn còn phim bên trong!');
         }
 
         $danhmuc->delete();
+        return redirect()->route('admin.danhmuc.index')->with('success', 'Đã chuyển danh mục vào thùng rác!');
+    }
 
-        return redirect()->route('admin.danhmuc.index')->with('success', 'Xóa danh mục thành công!');
+    // 🔁 Danh sách danh mục đã xóa
+    public function trashed()
+    {
+        $danhmucs = DanhMuc::onlyTrashed()->get();
+        return view('admin.danhmuc.trashed', compact('danhmucs'));
+    }
+
+    // 🔄 Khôi phục danh mục
+    public function restore($id)
+    {
+        $danhmuc = DanhMuc::onlyTrashed()->findOrFail($id);
+        $danhmuc->restore();
+
+        return redirect()->route('admin.danhmuc.trashed')->with('success', 'Khôi phục danh mục thành công!');
+    }
+
+    // ❌ Xóa vĩnh viễn
+    public function forceDelete($id)
+    {
+        $danhmuc = DanhMuc::onlyTrashed()->findOrFail($id);
+        $danhmuc->forceDelete();
+
+        return redirect()->route('admin.danhmuc.trashed')->with('success', 'Xóa vĩnh viễn danh mục thành công!');
     }
 }
+

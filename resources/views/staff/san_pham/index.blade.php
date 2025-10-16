@@ -8,19 +8,8 @@
             <a href="{{ route('staff.san_pham.create') }}" class="btn btn-success me-2">
                 ➕ Thêm sản phẩm
             </a>
-            <a href="{{ route('staff.san_pham.trashed') }}" class="btn btn-outline-warning">
-                🗑️ Thùng rác
-            </a>
         </div>
     </div>
-
-    {{-- Hiển thị thông báo thành công --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        </div>
-    @endif
 
     {{-- Bảng danh sách sản phẩm --}}
     <div class="card shadow-sm">
