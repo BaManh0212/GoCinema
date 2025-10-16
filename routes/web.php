@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
-
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\RapController as AdminRapController;
@@ -14,6 +13,10 @@ use App\Http\Controllers\Admin\SanPhamController as AdminSanPhamController;
 use App\Http\Controllers\Admin\DanhMucController as AdminDanhMucController;
 use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
+use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
+use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
+use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
+use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -98,9 +101,16 @@ Route::prefix('admin')
 
         // Quản lý rạp
         Route::resource('rap', AdminRapController::class)->names('rap');
-
+        // Quản lý phòng chiếu
+        Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
+        // Quản lý suất chiếu
+        Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục
+        Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
+        Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');
+        Route::delete('danhmuc/{id}/xoa-vinh-vien', [AdminDanhMucController::class, 'forceDelete'])->name('danhmuc.forceDelete');
         Route::resource('danhmuc', AdminDanhMucController::class)->names('danhmuc');
+
 
         // Quản lý phim
         Route::get('phim/thung-rac', [AdminPhimController::class, 'trashed'])->name('phim.trashed');
@@ -119,6 +129,19 @@ Route::prefix('admin')
         Route::get('combo/thung-rac', [AdminComboController::class, 'trashed'])->name('combo.trashed');
         Route::post('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
+
+        // Quản lý người dùng
+        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
+        Route::patch('/nguoi-dung/{id}/toggle', [AdminNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle');
+
+
+        // Quản lý điểm tích lũy
+        Route::get('diem-tich-luy', [AdminDiemTichLuyController::class, 'index'])->name('diem-tich-luy.index');
+        Route::get('diem-tich-luy/create', [AdminDiemTichLuyController::class, 'create'])->name('diem-tich-luy.create');
+        Route::post('diem-tich-luy', [AdminDiemTichLuyController::class, 'store'])->name('diem-tich-luy.store');
+        Route::get('diem-tich-luy/statistics', [AdminDiemTichLuyController::class, 'statistics'])->name('diem-tich-luy.statistics');
+        Route::get('diem-tich-luy/{nguoiDungId}', [AdminDiemTichLuyController::class, 'show'])->name('diem-tich-luy.show');
+        Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
     });
 
 /*
@@ -137,16 +160,10 @@ Route::prefix('staff')
         Route::resource('danhmuc', StaffDanhMucController::class)->names('danhmuc');
 
         // Quản lý phim
-        Route::get('phim/thung-rac', [StaffPhimController::class, 'trashed'])->name('phim.trashed');
-        Route::put('phim/{id}/khoi-phuc', [StaffPhimController::class, 'restore'])->name('phim.restore');
-        Route::delete('phim/{id}/xoa-vinh-vien', [StaffPhimController::class, 'forceDelete'])->name('phim.forceDelete');
         Route::resource('phim', StaffPhimController::class)->names('phim');
 
         // Quản lý sản phẩm
         Route::resource('san_pham', StaffSanPhamController::class)->except(['show']);
-        Route::get('san_pham/thung-rac', [StaffSanPhamController::class, 'trashed'])->name('san_pham.trashed');
-        Route::put('san_pham/{id}/khoi-phuc', [StaffSanPhamController::class, 'restore'])->name('san_pham.restore');
-        Route::delete('san_pham/{id}/xoa-vinh-vien', [StaffSanPhamController::class, 'forceDelete'])->name('san_pham.forceDelete');
     });
 
 /*

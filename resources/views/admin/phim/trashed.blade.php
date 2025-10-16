@@ -45,9 +45,6 @@
                                         @method('PUT')
                                         <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Bạn có chắc muốn khôi phục phim này?')">Khôi phục</button>
                                     </form>
-
-                                    <!-- Force delete disabled in UI to prevent accidental permanent deletions -->
-                                    <button type="button" class="btn btn-sm btn-danger" disabled title="Chức năng xóa vĩnh viễn đã bị vô hiệu hóa">Xóa vĩnh viễn</button>
                                 </td>
                             </tr>
                         @empty
