@@ -24,7 +24,6 @@
             <div class="card-body">
                 <form action="{{ route('admin.rap.store') }}" method="POST">
                     @csrf
-
                     {{-- Tên rạp --}}
                     <div class="mb-3">
                         <label for="ten" class="form-label fw-bold">Tên rạp <span class="text-danger">*</span></label>

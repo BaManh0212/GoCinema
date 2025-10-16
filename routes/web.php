@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
-
+use App\Http\Controllers\Admin\AdminPhongChieuController;
+use App\Http\Controllers\Admin\AdminSuatChieuController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\RapController as AdminRapController;
@@ -98,7 +99,10 @@ Route::prefix('admin')
 
         // Quản lý rạp
         Route::resource('rap', AdminRapController::class)->names('rap');
-
+        // Quản lý phòng chiếu
+        Route::resource('phongchieu', PhongChieuController::class)->names('phongchieu');
+        // Quản lý suất chiếu
+        Route::resource('suatchieu', SuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
         Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');
