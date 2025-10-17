@@ -29,14 +29,15 @@ class AccountController extends Controller
     }
 
     /**
-     * Hiển thị trang đổi điểm lấy voucher
+     * Hiển thị trang đổi điểm lấy voucher (CHỈ VOUCHER VÉ)
      */
     public function rewards()
     {
         $user = Auth::user();
         
-        // Lấy danh sách voucher đang kích hoạt và còn hiệu lực
+        // Lấy danh sách voucher DÀNH CHO VÉ, đang kích hoạt và còn hiệu lực
         $vouchers = Voucher::where('kich_hoat', true)
+            ->where('ap_dung_cho', 've') // CHỈ LẤY VOUCHER VÉ
             ->conHieuLuc()
             ->orderBy('diem_can', 'asc')
             ->get();
@@ -45,7 +46,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Xử lý đổi điểm lấy voucher
+     * Xử lý đổi điểm lấy voucher (HSD = Ngày đổi + 30 ngày)
      */
     public function redeemVoucher(Request $request, $voucherId)
     {
@@ -54,6 +55,11 @@ class AccountController extends Controller
 
             $user = Auth::user();
             $voucher = Voucher::findOrFail($voucherId);
+            
+            // Kiểm tra voucher CHỈ DÀNH CHO VÉ
+            if ($voucher->ap_dung_cho !== 've') {
+                return back()->with('error', 'Voucher này không dành cho vé phim!');
+            }
             
             // Kiểm tra voucher còn hiệu lực
             if (!$voucher->conHieuLuc() || !$voucher->kich_hoat) {
@@ -68,22 +74,23 @@ class AccountController extends Controller
             // Trừ điểm
             $user->truDiem($voucher->diem_can, "Đổi voucher: {$voucher->ten}");
 
-            // Tạo bản ghi voucher_nguoi_dung
-            $ngayHan = $voucher->ngay_ket_thuc ? $voucher->ngay_ket_thuc->endOfDay() : now()->addYear();
+            // HSD = Ngày đổi + 30 ngày
+            $ngayHan = now()->addDays(30)->endOfDay();
 
+            // Tạo bản ghi voucher_nguoi_dung
             VoucherNguoiDung::create([
                 'nguoi_dung_id' => $user->id,
                 'voucher_id' => $voucher->id,
                 'diem_da_doi' => $voucher->diem_can,
                 'ngay_doi' => now(),
-                'ngay_han' => $ngayHan,
+                'ngay_han' => $ngayHan, // NGÀY ĐỔI + 30 NGÀY
                 'trang_thai' => 'chua_su_dung'
             ]);
 
             DB::commit();
 
             return redirect()->route('account.my-vouchers')
-                ->with('success', "Đổi điểm thành công! Bạn đã nhận voucher: {$voucher->ten}. Vui lòng kiểm tra trong mục 'Voucher của tôi'.");
+                ->with('success', "Đổi điểm thành công! Bạn đã nhận voucher: {$voucher->ten}. Voucher có hiệu lực đến {$ngayHan->format('d/m/Y')}. Vui lòng kiểm tra trong mục 'Voucher của tôi'.");
 
         } catch (\Exception $e) {
             DB::rollBack();

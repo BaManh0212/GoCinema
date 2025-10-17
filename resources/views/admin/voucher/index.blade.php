@@ -1,20 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Ưu đãi đổi điểm')
+@section('title', 'Voucher Vé Phim - Chỉ xem')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="fas fa-gift text-primary"></i> Ưu đãi đổi điểm
-        </h2>
         <div>
-            <button class="btn btn-outline-secondary me-2" onclick="window.location.reload()">
+            <h2 class="mb-0">
+                <i class="fas fa-ticket-alt text-primary"></i> Voucher Giảm Giá Vé Phim
+            </h2>
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i> Admin chỉ xem thống kê - Voucher tự động tạo khi người dùng đổi điểm
+            </small>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="window.location.reload()">
                 <i class="fas fa-sync-alt"></i> Tải lại
             </button>
-            <a href="{{ route('admin.voucher.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Thêm ưu đãi
-            </a>
+            <!-- XÓA NÚT THÊM MỚI -->
         </div>
     </div>
 
@@ -59,12 +62,10 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Áp dụng cho</label>
-                    <select name="ap_dung_cho" class="form-select">
-                        <option value="">Tất cả</option>
-                        <option value="ve" {{ request('ap_dung_cho') == 've' ? 'selected' : '' }}>Vé</option>
-                        <option value="san_pham" {{ request('ap_dung_cho') == 'san_pham' ? 'selected' : '' }}>Sản phẩm</option>
-                        <option value="tat_ca" {{ request('ap_dung_cho') == 'tat_ca' ? 'selected' : '' }}>Tất cả</option>
+                    <select name="ap_dung_cho" class="form-select" disabled>
+                        <option value="ve" selected>Vé phim</option>
                     </select>
+                    <small class="text-muted">Chỉ voucher vé</small>
                 </div>
                 <div class="col-md-3 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary">
@@ -102,7 +103,7 @@
                                 <th>Trạng thái</th>
                                 <th>Điểm cần</th>
                                 <th>Giá trị voucher</th>
-                                <th>HSD (ngày)</th>
+                                <th>HSD</th>
                                 <th>Kích hoạt</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -131,9 +132,24 @@
                                     </td>
                                     <td>
                                         @if($voucher->ngay_ket_thuc)
-                                            {{ $voucher->ngay_ket_thuc->diffInDays(now()) }} ngày
+                                            @php
+                                                $ngayConLai = (int) now()->diffInDays($voucher->ngay_ket_thuc, false);
+                                            @endphp
+                                            @if($ngayConLai > 0)
+                                                <span class="badge bg-success">
+                                                    {{ $ngayConLai }} ngày
+                                                </span>
+                                            @elseif($ngayConLai == 0)
+                                                <span class="badge bg-warning">
+                                                    Hết hạn hôm nay
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    Đã hết hạn
+                                                </span>
+                                            @endif
                                         @else
-                                            ∞
+                                            <span class="badge bg-secondary">Không giới hạn</span>
                                         @endif
                                     </td>
                                     <td>
@@ -149,17 +165,13 @@
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.voucher.edit', $voucher->id) }}" 
-                                               class="btn btn-sm btn-outline-primary" 
-                                               title="Sửa">
-                                                <i class="fas fa-edit"></i> Sửa
+                                            <a href="{{ route('admin.voucher.show', $voucher->id) }}" 
+                                               class="btn btn-sm btn-outline-info" 
+                                               title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i> Xem
                                             </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger" 
-                                                    onclick="confirmDelete({{ $voucher->id }})"
-                                                    title="Xóa">
-                                                <i class="fas fa-trash"></i> Xóa
-                                            </button>
+                                            <!-- ẨN NÚT SỬA VÀ XÓA -->
+                                            <!-- Voucher được tạo tự động khi người dùng đổi điểm -->
                                         </div>
                                     </td>
                                 </tr>
