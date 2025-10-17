@@ -13,7 +13,9 @@
                 {{-- Tên Combo --}}
                 <div class="form-group mb-3">
                     <label for="ten">Tên Combo</label>
-                    <input type="text" name="ten" id="ten" class="form-control @error('ten') is-invalid @enderror" value="{{ old('ten') }}">
+                    <input type="text" name="ten" id="ten" 
+                        class="form-control @error('ten') is-invalid @enderror" 
+                        value="{{ old('ten') }}">
                     @error('ten')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -22,7 +24,9 @@
                 {{-- Giá --}}
                 <div class="form-group mb-3">
                     <label for="gia">Giá Combo</label>
-                    <input type="number" name="gia" id="gia" class="form-control @error('gia') is-invalid @enderror" value="{{ old('gia') }}">
+                    <input type="number" name="gia" id="gia" 
+                        class="form-control @error('gia') is-invalid @enderror" 
+                        value="{{ old('gia') }}">
                     @error('gia')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -31,7 +35,8 @@
                 {{-- Mô tả --}}
                 <div class="form-group mb-3">
                     <label for="mo_ta">Mô tả</label>
-                    <textarea name="mo_ta" id="mo_ta" class="form-control @error('mo_ta') is-invalid @enderror">{{ old('mo_ta') }}</textarea>
+                    <textarea name="mo_ta" id="mo_ta" 
+                        class="form-control @error('mo_ta') is-invalid @enderror">{{ old('mo_ta') }}</textarea>
                     @error('mo_ta')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -40,7 +45,9 @@
                 {{-- Số lượng Combo --}}
                 <div class="form-group mb-3">
                     <label for="so_luong">Số lượng Combo</label>
-                    <input type="number" name="so_luong" id="so_luong" class="form-control @error('so_luong') is-invalid @enderror" value="{{ old('so_luong', 1) }}">
+                    <input type="number" name="so_luong" id="so_luong" 
+                        class="form-control @error('so_luong') is-invalid @enderror" 
+                        value="{{ old('so_luong', 1) }}">
                     @error('so_luong')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -56,21 +63,31 @@
                         <div class="combo-item mb-3 d-flex align-items-center">
                             <div class="flex-grow-1 me-3">
                                 <label for="san_pham_id_{{ $index }}" class="form-label">Sản phẩm</label>
-                                <select name="chi_tiet[{{ $index }}][san_pham_id]" id="san_pham_id_{{ $index }}" class="form-select @error("chi_tiet.$index.san_pham_id") is-invalid @enderror">
+                                <select 
+                                    name="chi_tiet[{{ $index }}][san_pham_id]" 
+                                    id="san_pham_id_{{ $index }}" 
+                                    class="form-select @error("chi_tiet.$index.san_pham_id") is-invalid @enderror">
                                     <option value="">-- Chọn sản phẩm --</option>
                                     @foreach ($sanPhams as $sanPham)
-                                        <option value="{{ $sanPham->id }}" {{ old("chi_tiet.$index.san_pham_id") == $sanPham->id ? 'selected' : '' }}>
+                                        <option value="{{ $sanPham->id }}" 
+                                            data-so-luong="{{ $sanPham->so_luong }}"
+                                            {{ old("chi_tiet.$index.san_pham_id") == $sanPham->id ? 'selected' : '' }}>
                                             {{ $sanPham->ten }}
                                         </option>
                                     @endforeach
                                 </select>
+                                <small class="text-muted stock-info d-block mt-1"></small>
                                 @error("chi_tiet.$index.san_pham_id")
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="flex-grow-1 me-3">
                                 <label for="so_luong_{{ $index }}" class="form-label">Số lượng</label>
-                                <input type="number" name="chi_tiet[{{ $index }}][so_luong]" id="so_luong_{{ $index }}" class="form-control @error("chi_tiet.$index.so_luong") is-invalid @enderror" value="{{ old("chi_tiet.$index.so_luong", 1) }}">
+                                <input type="number" 
+                                    name="chi_tiet[{{ $index }}][so_luong]" 
+                                    id="so_luong_{{ $index }}" 
+                                    class="form-control @error("chi_tiet.$index.so_luong") is-invalid @enderror" 
+                                    value="{{ old("chi_tiet.$index.so_luong", 1) }}">
                                 @error("chi_tiet.$index.so_luong")
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -79,13 +96,12 @@
                         </div>
                     @endforeach
                 </div>
+
                 <button type="button" id="add-combo-item" class="btn btn-primary mb-3">➕ Thêm sản phẩm</button>
 
                 {{-- Hiển thị lỗi chi tiết combo --}}
                 @if ($errors->has('chi_tiet'))
-                    <div class="alert alert-danger">
-                        {{ $errors->first('chi_tiet') }}
-                    </div>
+                    <div class="alert alert-danger">{{ $errors->first('chi_tiet') }}</div>
                 @endif
 
                 {{-- Nút Submit --}}
@@ -97,6 +113,9 @@
 
 <script>
     let comboIndex = {{ count(old('chi_tiet', [])) }};
+    const sanPhamData = @json($sanPhams->keyBy('id'));
+
+    // ➕ Thêm dòng sản phẩm
     document.getElementById('add-combo-item').addEventListener('click', function () {
         const comboChiTiet = document.getElementById('combo-chi-tiet');
         const newItem = `
@@ -106,29 +125,42 @@
                     <select name="chi_tiet[${comboIndex}][san_pham_id]" id="san_pham_id_${comboIndex}" class="form-select">
                         <option value="">-- Chọn sản phẩm --</option>
                         @foreach ($sanPhams as $sanPham)
-                            <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
+                            <option value="{{ $sanPham->id }}" data-so-luong="{{ $sanPham->so_luong }}">{{ $sanPham->ten }}</option>
                         @endforeach
                     </select>
+                    <small class="text-muted stock-info d-block mt-1"></small>
                 </div>
                 <div class="flex-grow-1 me-3">
                     <label for="so_luong_${comboIndex}" class="form-label">Số lượng</label>
                     <input type="number" name="chi_tiet[${comboIndex}][so_luong]" id="so_luong_${comboIndex}" class="form-control" value="1">
                 </div>
                 <button type="button" class="btn btn-danger remove-combo-item" data-index="${comboIndex}">Xóa</button>
-            </div>
-        `;
+            </div>`;
         comboChiTiet.insertAdjacentHTML('beforeend', newItem);
         comboIndex++;
     });
 
+    // ❌ Xóa sản phẩm
     document.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-combo-item')) {
-            const comboItem = e.target.closest('.combo-item');
-            if (comboItem) {
-                comboItem.remove(); // Xóa hẳn phần tử khỏi DOM
-            }
+            e.target.closest('.combo-item')?.remove();
         }
     });
 
+    // 🏷️ Hiển thị số lượng tồn kho khi chọn sản phẩm
+    document.addEventListener('change', function (e) {
+        if (e.target.matches('select[name^="chi_tiet"]')) {
+            const sanPhamId = e.target.value;
+            const comboItem = e.target.closest('.combo-item');
+            const stockInfo = comboItem.querySelector('.stock-info');
+
+            if (sanPhamId && sanPhamData[sanPhamId]) {
+                const sp = sanPhamData[sanPhamId];
+                stockInfo.textContent = `🏷️ Sản phẩm này còn ${sp.so_luong} trong kho`;
+            } else {
+                stockInfo.textContent = '';
+            }
+        }
+    });
 </script>
 @endsection
