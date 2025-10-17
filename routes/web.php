@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyControll
 use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
+use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
 
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -147,6 +148,9 @@ Route::prefix('admin')
         Route::resource('voucher', AdminVoucherController::class)->names('voucher');
         Route::post('voucher/{id}/toggle-status', [AdminVoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
         Route::get('voucher-statistics', [AdminVoucherController::class, 'statistics'])->name('voucher.statistics');
+
+        // Quản lý đơn vé
+        Route::resource('donve', AdminDonDatVeController::class)->names('donve');
     });
 
 /*
