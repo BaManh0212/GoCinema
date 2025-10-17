@@ -43,11 +43,11 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">🔍 Tìm kiếm</label>
-                    <input type="text" name="search" class="form-control" placeholder="Nhập tên voucher..." value="{{ request('search') }}">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" name="search" class="form-control" placeholder="Tên voucher..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">📂 Loại</label>
+                    <label class="form-label">Loại</label>
                     <select name="loai" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="phan_tram" {{ request('loai') == 'phan_tram' ? 'selected' : '' }}>Phần trăm</option>
@@ -55,7 +55,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">⚙️ Trạng thái</label>
+                    <label class="form-label">Trạng thái</label>
                     <select name="kich_hoat" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="1" {{ request('kich_hoat') == '1' ? 'selected' : '' }}>Đang bật</option>
@@ -64,21 +64,20 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Áp dụng cho</label>
-                    <select name="ap_dung_cho" class="form-select" disabled>
-                        <option value="ve" selected>Vé phim</option>
+                    <select name="ap_dung_cho" class="form-select">
+                        <option value="">Tất cả</option>
                     </select>
-                    <small class="text-muted">Chỉ voucher vé</small>
                 </div>
                 <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fas fa-search me-1"></i> Lọc
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Lọc
                     </button>
-                    <a href="{{ route('admin.voucher.index') }}" class="btn btn-outline-secondary flex-grow-1">
-                        <i class="fas fa-undo me-1"></i> Đặt lại
-                    </a>
-                    <a href="{{ route('admin.voucher.statistics') }}" class="btn btn-info flex-grow-1 text-white">
-                        <i class="fas fa-chart-bar me-1"></i> Thống kê
-                    </a>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ route('admin.voucher.index') }}'">
+                        <i class="fas fa-redo"></i> Đặt lại
+                    </button>
+                    <button type="button" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> Thống kê
+                    </button>
                 </div>
             </form>
         </div>
@@ -100,7 +99,7 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light text-center align-middle">
                             <tr>
-                                <th>Tên ưu đãi</th>
+                                <th>Tiêu đề</th>
                                 <th>Loại</th>
                                 <th>Trạng thái</th>
                                 <th>Điểm cần</th>
@@ -113,8 +112,8 @@
                         <tbody class="text-center">
                             @foreach($vouchers as $voucher)
                                 <tr>
-                                    <td class="text-start fw-semibold">{{ $voucher->ten }}</td>
-                                    <td><span class="badge bg-info">{{ $voucher->mo_ta_ap_dung }}</span></td>
+                                    <td class="text-start">{{ $voucher->ten }}</td>
+                                    <td><span class="badge bg-info text-white">Vé xem phim</span></td>
                                     <td>
                                         @if($voucher->conHieuLuc())
                                             <span class="badge bg-success">Đang bật</span>
@@ -122,8 +121,8 @@
                                             <span class="badge bg-danger">Đang tắt</span>
                                         @endif
                                     </td>
-                                    <td>{{ number_format($voucher->diem_can) }}</td>
-                                    <td class="text-primary fw-semibold">{{ $voucher->mo_ta_gia_tri }}</td>
+                                    <td>{{ number_format($voucher->diem_can, 0, ',', '.') }}</td>
+                                    <td class="text-primary fw-bold">{{ $voucher->mo_ta_gia_tri }}</td>
                                     <td>
                                         @if($voucher->ngay_ket_thuc)
                                             @php
@@ -153,20 +152,15 @@
                                                 type="checkbox"
                                                 {{ $voucher->kich_hoat ? 'checked' : '' }}
                                                 onchange="toggleStatus({{ $voucher->id }})"
-                                                style="cursor:pointer; width:50px; height:25px;"
+                                                style="cursor:pointer; width:40px; height:20px;"
                                             >
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.voucher.show', $voucher->id) }}" 
-                                               class="btn btn-sm btn-outline-info" 
-                                               title="Xem chi tiết">
-                                                <i class="fas fa-eye"></i> Xem
-                                            </a>
-                                            <!-- ẨN NÚT SỬA VÀ XÓA -->
-                                            <!-- Voucher được tạo tự động khi người dùng đổi điểm -->
-                                        </div>
+                                        <a href="{{ route('admin.voucher.show', $voucher->id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach
