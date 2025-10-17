@@ -39,9 +39,23 @@
                 </div>
 
                 {{-- Số lượng Combo --}}
+                @php
+                    $maxCombo = PHP_INT_MAX;
+                    foreach ($combo->chiTiet as $ct) {
+                        $sp = $sanPhams->firstWhere('id', $ct->san_pham_id);
+                        if ($sp) {
+                            // Tồn kho thực tế + số lượng sản phẩm đang dùng trong combo
+                            $totalAvailable = $sp->so_luong + ($ct->so_luong * $combo->so_luong);
+                            $maxCombo = min($maxCombo, intdiv($totalAvailable, $ct->so_luong));
+                        }
+                    }
+                @endphp
                 <div class="form-group mb-3">
                     <label for="so_luong">Số lượng Combo</label>
-                    <input type="number" name="so_luong" id="so_luong" class="form-control @error('so_luong') is-invalid @enderror" value="{{ old('so_luong', $combo->so_luong) }}">
+                    <input type="number" name="so_luong" id="so_luong" class="form-control @error('so_luong') is-invalid @enderror"
+                        value="{{ old('so_luong', $combo->so_luong) }}"
+                        max="{{ $maxCombo }}">
+                    <small class="text-muted">Tối đa: {{ $maxCombo }} combo dựa trên tồn kho hiện tại</small>
                     @error('so_luong')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -61,7 +75,7 @@
                                     <option value="">-- Chọn sản phẩm --</option>
                                     @foreach ($sanPhams as $sanPham)
                                         <option value="{{ $sanPham->id }}" {{ old("chi_tiet.$index.san_pham_id", $chiTiet['san_pham_id']) == $sanPham->id ? 'selected' : '' }}>
-                                            {{ $sanPham->ten }}
+                                            {{ $sanPham->ten }} (Còn: {{ $sanPham->so_luong + ($chiTiet['so_luong'] * $combo->so_luong) }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -98,7 +112,6 @@
 <script>
     let comboIndex = {{ count(old('chi_tiet', $combo->chiTiet->toArray())) }};
 
-    // Thêm sản phẩm mới vào combo
     document.getElementById('add-combo-item').addEventListener('click', function () {
         const comboChiTiet = document.getElementById('combo-chi-tiet');
         const newItem = `
@@ -108,7 +121,7 @@
                     <select name="chi_tiet[${comboIndex}][san_pham_id]" id="san_pham_id_${comboIndex}" class="form-select">
                         <option value="">-- Chọn sản phẩm --</option>
                         @foreach ($sanPhams as $sanPham)
-                            <option value="{{ $sanPham->id }}">{{ $sanPham->ten }}</option>
+                            <option value="{{ $sanPham->id }}">{{ $sanPham->ten }} (Còn: {{ $sanPham->so_luong }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -123,13 +136,10 @@
         comboIndex++;
     });
 
-    // Sửa sự kiện XÓA: xóa trực tiếp khỏi DOM, không thêm input ẩn
     document.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-combo-item')) {
             const comboItem = e.target.closest('.combo-item');
-            if (comboItem) {
-                comboItem.remove(); // Xóa hẳn phần tử khỏi giao diện
-            }
+            if (comboItem) comboItem.remove();
         }
     });
 </script>

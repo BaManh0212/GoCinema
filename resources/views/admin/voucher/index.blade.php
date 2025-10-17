@@ -1,9 +1,11 @@
-@extends('layouts.app')
+@extends('admin.layouts.admin')
 
 @section('title', 'Voucher Vé Phim - Chỉ xem')
 
 @section('content')
 <div class="container-fluid py-4">
+
+    {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0">
@@ -21,31 +23,31 @@
         </div>
     </div>
 
-    <!-- Thông báo -->
+    {{-- Thông báo --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <!-- Bộ lọc -->
-    <div class="card mb-4">
+    {{-- Bộ lọc tìm kiếm --}}
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-3">
+            <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label">Tìm kiếm</label>
-                    <input type="text" name="search" class="form-control" placeholder="Tên voucher..." value="{{ request('search') }}">
+                    <label class="form-label fw-semibold">🔍 Tìm kiếm</label>
+                    <input type="text" name="search" class="form-control" placeholder="Nhập tên voucher..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Loại</label>
+                    <label class="form-label fw-semibold">📂 Loại</label>
                     <select name="loai" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="phan_tram" {{ request('loai') == 'phan_tram' ? 'selected' : '' }}>Phần trăm</option>
@@ -53,7 +55,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Trạng thái</label>
+                    <label class="form-label fw-semibold">⚙️ Trạng thái</label>
                     <select name="kich_hoat" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="1" {{ request('kich_hoat') == '1' ? 'selected' : '' }}>Đang bật</option>
@@ -67,38 +69,38 @@
                     </select>
                     <small class="text-muted">Chỉ voucher vé</small>
                 </div>
-                <div class="col-md-3 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Lọc
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-search me-1"></i> Lọc
                     </button>
-                    <a href="{{ route('admin.voucher.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-redo"></i> Đặt lại
+                    <a href="{{ route('admin.voucher.index') }}" class="btn btn-outline-secondary flex-grow-1">
+                        <i class="fas fa-undo me-1"></i> Đặt lại
                     </a>
-                    <a href="{{ route('admin.voucher.statistics') }}" class="btn btn-info">
-                        <i class="fas fa-chart-bar"></i> Thống kê
+                    <a href="{{ route('admin.voucher.statistics') }}" class="btn btn-info flex-grow-1 text-white">
+                        <i class="fas fa-chart-bar me-1"></i> Thống kê
                     </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Bảng danh sách voucher -->
-    <div class="card">
+    {{-- Bảng danh sách --}}
+    <div class="card shadow-sm">
         <div class="card-body">
             @if($vouchers->isEmpty())
                 <div class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Chưa có voucher nào</p>
-                    <a href="{{ route('admin.voucher.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Tạo voucher đầu tiên
+                    <p class="text-muted mb-3">Hiện chưa có voucher nào.</p>
+                    <a href="{{ route('admin.voucher.create') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Tạo voucher đầu tiên
                     </a>
                 </div>
             @else
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                        <thead class="table-light text-center align-middle">
                             <tr>
-                                <th>Tiêu đề</th>
+                                <th>Tên ưu đãi</th>
                                 <th>Loại</th>
                                 <th>Trạng thái</th>
                                 <th>Điểm cần</th>
@@ -108,15 +110,11 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-center">
                             @foreach($vouchers as $voucher)
                                 <tr>
-                                    <td>
-                                        <strong>{{ $voucher->ten }}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ $voucher->mo_ta_ap_dung }}</span>
-                                    </td>
+                                    <td class="text-start fw-semibold">{{ $voucher->ten }}</td>
+                                    <td><span class="badge bg-info">{{ $voucher->mo_ta_ap_dung }}</span></td>
                                     <td>
                                         @if($voucher->conHieuLuc())
                                             <span class="badge bg-success">Đang bật</span>
@@ -124,12 +122,8 @@
                                             <span class="badge bg-danger">Đang tắt</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        <strong>{{ number_format($voucher->diem_can) }}</strong>
-                                    </td>
-                                    <td>
-                                        <strong class="text-primary">{{ $voucher->mo_ta_gia_tri }}</strong>
-                                    </td>
+                                    <td>{{ number_format($voucher->diem_can) }}</td>
+                                    <td class="text-primary fw-semibold">{{ $voucher->mo_ta_gia_tri }}</td>
                                     <td>
                                         @if($voucher->ngay_ket_thuc)
                                             @php
@@ -153,13 +147,13 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="form-check form-switch">
+                                        <div class="form-check form-switch d-flex justify-content-center">
                                             <input 
-                                                class="form-check-input" 
-                                                type="checkbox" 
+                                                class="form-check-input"
+                                                type="checkbox"
                                                 {{ $voucher->kich_hoat ? 'checked' : '' }}
                                                 onchange="toggleStatus({{ $voucher->id }})"
-                                                style="cursor: pointer; width: 48px; height: 24px;"
+                                                style="cursor:pointer; width:50px; height:25px;"
                                             >
                                         </div>
                                     </td>
@@ -180,31 +174,22 @@
                     </table>
                 </div>
 
-                <!-- Phân trang -->
+                {{-- Phân trang --}}
                 <div class="d-flex justify-content-between align-items-center mt-4">
-                    <div class="text-muted">
-                        Hiển thị {{ $vouchers->firstItem() ?? 0 }} - {{ $vouchers->lastItem() ?? 0 }} 
-                        trong tổng số {{ $vouchers->total() }} voucher
-                    </div>
-                    <div>
-                        {{ $vouchers->links() }}
-                    </div>
+                    <small class="text-muted">
+                        Hiển thị {{ $vouchers->firstItem() ?? 0 }}–{{ $vouchers->lastItem() ?? 0 }} /
+                        {{ $vouchers->total() }} voucher
+                    </small>
+                    <div>{{ $vouchers->links() }}</div>
                 </div>
             @endif
         </div>
     </div>
 </div>
 
-<!-- Form xóa ẩn -->
-<form id="deleteForm" method="POST" style="display: none;">
-    @csrf
-    @method('DELETE')
-</form>
-
-<!-- Form toggle status ẩn -->
-<form id="toggleForm" method="POST" style="display: none;">
-    @csrf
-</form>
+{{-- Form ẩn --}}
+<form id="deleteForm" method="POST" style="display: none;">@csrf @method('DELETE')</form>
+<form id="toggleForm" method="POST" style="display: none;">@csrf</form>
 
 @push('scripts')
 <script>
@@ -214,13 +199,12 @@ function toggleStatus(id) {
         form.action = `/admin/voucher/${id}/toggle-status`;
         form.submit();
     } else {
-        // Khôi phục lại trạng thái checkbox
         window.location.reload();
     }
 }
 
 function confirmDelete(id) {
-    if (confirm('Bạn có chắc chắn muốn xóa voucher này?\n\nLưu ý: Không thể xóa nếu đã có người dùng đổi voucher!')) {
+    if (confirm('Bạn có chắc chắn muốn xóa voucher này?\n\n⚠️ Lưu ý: Không thể xóa nếu đã có người dùng đổi voucher!')) {
         const form = document.getElementById('deleteForm');
         form.action = `/admin/voucher/${id}`;
         form.submit();
