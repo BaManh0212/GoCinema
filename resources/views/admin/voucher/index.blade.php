@@ -1,22 +1,25 @@
 @extends('admin.layouts.admin')
 
-@section('title', '🎁 Ưu đãi đổi điểm')
+@section('title', 'Voucher Vé Phim - Chỉ xem')
 
 @section('content')
 <div class="container-fluid py-4">
 
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary mb-0">
-            <i class="fas fa-gift me-2"></i> Ưu đãi đổi điểm
-        </h2>
-        <div class="d-flex gap-2">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-ticket-alt text-primary"></i> Voucher Giảm Giá Vé Phim
+            </h2>
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i> Admin chỉ xem thống kê - Voucher tự động tạo khi người dùng đổi điểm
+            </small>
+        </div>
+        <div>
             <button class="btn btn-outline-secondary" onclick="window.location.reload()">
-                <i class="fas fa-sync-alt me-1"></i> Tải lại
+                <i class="fas fa-sync-alt"></i> Tải lại
             </button>
-            <a href="{{ route('admin.voucher.create') }}" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> Thêm ưu đãi
-            </a>
+            <!-- XÓA NÚT THÊM MỚI -->
         </div>
     </div>
 
@@ -40,11 +43,11 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">🔍 Tìm kiếm</label>
-                    <input type="text" name="search" class="form-control" placeholder="Nhập tên voucher..." value="{{ request('search') }}">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" name="search" class="form-control" placeholder="Tên voucher..." value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">📂 Loại</label>
+                    <label class="form-label">Loại</label>
                     <select name="loai" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="phan_tram" {{ request('loai') == 'phan_tram' ? 'selected' : '' }}>Phần trăm</option>
@@ -52,7 +55,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">⚙️ Trạng thái</label>
+                    <label class="form-label">Trạng thái</label>
                     <select name="kich_hoat" class="form-select">
                         <option value="">Tất cả</option>
                         <option value="1" {{ request('kich_hoat') == '1' ? 'selected' : '' }}>Đang bật</option>
@@ -60,24 +63,21 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">🎟️ Áp dụng cho</label>
+                    <label class="form-label">Áp dụng cho</label>
                     <select name="ap_dung_cho" class="form-select">
                         <option value="">Tất cả</option>
-                        <option value="ve" {{ request('ap_dung_cho') == 've' ? 'selected' : '' }}>Vé</option>
-                        <option value="san_pham" {{ request('ap_dung_cho') == 'san_pham' ? 'selected' : '' }}>Sản phẩm</option>
-                        <option value="tat_ca" {{ request('ap_dung_cho') == 'tat_ca' ? 'selected' : '' }}>Tất cả</option>
                     </select>
                 </div>
                 <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fas fa-search me-1"></i> Lọc
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Lọc
                     </button>
-                    <a href="{{ route('admin.voucher.index') }}" class="btn btn-outline-secondary flex-grow-1">
-                        <i class="fas fa-undo me-1"></i> Đặt lại
-                    </a>
-                    <a href="{{ route('admin.voucher.statistics') }}" class="btn btn-info flex-grow-1 text-white">
-                        <i class="fas fa-chart-bar me-1"></i> Thống kê
-                    </a>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ route('admin.voucher.index') }}'">
+                        <i class="fas fa-redo"></i> Đặt lại
+                    </button>
+                    <button type="button" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> Thống kê
+                    </button>
                 </div>
             </form>
         </div>
@@ -99,12 +99,12 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light text-center align-middle">
                             <tr>
-                                <th>Tên ưu đãi</th>
+                                <th>Tiêu đề</th>
                                 <th>Loại</th>
                                 <th>Trạng thái</th>
                                 <th>Điểm cần</th>
-                                <th>Giá trị</th>
-                                <th>Hạn sử dụng</th>
+                                <th>Giá trị voucher</th>
+                                <th>HSD</th>
                                 <th>Kích hoạt</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -112,8 +112,8 @@
                         <tbody class="text-center">
                             @foreach($vouchers as $voucher)
                                 <tr>
-                                    <td class="text-start fw-semibold">{{ $voucher->ten }}</td>
-                                    <td><span class="badge bg-info">{{ $voucher->mo_ta_ap_dung }}</span></td>
+                                    <td class="text-start">{{ $voucher->ten }}</td>
+                                    <td><span class="badge bg-info text-white">Vé xem phim</span></td>
                                     <td>
                                         @if($voucher->conHieuLuc())
                                             <span class="badge bg-success">Đang bật</span>
@@ -121,15 +121,28 @@
                                             <span class="badge bg-danger">Đang tắt</span>
                                         @endif
                                     </td>
-                                    <td>{{ number_format($voucher->diem_can) }}</td>
-                                    <td class="text-primary fw-semibold">{{ $voucher->mo_ta_gia_tri }}</td>
+                                    <td>{{ number_format($voucher->diem_can, 0, ',', '.') }}</td>
+                                    <td class="text-primary fw-bold">{{ $voucher->mo_ta_gia_tri }}</td>
                                     <td>
                                         @if($voucher->ngay_ket_thuc)
-                                            <span class="text-muted">
-                                                Còn {{ $voucher->ngay_ket_thuc->diffInDays(now()) }} ngày
-                                            </span>
+                                            @php
+                                                $ngayConLai = (int) now()->diffInDays($voucher->ngay_ket_thuc, false);
+                                            @endphp
+                                            @if($ngayConLai > 0)
+                                                <span class="badge bg-success">
+                                                    {{ $ngayConLai }} ngày
+                                                </span>
+                                            @elseif($ngayConLai == 0)
+                                                <span class="badge bg-warning">
+                                                    Hết hạn hôm nay
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    Đã hết hạn
+                                                </span>
+                                            @endif
                                         @else
-                                            ∞
+                                            <span class="badge bg-secondary">Không giới hạn</span>
                                         @endif
                                     </td>
                                     <td>
@@ -139,22 +152,15 @@
                                                 type="checkbox"
                                                 {{ $voucher->kich_hoat ? 'checked' : '' }}
                                                 onchange="toggleStatus({{ $voucher->id }})"
-                                                style="cursor:pointer; width:50px; height:25px;"
+                                                style="cursor:pointer; width:40px; height:20px;"
                                             >
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ route('admin.voucher.edit', $voucher->id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i> Sửa
-                                            </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmDelete({{ $voucher->id }})">
-                                                <i class="fas fa-trash"></i> Xóa
-                                            </button>
-                                        </div>
+                                        <a href="{{ route('admin.voucher.show', $voucher->id) }}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

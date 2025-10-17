@@ -55,8 +55,9 @@
             <!-- Header -->
             <div class="card mb-4 bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="card-body text-white py-4">
-                    <h2 class="mb-2"><i class="fas fa-ticket-alt me-2"></i>Voucher của tôi</h2>
-                    <p class="mb-0">Quản lý và sử dụng các voucher đã đổi</p>
+                    <h2 class="mb-2"><i class="fas fa-ticket-alt me-2"></i>Voucher vé phim của tôi</h2>
+                    <p class="mb-0">Quản lý và sử dụng các voucher giảm giá vé đã đổi</p>
+                    <small class="text-white-50">Voucher có hiệu lực 30 ngày kể từ ngày đổi</small>
                 </div>
             </div>
 
@@ -94,9 +95,9 @@
                                                     @endif
                                                     <div class="mt-2">
                                                         <span class="badge bg-success me-1">{{ $voucher->moTaGiaTri }}</span>
-                                                        @if($voucher->ap_dung_cho)
-                                                            <span class="badge bg-info">{{ $voucher->moTaApDung }}</span>
-                                                        @endif
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-film me-1"></i> Chỉ dành cho VÉ
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -128,8 +129,23 @@
 
                                                 <!-- Thông tin thời gian -->
                                                 <div class="small text-muted mb-2">
-                                                    <div><i class="fas fa-calendar-plus"></i> Đổi: {{ $voucherNguoiDung->ngay_doi->format('d/m/Y') }}</div>
-                                                    <div><i class="fas fa-calendar-times"></i> HSD: {{ $voucherNguoiDung->ngay_han->format('d/m/Y') }}</div>
+                                                    <div>
+                                                        <i class="fas fa-calendar-plus"></i> Đổi: {{ $voucherNguoiDung->ngay_doi->format('d/m/Y H:i') }}
+                                                    </div>
+                                                    <div>
+                                                        <i class="fas fa-calendar-times"></i> HSD: {{ $voucherNguoiDung->ngay_han->format('d/m/Y') }}
+                                                        <span class="badge bg-info ms-1">30 ngày</span>
+                                                    </div>
+                                                    @if($conHieuLuc && $trangThai == 'chua_su_dung')
+                                                        @php
+                                                            $ngayConLai = now()->diffInDays($voucherNguoiDung->ngay_han, false);
+                                                        @endphp
+                                                        @if($ngayConLai <= 7 && $ngayConLai > 0)
+                                                            <div class="text-warning fw-bold">
+                                                                <i class="fas fa-exclamation-triangle"></i> Còn {{ $ngayConLai }} ngày
+                                                            </div>
+                                                        @endif
+                                                    @endif
                                                 </div>
 
                                                 <!-- Mã voucher -->
@@ -167,12 +183,14 @@
             <!-- Hướng dẫn -->
             <div class="card bg-light mt-4">
                 <div class="card-body">
-                    <h5><i class="fas fa-question-circle text-info me-2"></i>Hướng dẫn sử dụng voucher</h5>
+                    <h5><i class="fas fa-question-circle text-info me-2"></i>Hướng dẫn sử dụng voucher vé phim</h5>
                     <ul class="mb-0">
                         <li>Voucher sẽ được lưu sau khi bạn đổi điểm thành công</li>
+                        <li><strong class="text-primary">Voucher có hiệu lực 30 ngày</strong> kể từ ngày đổi</li>
                         <li>Mỗi voucher có mã riêng, bạn có thể sao chép để sử dụng</li>
-                        <li>Xuất trình mã voucher tại quầy để được áp dụng ưu đãi</li>
-                        <li>Kiểm tra hạn sử dụng trước khi đến rạp</li>
+                        <li>Voucher <strong class="text-danger">CHỈ ÁP DỤNG CHO VÉ PHIM</strong>, không áp dụng cho bắp nước</li>
+                        <li>Xuất trình mã voucher khi đặt vé online hoặc tại quầy để được giảm giá</li>
+                        <li>Kiểm tra HSD trước khi sử dụng - voucher hết hạn không thể dùng lại</li>
                         <li>Voucher đã sử dụng hoặc hết hạn không thể dùng lại</li>
                     </ul>
                 </div>

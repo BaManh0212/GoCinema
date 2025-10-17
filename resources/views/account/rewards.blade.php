@@ -55,13 +55,17 @@
             <!-- Header -->
             <div class="card mb-4 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-white text-center py-4">
-                    <h2 class="mb-3"><i class="fas fa-gift me-2"></i>Đổi điểm lấy voucher</h2>
-                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Sử dụng điểm để đổi voucher ưu đãi</p>
+                    <h2 class="mb-3"><i class="fas fa-ticket-alt me-2"></i>Đổi điểm lấy voucher VÉ PHIM</h2>
+                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Sử dụng điểm để đổi voucher giảm giá vé phim</p>
+                    <small class="text-white-50">Voucher chỉ áp dụng cho vé xem phim, có hiệu lực 30 ngày từ ngày đổi</small>
                 </div>
             </div>
 
             <!-- Danh sách voucher -->
-            <h4 class="mb-4">Voucher có thể đổi</h4>
+            <h4 class="mb-4">
+                <i class="fas fa-film me-2"></i>Voucher giảm giá vé phim
+                <span class="badge bg-info ms-2">Chỉ dành cho vé</span>
+            </h4>
             
             @if($vouchers->isEmpty())
                 <div class="alert alert-info">
@@ -96,12 +100,10 @@
                                             <div class="col-6">
                                                 <small class="text-muted">Loại voucher:</small>
                                                 <div class="fw-bold">
-                                                    @if($voucher->loai == 'giam_gia')
-                                                        <i class="fas fa-percent text-success"></i> Giảm giá
-                                                    @elseif($voucher->loai == 'mien_phi')
-                                                        <i class="fas fa-gift text-info"></i> Miễn phí
+                                                    @if($voucher->loai == 'phan_tram')
+                                                        <i class="fas fa-percent text-success"></i> Giảm theo %
                                                     @else
-                                                        <i class="fas fa-tag text-warning"></i> Khác
+                                                        <i class="fas fa-money-bill text-success"></i> Giảm theo tiền
                                                     @endif
                                                 </div>
                                             </div>
@@ -114,25 +116,20 @@
                                         </div>
                                     </div>
 
-                                    @if($voucher->ap_dung_cho)
-                                        <div class="mb-3">
-                                            <small class="text-muted">Áp dụng cho:</small>
-                                            <div>
-                                                <span class="badge bg-info">
-                                                    {{ $voucher->moTaApDung }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
+                                    <!-- Hiển thị áp dụng cho VÉ -->
+                                    <div class="mb-3">
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-film me-1"></i> Chỉ dành cho VÉ PHIM
+                                        </span>
+                                    </div>
 
-                                    @if($voucher->ngay_ket_thuc)
-                                        <div class="mb-3">
-                                            <small class="text-muted">
-                                                <i class="fas fa-clock me-1"></i>Hiệu lực đến: 
-                                                <span class="text-danger">{{ $voucher->ngay_ket_thuc->format('d/m/Y') }}</span>
-                                            </small>
-                                        </div>
-                                    @endif
+                                    <!-- HSD = 30 ngày từ ngày đổi -->
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>Hiệu lực: 
+                                            <span class="text-info fw-bold">30 ngày</span> kể từ ngày đổi
+                                        </small>
+                                    </div>
                                     
                                     <hr>
                                     
@@ -166,13 +163,14 @@
             <!-- Hướng dẫn tích điểm -->
             <div class="card bg-light mt-4">
                 <div class="card-body">
-                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm & sử dụng voucher</h5>
+                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm & sử dụng voucher vé phim</h5>
                     <ul class="mb-0">
                         <li>Mỗi lần đặt vé xem phim, bạn sẽ nhận được điểm thưởng</li>
                         <li>Điểm được quy đổi: 1000đ chi tiêu = 1 điểm tích lũy</li>
-                        <li>Sử dụng điểm để đổi lấy voucher ưu đãi</li>
+                        <li>Sử dụng điểm để đổi lấy voucher giảm giá <strong class="text-danger">VÉ PHIM</strong></li>
+                        <li><strong class="text-primary">Voucher có hiệu lực 30 ngày</strong> kể từ ngày đổi</li>
                         <li>Voucher sẽ được lưu trong mục "Voucher của tôi" sau khi đổi thành công</li>
-                        <li>Kiểm tra thời hạn sử dụng voucher trước khi đổi</li>
+                        <li>Voucher <strong>CHỈ ÁP DỤNG CHO VÉ XEM PHIM</strong>, không áp dụng cho bắp nước hoặc sản phẩm khác</li>
                     </ul>
                 </div>
             </div>
