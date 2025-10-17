@@ -156,6 +156,18 @@
             </div>
         </div>
     </li>
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDoiDiem" aria-expanded="false" aria-controls="menuDoiDiem">
+            <i class="fas fa-fw fa-percent"></i>
+            <span>Ưu đãi đổi điểm</span>
+        </a>
+        <div id="menuDoiDiem" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('admin.voucher.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
+                <a class="collapse-item" href="{{ route('admin.voucher.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
+            </div>
+        </div>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
