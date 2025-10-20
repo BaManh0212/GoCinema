@@ -90,12 +90,14 @@
                                     
                                     <form action="{{ route('admin.nguoi-dung.toggle', $user->id) }}" method="POST" class="d-inline">
                                         @csrf
+                                        @method('PATCH') {{-- Thêm dòng này --}}
                                         <button type="submit" 
                                             class="btn btn-sm {{ $user->trang_thai ? 'btn-danger' : 'btn-success' }}" 
                                             title="{{ $user->trang_thai ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}">
                                             <i class="fas fa-{{ $user->trang_thai ? 'lock' : 'unlock' }}"></i>
                                         </button>
                                     </form>
+
                                 </div>
                             </td>
                         </tr>
