@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\ReportExport;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
@@ -16,17 +18,11 @@ class ReportController extends Controller
         $from = $request->input('from');
         $to   = $request->input('to');
 
-        try {
-            $from = $from ? Carbon::parse($from)->startOfDay() : now()->subDays(29)->startOfDay();
-        } catch (\Throwable $e) {
-            $from = now()->subDays(29)->startOfDay();
-        }
+        try { $from = $from ? Carbon::parse($from)->startOfDay() : now()->subDays(29)->startOfDay(); }
+        catch (\Throwable $e) { $from = now()->subDays(29)->startOfDay(); }
 
-        try {
-            $to = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay();
-        } catch (\Throwable $e) {
-            $to = now()->endOfDay();
-        }
+        try { $to = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay(); }
+        catch (\Throwable $e) { $to = now()->endOfDay(); }
 
         return [$from, $to];
     }
@@ -36,40 +32,37 @@ class ReportController extends Controller
         return $request->ajax() || $request->wantsJson() || $request->get('format') === 'json';
     }
 
-    protected function paidOrderStatus(): string
-    {
-        return 'da_thanh_toan';
-    }
-
-    protected function paidTicketStatuses(): array
-    {
-        return ['da_thanh_toan', 'da_su_dung'];
-    }
-
+    protected function paidOrderStatus(): string   { return 'da_thanh_toan'; }
+    protected function paidTicketStatuses(): array { return ['da_thanh_toan', 'da_su_dung']; }
 
     protected function viewOrJson(Request $request, string $view, array $data)
     {
-        // Luôn truyền danh sách rạp cho filter nếu chưa có
-        if (!array_key_exists('cinemas', $data)) {
-            $data['cinemas'] = $this->cinemasList();
-        }
-
-        // Chỉ trả JSON khi thật sự yêu cầu bằng query `?format=json`
-        if ($request->get('format') === 'json') {
-            return response()->json($data);
-        }
-
-        // Nếu view không tồn tại -> báo lỗi rõ ràng để dễ dò
+        if (!array_key_exists('cinemas', $data)) $data['cinemas'] = $this->cinemasList();
+        if ($request->get('format') === 'json')  return response()->json($data);
         if (!view()->exists($view)) {
-            abort(500, "View '{$view}' not found. Hãy kiểm tra đường dẫn resources/views/" . str_replace('.', '/', $view) . ".blade.php");
+            abort(500, "View '{$view}' not found. Hãy kiểm tra resources/views/" . str_replace('.', '/', $view) . ".blade.php");
         }
-
         return view($view, $data);
     }
 
     protected function cinemasList()
     {
         return DB::table('rap')->select('id', 'ten')->orderBy('ten')->get();
+    }
+
+    /** Xuất nếu có ?download=csv|xlsx|pdf */
+    private function exportIfRequested(Request $request, string $title, array $columns, iterable $rows, $from = null, $to = null)
+    {
+        $format = $request->query('download');
+        if (!$format) return null;
+
+        $period   = ($from && $to) ? $from->toDateString().' → '.$to->toDateString() : null;
+        $filename = Str::slug($title).'_'.now()->format('Ymd_His');
+
+        return ReportExport::download($format, $filename, $columns, $rows, [
+            'title'  => $title,
+            'period' => $period,
+        ]);
     }
 
     /** ====================== Tổng quan doanh thu ====================== */
@@ -79,26 +72,24 @@ class ReportController extends Controller
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
 
-        // Tổng doanh thu = tổng tiền đơn đã thanh toán
         $total = DB::table('don_dat_ve as ddv')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
             ->sum('ddv.tong_tien');
 
-        // Breakdown theo ngày từ các nguồn
         $tickets = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -111,9 +102,9 @@ class ReportController extends Controller
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dvc.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -125,9 +116,9 @@ class ReportController extends Controller
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dhsp.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -135,7 +126,6 @@ class ReportController extends Controller
             ->groupBy('ngay')
             ->pluck('revenue', 'ngay');
 
-        // Gộp theo ngày
         $days = [];
         for ($d = $from->copy(); $d->lte($to); $d->addDay()) {
             $key = $d->toDateString();
@@ -157,6 +147,15 @@ class ReportController extends Controller
             'san_pham'  => array_sum(array_column($days, 'san_pham')),
         ];
 
+        /* EXPORT */
+        if ($resp = $this->exportIfRequested(
+            $request,
+            'Doanh thu tổng theo ngày',
+            ['Ngày', 'Vé', 'Combo', 'Sản phẩm', 'Tổng'],
+            array_map(fn($r) => [$r['ngay'], $r['ve'], $r['combo'], $r['san_pham'], $r['tong']], $days),
+            $from, $to
+        )) return $resp;
+
         return $this->viewOrJson($request, 'admin.reports.revenue_total', compact('summary', 'days'));
     }
 
@@ -164,16 +163,17 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $isExport = (bool) $request->query('download');
+        $scope = $request->query('scope', 'by_day'); // by_day|by_movie|by_cinema
 
-        // Theo phim (top)
         $byMovie = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
             ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
             ->join('phim as p', 'p.id', '=', 'sc.phim_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -181,10 +181,9 @@ class ReportController extends Controller
             ->groupBy('p.id', 'p.tieu_de')
             ->selectRaw('p.id, p.tieu_de, COUNT(*) as so_ve, SUM(ctv.gia) as doanh_thu')
             ->orderByDesc('doanh_thu')
-            ->limit(50)
+            ->when(!$isExport, fn($q) => $q->limit(50))
             ->get();
 
-        // Theo rạp
         $byCinema = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
             ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
@@ -199,14 +198,13 @@ class ReportController extends Controller
             ->orderByDesc('doanh_thu')
             ->get();
 
-        // Theo ngày (chart)
         $byDay = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -223,6 +221,21 @@ class ReportController extends Controller
             'to'       => $to->toDateTimeString(),
         ];
 
+        /* EXPORT */
+        if ($scope === 'by_movie') {
+            $cols = ['Phim', 'Số vé', 'Doanh thu'];
+            $rows = $byMovie->map(fn($r) => [$r->tieu_de, $r->so_ve, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu vé theo phim', $cols, $rows, $from, $to)) return $resp;
+        } elseif ($scope === 'by_cinema') {
+            $cols = ['Rạp', 'Số vé', 'Doanh thu'];
+            $rows = $byCinema->map(fn($r) => [$r->ten, $r->so_ve, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu vé theo rạp', $cols, $rows, $from, $to)) return $resp;
+        } else {
+            $cols = ['Ngày', 'Số vé', 'Doanh thu'];
+            $rows = $byDay->map(fn($r) => [$r->ngay, $r->so_ve, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu vé theo ngày', $cols, $rows, $from, $to)) return $resp;
+        }
+
         return $this->viewOrJson($request, 'admin.reports.revenue_tickets', compact('summary', 'byMovie', 'byCinema', 'byDay'));
     }
 
@@ -230,15 +243,16 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $scope = $request->query('scope', 'table'); // table|by_day
 
         $rows = DB::table('don_dat_ve_combo as dvc')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dvc.don_dat_ve_id')
             ->join('combo as c', 'c.id', '=', 'dvc.combo_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -251,9 +265,9 @@ class ReportController extends Controller
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dvc.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -269,6 +283,17 @@ class ReportController extends Controller
             'to'            => $to->toDateTimeString(),
         ];
 
+        /* EXPORT */
+        if ($scope === 'by_day') {
+            $cols = ['Ngày', 'Số lượng', 'Doanh thu'];
+            $data = $byDay->map(fn($r) => [$r->ngay, $r->so_luong, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu combo theo ngày', $cols, $data, $from, $to)) return $resp;
+        } else {
+            $cols = ['Combo', 'Số lượng', 'Doanh thu'];
+            $data = $rows->map(fn($r) => [$r->ten, $r->so_luong, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu theo combo', $cols, $data, $from, $to)) return $resp;
+        }
+
         return $this->viewOrJson($request, 'admin.reports.revenue_combos', compact('summary', 'rows', 'byDay'));
     }
 
@@ -276,15 +301,16 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $scope = $request->query('scope', 'table'); // table|by_day
 
         $rows = DB::table('don_hang_san_pham as dhsp')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dhsp.don_dat_ve_id')
             ->join('san_pham as sp', 'sp.id', '=', 'dhsp.san_pham_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -297,9 +323,9 @@ class ReportController extends Controller
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'dhsp.don_dat_ve_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -315,6 +341,17 @@ class ReportController extends Controller
             'to'            => $to->toDateTimeString(),
         ];
 
+        /* EXPORT */
+        if ($scope === 'by_day') {
+            $cols = ['Ngày', 'Số lượng', 'Doanh thu'];
+            $data = $byDay->map(fn($r) => [$r->ngay, $r->so_luong, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu sản phẩm theo ngày', $cols, $data, $from, $to)) return $resp;
+        } else {
+            $cols = ['Sản phẩm', 'Số lượng', 'Doanh thu'];
+            $data = $rows->map(fn($r) => [$r->ten, $r->so_luong, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Doanh thu theo sản phẩm', $cols, $data, $from, $to)) return $resp;
+        }
+
         return $this->viewOrJson($request, 'admin.reports.revenue_products', compact('summary', 'rows', 'byDay'));
     }
 
@@ -324,8 +361,9 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $isExport = (bool) $request->query('download');
 
-        $rows = DB::table('chi_tiet_ve as ctv')
+        $query = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
             ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
             ->join('phim as p', 'p.id', '=', 'sc.phim_id')
@@ -334,23 +372,23 @@ class ReportController extends Controller
             ->when($rapId, fn($q) => $q->where('r.id', $rapId))
             ->whereBetween('ddv.created_at', [$from, $to])
             ->selectRaw('
-                ctv.id,
-                p.tieu_de as phim,
-                r.ten as rap,
-                ctv.gia,
-                ctv.loai_ghe,
-                ctv.trang_thai,
-                ddv.created_at as ngay_mua
+                ctv.id, p.tieu_de as phim, r.ten as rap,
+                ctv.gia, ctv.loai_ghe, ctv.trang_thai, ddv.created_at as ngay_mua
             ')
-            ->orderByDesc('ctv.id')
-            ->limit(200)
-            ->get();
+            ->orderByDesc('ctv.id');
+
+        $rows = $isExport ? $query->get() : $query->limit(200)->get();
 
         $summary = [
             'tong_ve'  => (int) $rows->count(),
             'da_thanh_toan' => (int) $rows->whereIn('trang_thai', $this->paidTicketStatuses())->count(),
             'da_huy'   => (int) $rows->where('trang_thai', 'da_huy')->count(),
         ];
+
+        /* EXPORT */
+        $cols = ['ID', 'Phim', 'Rạp', 'Giá', 'Loại ghế', 'Trạng thái', 'Ngày mua'];
+        $data = $rows->map(fn($r) => [$r->id, $r->phim, $r->rap, $r->gia, $r->loai_ghe, $r->trang_thai, $r->ngay_mua]);
+        if ($resp = $this->exportIfRequested($request, 'Danh sách vé', $cols, $data, $from, $to)) return $resp;
 
         return $this->viewOrJson($request, 'admin.reports.tickets', compact('summary', 'rows', 'from', 'to'));
     }
@@ -359,8 +397,9 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $isExport = (bool) $request->query('download');
 
-        $orders = DB::table('don_dat_ve as ddv')
+        $query = DB::table('don_dat_ve as ddv')
             ->join('nguoi_dung as nd', 'nd.id', '=', 'ddv.nguoi_dung_id')
             ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
             ->join('phim as p', 'p.id', '=', 'sc.phim_id')
@@ -370,13 +409,11 @@ class ReportController extends Controller
             ->whereBetween('ddv.created_at', [$from, $to])
             ->selectRaw('
                 ddv.id, ddv.ma_don, ddv.tong_tien, ddv.trang_thai, ddv.created_at,
-                nd.ho_ten as khach_hang,
-                p.tieu_de as phim,
-                r.ten as rap
+                nd.ho_ten as khach_hang, p.tieu_de as phim, r.ten as rap
             ')
-            ->orderByDesc('ddv.id')
-            ->limit(200)
-            ->get();
+            ->orderByDesc('ddv.id');
+
+        $orders = $isExport ? $query->get() : $query->limit(200)->get();
 
         $total = (int) $orders->count();
         $paid  = (int) $orders->where('trang_thai', $this->paidOrderStatus())->count();
@@ -390,6 +427,11 @@ class ReportController extends Controller
             'doanh_thu' => (float) $orders->where('trang_thai', $this->paidOrderStatus())->sum('tong_tien'),
         ];
 
+        /* EXPORT */
+        $cols = ['ID', 'Mã đơn', 'Khách hàng', 'Phim', 'Rạp', 'Trạng thái', 'Tổng tiền', 'Ngày'];
+        $data = $orders->map(fn($r) => [$r->id, $r->ma_don, $r->khach_hang, $r->phim, $r->rap, $r->trang_thai, $r->tong_tien, $r->created_at]);
+        if ($resp = $this->exportIfRequested($request, 'Danh sách đơn đặt vé', $cols, $data, $from, $to)) return $resp;
+
         return $this->viewOrJson($request, 'admin.reports.orders', compact('summary', 'orders', 'from', 'to'));
     }
 
@@ -402,15 +444,20 @@ class ReportController extends Controller
             ->join('nguoi_dung as nd', 'nd.id', '=', 'ddv.nguoi_dung_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', 'da_huy')
             ->whereBetween('ddv.created_at', [$from, $to])
             ->orderByDesc('ddv.id')
             ->select('ddv.*', 'nd.ho_ten as khach_hang')
             ->get();
+
+        /* EXPORT */
+        $cols = ['ID', 'Mã đơn', 'Khách hàng', 'Tổng tiền', 'Ngày', 'Trạng thái'];
+        $data = $orders->map(fn($r) => [$r->id, $r->ma_don, $r->khach_hang, $r->tong_tien, $r->created_at, $r->trang_thai]);
+        if ($resp = $this->exportIfRequested($request, 'Danh sách đơn đã hủy', $cols, $data, $from, $to)) return $resp;
 
         return $this->viewOrJson($request, 'admin.reports.orders_canceled', compact('orders', 'from', 'to'));
     }
@@ -419,15 +466,16 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $scope = $request->query('scope', 'by_method'); // by_method|by_status
 
         $byMethod = DB::table('thanh_toan as tt')
             ->join('phuong_thuc_thanh_toan as pttt', 'pttt.id', '=', 'tt.phuong_thuc_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('don_dat_ve as ddv', 'ddv.id', '=', 'tt.don_dat_ve_id')
-                    ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->whereBetween('tt.created_at', [$from, $to])
             ->groupBy('pttt.id', 'pttt.ten')
@@ -438,10 +486,10 @@ class ReportController extends Controller
         $byStatus = DB::table('thanh_toan as tt')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('don_dat_ve as ddv', 'ddv.id', '=', 'tt.don_dat_ve_id')
-                    ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->whereBetween('tt.created_at', [$from, $to])
             ->groupBy('tt.trang_thai')
@@ -449,11 +497,22 @@ class ReportController extends Controller
             ->get();
 
         $summary = [
-            'tong_giao_dich' => (int) $byStatus->sum('so_luong'),
-            'thanh_cong'     => (int) ($byStatus->firstWhere('trang_thai', 'thanh_cong')->so_luong ?? 0),
+            'tong_giao_dich'   => (int) $byStatus->sum('so_luong'),
+            'thanh_cong'       => (int) ($byStatus->firstWhere('trang_thai', 'thanh_cong')->so_luong ?? 0),
             'ti_le_thanh_cong' => (float) ($byStatus->sum('so_luong') ? round(($byStatus->firstWhere('trang_thai', 'thanh_cong')->so_luong ?? 0) * 100 / $byStatus->sum('so_luong'), 2) : 0),
-            'tong_tien_xu_ly' => (float) $byStatus->sum('tong_tien'),
+            'tong_tien_xu_ly'  => (float) $byStatus->sum('tong_tien'),
         ];
+
+        /* EXPORT */
+        if ($scope === 'by_status') {
+            $cols = ['Trạng thái', 'Số lượng', 'Tổng tiền'];
+            $data = $byStatus->map(fn($r) => [$r->trang_thai, $r->so_luong, $r->tong_tien]);
+            if ($resp = $this->exportIfRequested($request, 'Thanh toán theo trạng thái', $cols, $data, $from, $to)) return $resp;
+        } else {
+            $cols = ['Phương thức', 'Số giao dịch', 'Tổng tiền'];
+            $data = $byMethod->map(fn($r) => [$r->ten, $r->so_giao_dich, $r->tong_tien]);
+            if ($resp = $this->exportIfRequested($request, 'Thanh toán theo phương thức', $cols, $data, $from, $to)) return $resp;
+        }
 
         return $this->viewOrJson($request, 'admin.reports.payments', compact('summary', 'byMethod', 'byStatus', 'from', 'to'));
     }
@@ -468,9 +527,9 @@ class ReportController extends Controller
             ->join('nguoi_dung as nd', 'nd.id', '=', 'ddv.nguoi_dung_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('tt.trang_thai', 'hoan_tien')
             ->whereBetween('tt.created_at', [$from, $to])
@@ -483,6 +542,11 @@ class ReportController extends Controller
             'tong_tien'    => (float) $rows->sum('so_tien'),
         ];
 
+        /* EXPORT */
+        $cols = ['ID TT', 'Mã đơn', 'Khách hàng', 'Số tiền', 'Thời gian', 'Ghi chú'];
+        $data = $rows->map(fn($r) => [$r->id, $r->ma_don, $r->khach_hang, $r->so_tien, $r->created_at, $r->mo_ta ?? '']);
+        if ($resp = $this->exportIfRequested($request, 'Giao dịch hoàn tiền', $cols, $data, $from, $to)) return $resp;
+
         return $this->viewOrJson($request, 'admin.reports.refunds', compact('summary', 'rows', 'from', 'to'));
     }
 
@@ -492,6 +556,7 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $isExport = (bool) $request->query('download');
 
         $rows = DB::table('chi_tiet_ve as ctv')
             ->join('don_dat_ve as ddv', 'ddv.id', '=', 'ctv.don_dat_ve_id')
@@ -499,8 +564,8 @@ class ReportController extends Controller
             ->join('phim as p', 'p.id', '=', 'sc.phim_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.trang_thai', $this->paidOrderStatus())
             ->whereIn('ctv.trang_thai', $this->paidTicketStatuses())
@@ -508,8 +573,13 @@ class ReportController extends Controller
             ->groupBy('p.id', 'p.tieu_de')
             ->selectRaw('p.id, p.tieu_de, COUNT(*) as so_ve, SUM(ctv.gia) as doanh_thu')
             ->orderByDesc('doanh_thu')
-            ->limit(100)
+            ->when(!$isExport, fn($q) => $q->limit(100))
             ->get();
+
+        /* EXPORT */
+        $cols = ['Phim', 'Số vé', 'Doanh thu'];
+        $data = $rows->map(fn($r) => [$r->tieu_de, $r->so_ve, $r->doanh_thu]);
+        if ($resp = $this->exportIfRequested($request, 'Phim bán chạy', $cols, $data, $from, $to)) return $resp;
 
         return $this->viewOrJson($request, 'admin.reports.movies', compact('rows', 'from', 'to'));
     }
@@ -518,6 +588,7 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rapId = (int) $request->rap_id;
+        $scope = $request->query('scope', 'by_day'); // by_day|by_showtime
 
         $info = DB::table('phim')->where('id', $id)->first();
 
@@ -526,8 +597,8 @@ class ReportController extends Controller
             ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('sc.phim_id', $id)
             ->where('ddv.trang_thai', $this->paidOrderStatus())
@@ -559,6 +630,19 @@ class ReportController extends Controller
             'doanh_thu'  => (float) $byDay->sum('doanh_thu'),
         ];
 
+        /* EXPORT */
+        if ($scope === 'by_showtime') {
+            $cols = ['Suất chiếu', 'Rạp', 'Số vé', 'Doanh thu'];
+            $data = $byShowtime->map(fn($r) =>
+                [$r->gio_bat_dau.' - '.$r->gio_ket_thuc, $r->rap, $r->so_ve, $r->doanh_thu]
+            );
+            if ($resp = $this->exportIfRequested($request, 'Chi tiết phim: '.$summary['phim'], $cols, $data, $from, $to)) return $resp;
+        } else {
+            $cols = ['Ngày', 'Số vé', 'Doanh thu'];
+            $data = $byDay->map(fn($r) => [$r->ngay, $r->so_ve, $r->doanh_thu]);
+            if ($resp = $this->exportIfRequested($request, 'Chi tiết phim: '.$summary['phim'], $cols, $data, $from, $to)) return $resp;
+        }
+
         return $this->viewOrJson($request, 'admin.reports.movie_detail', compact('summary', 'byDay', 'byShowtime', 'from', 'to'));
     }
 
@@ -571,9 +655,9 @@ class ReportController extends Controller
             ->join('nguoi_dung as nd', 'nd.id', '=', 'ddv.nguoi_dung_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
-                    ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->whereBetween('ddv.created_at', [$from, $to])
             ->groupBy('nd.id', 'nd.ho_ten', 'nd.email')
@@ -585,6 +669,11 @@ class ReportController extends Controller
             ->orderByDesc('chi_tieu')
             ->limit(100)
             ->get();
+
+        /* EXPORT */
+        $cols = ['Khách hàng', 'Email', 'Số đơn', 'Chi tiêu (đã thanh toán)'];
+        $data = $rows->map(fn($r) => [$r->ho_ten, $r->email, $r->so_don, $r->chi_tieu]);
+        if ($resp = $this->exportIfRequested($request, 'Khách hàng tiêu biểu', $cols, $data, $from, $to)) return $resp;
 
         return $this->viewOrJson($request, 'admin.reports.customers', compact('rows', 'from', 'to'));
     }
@@ -601,8 +690,8 @@ class ReportController extends Controller
             ->join('phim as p', 'p.id', '=', 'sc.phim_id')
             ->when($rapId, function ($q) use ($rapId) {
                 $q->join('phong_chieu as pc', 'pc.id', '=', 'sc.phong_id')
-                    ->join('rap as r', 'r.id', '=', 'pc.rap_id')
-                    ->where('r.id', $rapId);
+                  ->join('rap as r', 'r.id', '=', 'pc.rap_id')
+                  ->where('r.id', $rapId);
             })
             ->where('ddv.nguoi_dung_id', $id)
             ->whereBetween('ddv.created_at', [$from, $to])
@@ -617,6 +706,11 @@ class ReportController extends Controller
             'da_thanh_toan' => (int) $orders->where('trang_thai', $this->paidOrderStatus())->count(),
             'chi_tieu'   => (float) $orders->where('trang_thai', $this->paidOrderStatus())->sum('tong_tien'),
         ];
+
+        /* EXPORT */
+        $cols = ['Mã đơn', 'Phim', 'Tổng tiền', 'Trạng thái', 'Ngày'];
+        $data = $orders->map(fn($r) => [$r->ma_don, $r->phim, $r->tong_tien, $r->trang_thai, $r->created_at]);
+        if ($resp = $this->exportIfRequested($request, 'Lịch sử mua của: '.$summary['khach_hang'], $cols, $data, $from, $to)) return $resp;
 
         return $this->viewOrJson($request, 'admin.reports.customer_detail', compact('summary', 'orders', 'from', 'to'));
     }
@@ -640,6 +734,11 @@ class ReportController extends Controller
             ->orderByDesc('doanh_thu')
             ->get();
 
+        /* EXPORT */
+        $cols = ['Rạp', 'Số vé', 'Doanh thu'];
+        $data = $rows->map(fn($r) => [$r->ten, $r->so_ve, $r->doanh_thu]);
+        if ($resp = $this->exportIfRequested($request, 'Doanh thu theo rạp', $cols, $data, $from, $to)) return $resp;
+
         return $this->viewOrJson($request, 'admin.reports.cinemas', compact('rows', 'from', 'to'));
     }
 
@@ -657,9 +756,7 @@ class ReportController extends Controller
             ->selectRaw('ddv.*, nd.ho_ten as khach_hang, nd.email, p.tieu_de as phim, r.ten as rap')
             ->first();
 
-        if (!$order) {
-            abort(404);
-        }
+        if (!$order) abort(404);
 
         $tickets = DB::table('chi_tiet_ve as ctv')
             ->leftJoin('ghe as g', 'g.id', '=', 'ctv.ghe_id')
@@ -694,13 +791,24 @@ class ReportController extends Controller
             'da_thanh_toan' => (float) $payments->where('trang_thai', 'thanh_cong')->sum('so_tien'),
         ];
 
+        /* EXPORT HÓA ĐƠN/CHI TIẾT ĐƠN */
+        if ($format = $request->query('download')) {
+            $cols = ['Hạng mục', 'SL', 'Đơn giá', 'Thành tiền'];
+            $rows = [];
+            foreach ($tickets as $t)   { $rows[] = ['Vé '.$t->hang.$t->cot, 1, $t->gia, $t->gia]; }
+            foreach ($combos as $c)    { $rows[] = ['Combo '.$c->ten, $c->so_luong, $c->gia, $c->thanh_tien]; }
+            foreach ($products as $p)  { $rows[] = ['SP '.$p->ten, $p->so_luong, $p->gia, $p->thanh_tien]; }
+
+            return ReportExport::download($format,
+                'hoa_don_'.$order->ma_don,
+                $cols,
+                $rows,
+                ['title' => 'Hóa đơn #'.$order->ma_don.' - '.$order->khach_hang]
+            );
+        }
+
         return $this->viewOrJson($request, 'admin.reports.order_detail', compact(
-            'order',
-            'tickets',
-            'combos',
-            'products',
-            'payments',
-            'summary'
+            'order', 'tickets', 'combos', 'products', 'payments', 'summary'
         ));
     }
 }
