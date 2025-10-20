@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('vai_tro_id')->constrained('vai_tro');
             $table->boolean('kich_hoat')->default(true);
             $table->enum('loai_tai_khoan', ['khach_hang','nhan_vien','quan_ly'])->default('khach_hang');
-            $table->integer('diem')->default(0);
+            $table->integer('diem_tich_luy')->default(0);
             $table->timestamps();
         });
     }

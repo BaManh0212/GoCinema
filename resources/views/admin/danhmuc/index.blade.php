@@ -4,13 +4,23 @@
 <div class="container-fluid">
     <h3 class="mb-4">Danh sách danh mục</h3>
 
-    <a href="{{ route('admin.danhmuc.create') }}" class="btn btn-primary mb-3">
-        <i class="bi bi-plus-circle"></i> Thêm danh mục
-    </a>
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <a href="{{ route('admin.danhmuc.create') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> ➕ Thêm danh mục
+        </a>
+        <a href="{{ route('admin.danhmuc.trashed') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-trash"></i> 🗑️ Thùng rác
+        </a>
+    </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+@if (session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+
 
     <table class="table table-bordered table-striped">
         <thead class="table-dark">

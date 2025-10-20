@@ -11,18 +11,21 @@ class Phim extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'phim';
-    protected $fillable = [
-        'tieu_de',
-        'mo_ta',
-        'anh_poster',
-        'trailer',
-        'phu_de',
-        'thoi_luong',
-        'ngay_cong_chieu',
-        'do_tuoi_gioi_han',
-        'danh_muc_id',
-        'ngon_ngu_id',
-    ];
+   protected $fillable = [
+    'tieu_de',
+    'mo_ta',
+    'anh_poster',
+    'trailer',
+    'phu_de',
+    'thoi_luong',
+    'ngay_cong_chieu',
+    'do_tuoi_gioi_han',
+    'danh_muc_id',
+    'ngon_ngu_id',
+    'dao_dien',
+    'dien_vien',
+];
+
 
     public function danhMuc()
     {
@@ -40,4 +43,9 @@ class Phim extends Model
     {
         return $this->belongsToMany(DinhDang::class, 'phim_dinh_dang', 'phim_id', 'dinh_dang_id');
     }
+    public function danhMucs()
+{
+    return $this->belongsToMany(DanhMuc::class, 'phim_danh_muc', 'phim_id', 'danh_muc_id');
+}
+
 }

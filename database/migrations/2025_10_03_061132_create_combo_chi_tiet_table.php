@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('combo_chi_tiet', function (Blueprint $table) {
-            $table->foreignId('combo_id')->constrained('combo');
+            $table->foreign('combo_id')->references('id')->on('combo')->onDelete('cascade');
             $table->foreignId('san_pham_id')->constrained('san_pham');
             $table->integer('so_luong')->default(1);
             $table->primary(['combo_id','san_pham_id']);

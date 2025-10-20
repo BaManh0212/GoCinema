@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dien_vien', function (Blueprint $table) {
-            $table->id();
-            $table->string('ten');
-            $table->text('tieu_su')->nullable();
-            $table->date('ngay_sinh')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+       Schema::create('phim_danh_muc', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('phim_id')->constrained('phim')->onDelete('cascade');
+    $table->foreignId('danh_muc_id')->constrained('danh_muc')->onDelete('cascade');
+    $table->timestamps();
+});
+
+
     }
 
     /**
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dien_vien');
+        Schema::dropIfExists('phim_danh_muc');
     }
 };

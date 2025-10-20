@@ -3,141 +3,118 @@
 @section('title', 'Quản lý phim')
 
 @section('content')
-    <div class="container mt-4">
-        <h2 class="text-center mb-4">🎬 Danh sách phim</h2>
+<div class="container mt-4">
 
-        {{-- Nút thêm phim mới và Thùng rác --}}
-        <div class="d-flex justify-content-end mb-3 gap-2">
-            <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-secondary">
-                🗑️ Thùng rác
-            </a>
-            <a href="{{ route('admin.phim.create') }}" class="btn btn-success">
-                ➕ Thêm phim mới
-            </a>
+    {{-- Tiêu đề --}}
+    <h2 class="text-center mb-4 fw-bold text-primary">🎬 Danh sách phim</h2>
+
+    {{-- Nút thao tác --}}
+    <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
+        <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-secondary">
+            🗑️ Thùng rác
+        </a>
+        <a href="{{ route('admin.phim.create') }}" class="btn btn-success">
+            ➕ Thêm phim mới
+        </a>
+    </div>
+
+    {{-- Thông báo --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            ✅ {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
         </div>
+    @endif
 
-        {{-- Bảng danh sách phim --}}
-        <div class="card shadow-sm">
-           <div class="card-body table-responsive">
-    <table class="table table-hover align-middle text-center">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Poster</th>
-                            <th>Tiêu đề</th>
-                            <th>Mô tả</th>
-                            <th>Trailer</th>
-                            <th>Phụ đề</th>
-                            <th>Thời lượng</th>
-                            <th>Ngày công chiếu</th>
-                            <th>Giới hạn tuổi</th>
-                            <th>Danh mục</th>
-                            <th>Ngôn ngữ</th>
-                            <th>Ngày tạo</th>
-                            <th>Ngày cập nhật</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
+    {{-- Danh sách phim --}}
+    <div class="row g-3">
+        @forelse($phims as $phim)
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden movie-card">
+                    
+                    {{-- Poster --}}
+                    <div style="height: 250px; overflow: hidden;">
+                        @if($phim->anh_poster)
+                            <img src="{{ asset('storage/' . $phim->anh_poster) }}" 
+                                 alt="Poster phim" 
+                                 class="img-fluid w-100 h-100 object-fit-cover">
+                        @else
+                            <div class="bg-light d-flex align-items-center justify-content-center h-100 text-muted">
+                                <small>No Image</small>
+                            </div>
+                        @endif
+                    </div>
 
-                    <tbody>
-                        @forelse($phims as $phim)
-                            <tr>
-                                <td>{{ $phim->id }}</td>
+                    {{-- Nội dung --}}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="fw-bold text-primary text-uppercase mb-2">{{ $phim->tieu_de }}</h5>
 
-                                {{-- Ảnh poster --}}
-                                <td>
-                                    @if($phim->anh_poster)
-                                        <img src="{{ asset('storage/' . $phim->anh_poster) }}" alt="Poster" width="70" height="90"
-                                            class="rounded shadow-sm">
-                                    @else
-                                        <span class="text-muted fst-italic">Chưa có</span>
-                                    @endif
-                                </td>
+                        <span class="badge {{ $phim->ngay_cong_chieu > now() ? 'bg-info text-dark' : 'bg-success' }} mb-2">
+                            {{ $phim->ngay_cong_chieu > now() ? 'Sắp chiếu' : 'Đang chiếu' }}
+                        </span>
 
-                                {{-- Tiêu đề --}}
-                                <td class="fw-semibold text-start">{{ $phim->tieu_de }}</td>
+                        <ul class="list-unstyled small mb-3">
+                            <li>⏱️ <strong>Thời lượng:</strong> {{ $phim->thoi_luong }} phút</li>
+                            <li>📅 <strong>Công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</li>
+                            <li>🗣️ <strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</li>
+                            <li>🎬 <strong>Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</li>
+                            <li>👥 <strong>Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</li>
+                            <li>📁 <strong>Danh mục:</strong>
+                                @if($phim->danhMucs && $phim->danhMucs->count())
+                                    @foreach($phim->danhMucs as $dm)
+                                        <span class="badge bg-warning text-dark">{{ $dm->ten }}</span>
+                                    @endforeach
+                                @else
+                                <span class="text-muted">—</span>
+                                @endif
+                            </li>
 
-                                {{-- Mô tả --}}
-                                <td class="text-start"
-                                    style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    {{ $phim->mo_ta }}
-                                </td>
+                            <li>🔞 <strong>Độ tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?? 'P' }}</li>
+                        </ul>
 
-                                {{-- Trailer --}}
-                                <td>
-                                    @if($phim->trailer)
-                                        <a href="{{ $phim->trailer }}" target="_blank" class="text-decoration-none">🎥 Xem</a>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-
-                                {{-- Phụ đề --}}
-                                <td>
-                                    @if($phim->phu_de)
-                                        ✅ Có
-                                    @else
-                                        ❌ Không
-                                    @endif
-                                </td>
-
-                                {{-- Thời lượng --}}
-                                <td>{{ $phim->thoi_luong }} phút</td>
-
-                                {{-- Ngày công chiếu --}}
-                                <td>
-                                    {{ $phim->ngay_cong_chieu ? \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') : '—' }}
-                                </td>
-
-                                {{-- Giới hạn tuổi --}}
-                                <td>{{ $phim->do_tuoi_gioi_han ?? '—' }}</td>
-
-                                {{-- Danh mục --}}
-                                <td>{{ $phim->danhMuc->ten ?? '—' }}</td>
-
-                                {{-- Ngôn ngữ --}}
-                                <td>{{ $phim->ngonNgu->ten ?? '—' }}</td>
-
-                                {{-- Ngày tạo --}}
-                                <td>
-                                    {{ $phim->created_at ? \Carbon\Carbon::parse($phim->created_at)->format('d/m/Y H:i') : '—' }}
-                                </td>
-
-                                {{-- Ngày cập nhật --}}
-                                <td>
-                                    {{ $phim->updated_at ? \Carbon\Carbon::parse($phim->updated_at)->format('d/m/Y H:i') : '—' }}
-                                </td>
-
-
-                                {{-- Hành động --}}
-                                <td>
-                                    <a href="{{ route('admin.phim.edit', $phim->id) }}" class="btn btn-sm btn-primary me-2">
-                                        ✏️ Sửa
-                                    </a>
-
-                                    <form action="{{ route('admin.phim.destroy', $phim->id) }}" method="POST"
-                                        style="display:inline;" onsubmit="return confirm('Xác nhận xóa phim này?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            🗑️ Xóa
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="14" class="text-muted">Không có phim nào trong hệ thống</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                {{-- Phân trang --}}
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $phims->links('pagination::bootstrap-5') }}
+                        {{-- Hành động --}}
+                        <div class="mt-auto d-flex flex-wrap gap-2">
+                            <a href="{{ route('admin.phim.show', $phim->id) }}" class="btn btn-sm btn-outline-primary">
+                                👁️ Xem chi tiết
+                            </a>
+                            <a href="{{ route('admin.phim.edit', $phim->id) }}" class="btn btn-sm btn-outline-primary">
+                                ✏️ Sửa
+                            </a>
+                            <form action="{{ route('admin.phim.destroy', $phim->id) }}" method="POST" 
+                                  onsubmit="return confirm('Xác nhận xóa phim này?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Xóa</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        @empty
+            <div class="col-12 text-center text-muted mt-4">
+                Không có phim nào trong hệ thống 📭
+            </div>
+        @endforelse
     </div>
+
+    {{-- Phân trang --}}
+    <div class="d-flex justify-content-center mt-4">
+        {{ $phims->links('pagination::bootstrap-5') }}
+    </div>
+
+</div>
+
+{{-- Hiệu ứng hover --}}
+<style>
+.movie-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+.object-fit-cover {
+    object-fit: cover;
+}
+</style>
 @endsection
