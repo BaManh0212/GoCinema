@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SanPham;
 use Illuminate\Http\Request;
+use App\Models\ComboChiTiet;
 
 class SanPhamController extends Controller
 {
@@ -91,12 +92,25 @@ class SanPhamController extends Controller
      * 🗑️ Xóa mềm sản phẩm
      */
     public function destroy(SanPham $sanPham)
-    {
-        $sanPham->delete();
+{
+    // 🔍 Kiểm tra xem sản phẩm có nằm trong combo nào không
+    $comboDangDung = ComboChiTiet::where('san_pham_id', $sanPham->id)
+                                 ->with('combo')
+                                 ->get();
 
+    // Nếu đang nằm trong combo → chặn xóa
+    if ($comboDangDung->isNotEmpty()) {
+        $danhSachCombo = $comboDangDung->pluck('combo.ten')->implode(', ');
         return redirect()->route('admin.san_pham.index')
-                         ->with('success', '🗑️ Sản phẩm đã được xóa thành công.');
+                         ->with('error', "❌ Không thể xóa sản phẩm '{$sanPham->ten}' vì đang nằm trong các combo: {$danhSachCombo}.");
     }
+
+    // ✅ Nếu không nằm trong combo nào → cho phép xóa
+    $sanPham->delete();
+
+    return redirect()->route('admin.san_pham.index')
+                     ->with('success', '🗑️ Sản phẩm đã được xóa thành công.');
+}
 
     /**
      * 🧺 Hiển thị danh sách sản phẩm đã xóa (thùng rác)
