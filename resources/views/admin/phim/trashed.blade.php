@@ -36,7 +36,14 @@
                                     @endif
                                 </td>
                                 <td class="fw-semibold text-start">{{ $phim->tieu_de }}</td>
-                                <td>{{ $phim->danhMuc->ten ?? '—' }}</td>
+                                <td>
+                                    @if($phim->danhMucs && $phim->danhMucs->count())
+                                    @foreach($phim->danhMucs as $dm)
+                                        <span class="badge bg-warning text-dark">{{ $dm->ten }}</span>
+                                    @endforeach
+                                @else
+                                <span class="text-muted">—</span>
+                                @endif</td>
                                 <td>{{ $phim->ngonNgu->ten ?? '—' }}</td>
                                 <td>{{ $phim->deleted_at ? \Carbon\Carbon::parse($phim->deleted_at)->format('d/m/Y H:i') : '—' }}</td>
                                 <td>
