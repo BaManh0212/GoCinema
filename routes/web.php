@@ -132,8 +132,8 @@ Route::prefix('admin')
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
 
         // Quản lý người dùng
-        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
         Route::patch('/nguoi-dung/{id}/toggle', [AdminNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle');
+        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
 
 
         // Quản lý điểm tích lũy
