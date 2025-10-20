@@ -258,13 +258,39 @@ public function store(Request $request)
      * 🔄 KHÔI PHỤC COMBO
      * ============================== */
     public function restore($id)
-    {
-        $combo = Combo::onlyTrashed()->findOrFail($id);
-        $combo->restore();
+{
+    $combo = Combo::onlyTrashed()->findOrFail($id);
+    $combo->restore();
 
-        // ❌ Không tự trừ kho khi khôi phục (đợi admin chỉnh sửa lại nếu cần)
-        return redirect()->route('admin.combo.trashed')->with('success', 'Combo đã được khôi phục thành công (chưa trừ kho).');
+    // ✅ Trừ lại kho khi khôi phục combo
+    $chiTiet = ComboChiTiet::where('combo_id', $combo->id)->get();
+    $errors = [];
+
+    foreach ($chiTiet as $ct) {
+        $sp = SanPham::find($ct->san_pham_id);
+
+        // Nếu sản phẩm không đủ hàng để khôi phục → báo lỗi
+        if ($sp->so_luong < $combo->so_luong * $ct->so_luong) {
+            $errors[] = "Sản phẩm '{$sp->ten}' không đủ hàng để khôi phục combo.";
+        }
     }
+
+    // Nếu có lỗi → rollback restore (soft delete lại) và báo lỗi
+    if (!empty($errors)) {
+        $combo->delete(); // soft delete lại combo
+        return redirect()->route('admin.combo.trashed')->withErrors($errors);
+    }
+
+    // Nếu đủ hàng → trừ kho
+    foreach ($chiTiet as $ct) {
+        $sp = SanPham::find($ct->san_pham_id);
+        $sp->so_luong -= $combo->so_luong * $ct->so_luong;
+        $sp->save();
+    }
+
+    return redirect()->route('admin.combo.trashed')->with('success', '✅ Combo đã được khôi phục và trừ kho thành công.');
+}
+
 
     /** =============================
      * 🚮 XÓA VĨNH VIỄN COMBO
