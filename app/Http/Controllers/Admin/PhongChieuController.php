@@ -11,11 +11,12 @@ class PhongChieuController extends Controller
 {
     public function index()
     {
-        $phongchieus = PhongChieu::with('dinhDang')
-            ->orderBy('id', 'asc')
-            ->paginate(10);
+    $phongchieus = PhongChieu::with(['dinhDang'])
+        ->withCount('ghes') // 👈 thêm dòng này
+        ->orderBy('id', 'asc')
+        ->paginate(10);
 
-        return view('admin.phong_chieu.index', compact('phongchieus'));
+    return view('admin.phong_chieu.index', compact('phongchieus'));
     }
 
     public function create()

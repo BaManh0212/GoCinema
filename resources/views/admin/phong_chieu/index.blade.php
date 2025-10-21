@@ -36,7 +36,7 @@
                             <td>{{ $phongchieus->firstItem() + $key }}</td>
                             <td class="text-start ps-4">{{ $p->ten }}</td>
                             <td>{{ $p->dinhDang?->ten ?? 'Không có' }}</td>
-                            <td>{{ $p->tong_ghe }}</td>
+                            <td>{{ $p->ghes_count }}</td>
                             <td>
                                 @if($p->trang_thai == 'hoat_dong')
                                     <span class="badge bg-success">Hoạt động</span>
