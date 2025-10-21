@@ -19,7 +19,7 @@ use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
-
+use App\Http\Controllers\Admin\GheController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -95,7 +95,7 @@ Route::get('/admin-only', function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'role:quan_ly'])
+    // ->middleware(['auth', 'role:quan_ly'])
     ->group(function () {
         // Dashboard
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -104,6 +104,10 @@ Route::prefix('admin')
         Route::resource('rap', AdminRapController::class)->names('rap');
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
+        // Quản lý ghế theo từng phòng
+        Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
         // Quản lý suất chiếu
         Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục

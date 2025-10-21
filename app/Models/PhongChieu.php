@@ -45,4 +45,8 @@ class PhongChieu extends Model
     {
         return $this->hasMany(Ghe::class, 'phong_id', 'id');
     }
+    public function ghes()
+    {
+    return $this->hasMany(Ghe::class, 'phong_id', 'id');
+    }
 }

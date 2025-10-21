@@ -121,7 +121,7 @@
         </div>
     </div>
 </li>
-   <li class="nav-item">
+   {{-- <li class="nav-item">
     <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuGhe"
         aria-expanded="false" aria-controls="menuGhe">
         <i class="fas fa-fw fa-chair"></i>
@@ -137,7 +137,7 @@
             </a>
         </div>
     </div>
-</li>
+</li> --}}
 
 
     <!-- Divider -->

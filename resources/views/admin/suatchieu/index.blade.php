@@ -43,9 +43,9 @@
                             <td>{{ \Carbon\Carbon::parse($s->gio_ket_thuc)->format('H:i d/m/Y') }}</td>
                             <td>{{ number_format($s->gia_ve, 0, ',', '.') }}</td>
                             <td>
-                                <a href="{{ route('admin.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-warning me-1">
+                                {{-- <a href="{{ route('admin.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-warning me-1">
                                     <i class="bi bi-ui-checks"></i> Quản lý ghế
-                                </a>
+                                </a> --}}
                                 <a href="{{ route('admin.suatchieu.edit', $s->id) }}" class="btn btn-sm btn-outline-primary me-1">
                                     <i class="bi bi-pencil-square"></i> Sửa
                                 </a>
