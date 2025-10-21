@@ -95,7 +95,7 @@ Route::get('/admin-only', function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    // ->middleware(['auth', 'role:quan_ly'])
+    ->middleware(['auth', 'role:quan_ly'])
     ->group(function () {
         // Dashboard
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
