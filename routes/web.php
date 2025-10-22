@@ -101,7 +101,7 @@ Route::prefix('admin')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Quản lý rạp
-        Route::resource('rap', AdminRapController::class)->names('rap');
+        Route::get('/rap', [AdminRapController::class, 'show'])->name('rap.show');
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
         // Quản lý ghế theo từng phòng
