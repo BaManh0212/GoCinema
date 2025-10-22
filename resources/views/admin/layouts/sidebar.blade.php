@@ -70,20 +70,10 @@
 
     <!-- Rạp -->
     <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuRap" aria-expanded="false" aria-controls="menuRap">
-            <i class="fas fa-fw fa-building"></i>
+        <a class="nav-link" href="{{ route('admin.rap.show') }}">
+            <i class="fas fa-cubes"></i>
             <span>Rạp chiếu</span>
         </a>
-        <div id="menuRap" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('admin/rap') ? 'active' : '' }}" href="{{ route('admin.rap.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách rạp
-                </a>
-                <a class="collapse-item {{ request()->is('admin/rap/create') ? 'active' : '' }}" href="{{ route('admin.rap.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm rạp mới
-                </a>
-            </div>
-        </div>
     </li>
     <!-- Phòng chiếu -->
     <li class="nav-item">
