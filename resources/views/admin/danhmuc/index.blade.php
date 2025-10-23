@@ -70,11 +70,11 @@
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
                     <tr class="text-center">
-                        <th style="width: 70px;">#</th>
+                        <th style="width: 70px;">STT</th>
                         <th class="text-start">Tên danh mục</th>
                         <th class="text-start">Slug</th>
                         <th style="width: 160px;">Số lượng phim</th>
-                        <th style="width: 180px;">Hành động</th>
+                        <th style="width: 220px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -90,10 +90,20 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
+                                    
+                                    {{-- 👁️ Nút xem chi tiết --}}
+                                    <a href="{{ route('admin.danhmuc.show', $dm->id) }}" 
+                                       class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
+
+                                    {{-- ✏️ Nút sửa --}}
                                     <a href="{{ route('admin.danhmuc.edit', $dm->id) }}" 
                                        class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-pencil-square"></i> Sửa
                                     </a>
+
+                                    {{-- 🗑️ Nút xóa --}}
                                     <form action="{{ route('admin.danhmuc.destroy', $dm->id) }}" 
                                           method="POST" onsubmit="return confirm('Xóa danh mục này?')" class="d-inline">
                                         @csrf

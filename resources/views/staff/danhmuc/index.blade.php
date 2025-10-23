@@ -1,36 +1,145 @@
 @extends('staff.layouts.staff')
 
 @section('content')
-<div class="container-fluid">
-    <h3 class="mb-4">Danh sách danh mục</h3>
+<div class="container mt-4">
 
-    <a href="{{ route('staff.danhmuc.create') }}" class="btn btn-primary mb-3">
-        <i class="bi bi-plus-circle"></i> Thêm danh mục
-    </a>
+    {{-- 🏷️ Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0 text-gradient">
+                <i class="bi bi-folder2-open"></i> Quản lý Danh mục
+            </h2>
+            <small class="text-muted">Xem, lọc và quản lý các danh mục phim</small>
+        </div>
+    </div>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Tên danh mục</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($danhmucs as $dm)
-            <tr>
-                <td>{{ $dm->id }}</td>
-                <td>{{ $dm->ten }}</td>
-                <td>
-                    <a href="{{ route('staff.danhmuc.edit', $dm->id) }}" class="btn btn-warning btn-sm">Sửa</a>
-                    <form action="{{ route('staff.danhmuc.destroy', $dm->id) }}" method="POST" class="d-inline">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-danger btn-sm" onclick="return confirm('Xóa danh mục này?')">Xóa</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    {{-- 🔍 Bộ lọc --}}
+    <form method="GET" action="{{ route('staff.danhmuc.index') }}" class="card shadow-sm mb-4 p-3 bg-light border-0">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="form-control" 
+                    placeholder="🔍 Tìm kiếm danh mục..." 
+                    value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="sort" class="form-select">
+                    <option value="">-- Sắp xếp theo --</option>
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A → Z)</option>
+                    <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z → A)</option>
+                    <option value="phim_count_desc" {{ request('sort') == 'phim_count_desc' ? 'selected' : '' }}>Nhiều phim nhất</option>
+                    <option value="phim_count_asc" {{ request('sort') == 'phim_count_asc' ? 'selected' : '' }}>Ít phim nhất</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary"><i class="bi bi-funnel"></i> Lọc</button>
+            </div>
+            <div class="col-md-2 d-grid">
+                <a href="{{ route('staff.danhmuc.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-repeat"></i> Làm mới
+                </a>
+            </div>
+        </div>
+    </form>
+
+    {{-- ✅ Thông báo --}}
+    @if (session('success'))
+        <div class="alert alert-success shadow-sm rounded-3">
+            <i class="bi bi-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger shadow-sm rounded-3">
+            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    {{-- 📋 Bảng danh mục --}}
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-header text-white">
+                    <tr class="text-center">
+                        <th style="width: 70px;">STT</th>
+                        <th class="text-start">Tên danh mục</th>
+                        <th class="text-start">Slug</th>
+                        <th style="width: 160px;">Số lượng phim</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($danhmucs as $dm)
+                        <tr class="table-row">
+                            <td class="text-center fw-bold text-muted">{{ $dm->id }}</td>
+                            <td class="fw-semibold">{{ $dm->ten }}</td>
+                            <td class="text-muted">{{ $dm->slug }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-info bg-opacity-75 px-3 py-2 shadow-sm">
+                                    {{ $dm->phims_count }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox"></i> Không có danh mục nào phù hợp.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+
+{{-- 🎨 CSS tùy chỉnh --}}
+<style>
+.text-gradient {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.table-header {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+}
+
+.table-row {
+    background-color: #fff;
+    transition: all 0.25s ease-in-out;
+}
+.table-row:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.table-row:hover {
+    background-color: #e9f5ff;
+    transform: scale(1.01);
+}
+
+.table th {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-bottom: none !important;
+}
+.table td {
+    padding: 1rem 1.2rem;
+    vertical-align: middle;
+}
+
+.btn-light {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    transition: all 0.2s ease;
+}
+.btn-light:hover {
+    background-color: #e9ecef;
+    transform: scale(1.05);
+}
+
+.card {
+    border-radius: 1rem;
+}
+</style>
 @endsection
