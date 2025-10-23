@@ -70,7 +70,7 @@
 
     <!-- Rạp -->
     <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('admin.rap.show') }}">
+        <a class="nav-link" href="{{ route('admin.rap.index') }}">
             <i class="fas fa-cubes"></i>
             <span>Rạp chiếu</span>
         </a>
