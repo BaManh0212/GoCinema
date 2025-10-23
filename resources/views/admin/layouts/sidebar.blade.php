@@ -146,7 +146,7 @@
     <li class="nav-item {{ request()->is('admin/san_pham*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.san_pham.index') }}">
             <i class="fas fa-box-open"></i>
-            <span>Sản phẩm</span>
+            <span>Đồ ăn và đồ lưu niệm</span>
         </a>
     </li>
 
