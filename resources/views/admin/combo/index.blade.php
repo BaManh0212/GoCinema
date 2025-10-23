@@ -35,6 +35,33 @@
         </div>
     @endif
 
+    {{-- 🔍 Tìm kiếm và Lọc --}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.combo.index') }}" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm theo tên combo" 
+                        value="{{ $filters['q'] ?? '' }}">
+                </div>
+                <div class="col-auto">
+                    <select name="sort" class="form-select">
+                        <option value="">-- Sắp xếp --</option>
+                        <option value="moi_nhat" {{ ($filters['sort'] ?? '') == 'moi_nhat' ? 'selected' : '' }}>Mới nhất</option>
+                        <option value="cu_nhat" {{ ($filters['sort'] ?? '') == 'cu_nhat' ? 'selected' : '' }}>Cũ nhất</option>
+                        <option value="gia_desc" {{ ($filters['sort'] ?? '') == 'gia_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+                        <option value="gia_asc" {{ ($filters['sort'] ?? '') == 'gia_asc' ? 'selected' : '' }}>Giá tăng dần</option>
+                    </select>
+                </div>
+
+                <div class="ms-auto text-end">
+                    <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">Tìm kiếm</button>
+                    <a href="{{ route('admin.combo.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">Đặt lại</a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
     {{-- 📋 Bảng Combo --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
@@ -157,6 +184,14 @@
 }
 .card {
     border-radius: 1rem;
+}
+
+/*nút lọc và đặt lại nằm bên phải */
+.ms-auto {
+    margin-left: auto !important;
+}
+.text-end {
+    text-align: right !important;
 }
 </style>
 @endsection
