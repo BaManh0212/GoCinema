@@ -1,120 +1,170 @@
 @extends('admin.layouts.admin')
 
-@section('title', 'Quản lý phim')
+@section('title', 'Quản lý Phim')
 
 @section('content')
-<div class="container mt-4">
+<div class="container py-4">
 
-    {{-- Tiêu đề --}}
-    <h2 class="text-center mb-4 fw-bold text-primary">🎬 Danh sách phim</h2>
-
-    {{-- Nút thao tác --}}
-    <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
-        <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-secondary">
-            🗑️ Thùng rác
-        </a>
-        <a href="{{ route('admin.phim.create') }}" class="btn btn-success">
-            ➕ Thêm phim mới
-        </a>
+    {{-- 🏷️ Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0 text-gradient">
+                <i class="bi bi-box-seam"></i> Danh sách Phim
+            </h2>
+            <small class="text-muted">Xem, quản lý và lọc các Phim hiện có</small>
+        </div>
+        <div>
+            <a href="{{ route('admin.phim.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
+                <i class="bi bi-plus-circle"></i> Thêm Phim Mới
+            </a>
+            <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+                <i class="bi bi-trash"></i> Thùng rác
+            </a>
+        </div>
     </div>
 
-    {{-- Thông báo --}}
+    {{-- ✅ Thông báo --}}
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        <div class="alert alert-success shadow-sm rounded-3">
+            <i class="bi bi-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger shadow-sm rounded-3">
+            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
         </div>
     @endif
 
-    {{-- Danh sách phim --}}
-    <div class="row g-3">
-        @forelse($phims as $phim)
-            <div class="col-md-6 col-lg-4">
-                <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden movie-card">
-                    
-                    {{-- Poster --}}
-                    <div style="height: 250px; overflow: hidden;">
-                        @if($phim->anh_poster)
-                            <img src="{{ asset('storage/' . $phim->anh_poster) }}" 
-                                 alt="Poster phim" 
-                                 class="img-fluid w-100 h-100 object-fit-cover">
-                        @else
-                            <div class="bg-light d-flex align-items-center justify-content-center h-100 text-muted">
-                                <small>No Image</small>
-                            </div>
-                        @endif
-                    </div>
+    {{-- 🎥 Danh sách phim --}}
 
-                    {{-- Nội dung --}}
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="fw-bold text-primary text-uppercase mb-2">{{ $phim->tieu_de }}</h5>
+    @forelse($phims as $phim)
+        <div class="movie-card shadow-sm p-3 mb-4 rounded-4 d-flex align-items-center justify-content-between bg-white">
 
-                        <span class="badge {{ $phim->ngay_cong_chieu > now() ? 'bg-info text-dark' : 'bg-success' }} mb-2">
-                            {{ $phim->ngay_cong_chieu > now() ? 'Sắp chiếu' : 'Đang chiếu' }}
-                        </span>
+            {{-- Poster --}}
+            <div class="movie-poster flex-shrink-0 me-3">
+                @if($phim->anh_poster)
+                    <img src="{{ asset('storage/' . $phim->anh_poster) }}" alt="Poster" class="poster-img rounded-3">
+                @else
+                    <div class="poster-placeholder">No Image</div>
+                @endif
+            </div>
 
-                        <ul class="list-unstyled small mb-3">
-                            <li>⏱️ <strong>Thời lượng:</strong> {{ $phim->thoi_luong }} phút</li>
-                            <li>📅 <strong>Công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</li>
-                            <li>🗣️ <strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</li>
-                            <li>🎬 <strong>Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</li>
-                            <li>👥 <strong>Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</li>
-                            <li>📁 <strong>Danh mục:</strong>
-                                @if($phim->danhMucs && $phim->danhMucs->count())
-                                    @foreach($phim->danhMucs as $dm)
-                                        <span class="badge bg-warning text-dark">{{ $dm->ten }}</span>
-                                    @endforeach
-                                @else
-                                <span class="text-muted">—</span>
-                                @endif
-                            </li>
-
-                            <li>🔞 <strong>Độ tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?? 'P' }}</li>
-                        </ul>
-
-                        {{-- Hành động --}}
-                        <div class="mt-auto d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.phim.show', $phim->id) }}" class="btn btn-sm btn-outline-primary">
-                                👁️ Xem chi tiết
-                            </a>
-                            <a href="{{ route('admin.phim.edit', $phim->id) }}" class="btn btn-sm btn-outline-primary">
-                                ✏️ Sửa
-                            </a>
-                            <form action="{{ route('admin.phim.destroy', $phim->id) }}" method="POST" 
-                                  onsubmit="return confirm('Xác nhận xóa phim này?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Xóa</button>
-                            </form>
-                        </div>
-                    </div>
+            {{-- Nội dung --}}
+            <div class="movie-details flex-grow-1">
+                <div class="d-flex align-items-center mb-1">
+                    <h5 class="fw-bold text-primary mb-0">{{ strtoupper($phim->tieu_de) }}</h5>
+                    <span class="badge ms-2 {{ $phim->ngay_cong_chieu > now() ? 'bg-info text-dark' : 'bg-success' }}">
+                        {{ $phim->ngay_cong_chieu > now() ? 'Sắp chiếu' : 'Đang chiếu' }}
+                    </span>
                 </div>
-            </div>
-        @empty
-            <div class="col-12 text-center text-muted mt-4">
-                Không có phim nào trong hệ thống 📭
-            </div>
-        @endforelse
-    </div>
 
-    {{-- Phân trang --}}
-    <div class="d-flex justify-content-center mt-4">
-        {{ $phims->links('pagination::bootstrap-5') }}
-    </div>
+                <ul class="list-unstyled small text-secondary mb-2">
+                    <li>⏱️ <strong>Thời lượng:</strong> {{ $phim->thoi_luong }} phút</li>
+                    <li>📅 <strong>Công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</li>
+                    <li>🗣️ <strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</li>
+                    <li>🎬 <strong>Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</li>
+                    <li>👥 <strong>Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</li>
+                    <li>📁 <strong>Danh mục:</strong>
+                        @forelse($phim->danhMucs as $dm)
+                            <span class="badge bg-light text-dark border">{{ $dm->ten }}</span>
+                        @empty
+                            <span class="text-muted">—</span>
+                        @endforelse
+                    </li>
+                    <li>🔞 <strong>Độ tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?? 'P' }}</li>
+                </ul>
+            </div>
+
+            {{-- Nút hành động --}}
+            <div class="movie-actions text-end d-flex flex-column gap-2 ms-3">
+                <a href="{{ route('admin.phim.show', $phim->id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Chi tiết</a>
+                <a href="{{ route('admin.phim.edit', $phim->id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Sửa</a>
+                <form action="{{ route('admin.phim.destroy', $phim->id) }}" method="POST" onsubmit="return confirm('Xác nhận xóa phim này?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Xóa</button>
+                </form>
+            </div>
+        </div>
+    @empty
+        <div class="text-center text-muted mt-5">Không có phim nào trong hệ thống 📭</div>
+    @endforelse
 
 </div>
 
-{{-- Hiệu ứng hover --}}
 <style>
+.text-gradient {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 .movie-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #eef1f5;
+    transition: all 0.25s ease;
+    background-color: #fff;
 }
 .movie-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
-.object-fit-cover {
-    object-fit: cover;
+
+/* ✅ Poster hiển thị đầy đủ, đúng tỉ lệ */
+.movie-poster {
+    width: 200px;                /* to hơn cho rõ nét */
+    height: 300px;               /* tỉ lệ chuẩn poster 2:3 */
+    overflow: hidden;
+    border-radius: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;         /* ✅ ảnh tràn full khung */
+    object-position: top;      /* hoặc center, tuỳ ảnh */
+    border-radius: 16px;
+    transition: transform 0.3s ease;
+}
+
+
+.movie-poster img:hover {
+    transform: scale(1.05);
+}
+
+/* Nếu không có ảnh */
+.poster-placeholder {
+    width: 200px;
+    height: 300px;
+    background: #f0f0f0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-weight: 600;
+}
+
+/* Nội dung phim */
+.movie-details {
+    flex: 1;
+    padding: 0 15px;
+}
+
+/* Badge & nút */
+.badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 1rem;
+}
+.movie-actions .btn {
+    font-size: 0.85rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+.movie-actions .btn:hover {
+    transform: scale(1.05);
 }
 </style>
+
 @endsection

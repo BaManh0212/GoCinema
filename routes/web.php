@@ -133,7 +133,7 @@ Route::prefix('admin')
         // Quản lý combo
         Route::resource('combo', AdminComboController::class)->except(['show'])->names('combo');
         Route::get('combo/thung-rac', [AdminComboController::class, 'trashed'])->name('combo.trashed');
-        Route::post('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
+        Route::put('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
 
         // Quản lý người dùng

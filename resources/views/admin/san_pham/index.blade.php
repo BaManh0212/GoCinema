@@ -1,75 +1,81 @@
 @extends('admin.layouts.admin')
 
+@section('title', 'Quản lý Sản phẩm')
+
 @section('content')
 <div class="container mt-4">
+
+    {{-- 🏷️ Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">📦 Danh sách đồ ăn và đồ lưu niệm</h2>
         <div>
-            <a href="{{ route('admin.san_pham.create') }}" class="btn btn-success me-2">
-                ➕ Thêm sản phẩm
+            <h2 class="fw-bold mb-0 text-gradient">
+                <i class="bi bi-basket3-fill"></i> Danh sách đồ ăn & đồ lưu niệm
+            </h2>
+            <small class="text-muted">Xem, quản lý và lọc các sản phẩm hiện có</small>
+        </div>
+        <div>
+            <a href="{{ route('admin.san_pham.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
+                <i class="bi bi-plus-circle"></i> Thêm sản phẩm
             </a>
-            <a href="{{ route('admin.san_pham.trashed') }}" class="btn btn-outline-warning">
-                🗑️ Thùng rác
+            <a href="{{ route('admin.san_pham.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+                <i class="bi bi-trash"></i> Thùng rác
             </a>
         </div>
     </div>
 
-    {{-- Hiển thị thông báo thành công --}}
+    {{-- ✅ Thông báo --}}
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        <div class="alert alert-success shadow-sm rounded-3">
+            <i class="bi bi-check-circle"></i> {{ session('success') }}
         </div>
     @endif
-    {{-- Hiển thị thông báo lỗi --}}
     @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-           {{ session('error') }}
-           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        <div class="alert alert-danger shadow-sm rounded-3">
+            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
         </div>
     @endif
 
-
-    {{-- Bảng danh sách sản phẩm --}}
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light text-center">
+    {{-- 📋 Bảng sản phẩm --}}
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-header text-white text-center">
                     <tr>
-                        <th>ID</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Giá (VNĐ)</th>
-                        <th>Số lượng</th>
-                        <th width="200px">Hành động</th>
+                        <th style="width:70px;">ID</th>
+                        <th class="text-start">Tên sản phẩm</th>
+                        <th class="text-end">Giá (VNĐ)</th>
+                        <th class="text-center">Số lượng</th>
+                        <th style="width:180px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($sanPhams as $sanPham)
-                        <tr>
-                            <td class="text-center">{{ $sanPham->id }}</td>
-                            <td>{{ $sanPham->ten }}</td>
+                        <tr class="table-row">
+                            <td class="text-center fw-bold text-muted">{{ $sanPham->id }}</td>
+                            <td class="fw-semibold text-start">{{ $sanPham->ten }}</td>
                             <td class="text-end">{{ number_format($sanPham->gia, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $sanPham->so_luong }}</td>
                             <td class="text-center">
-                                <a href="{{ route('admin.san_pham.edit', $sanPham->id) }}" class="btn btn-sm btn-outline-primary me-1">
-                                    ✏️ Sửa
-                                </a>
-                                <form action="{{ route('admin.san_pham.destroy', $sanPham->id) }}" 
-                                      method="POST" 
-                                      style="display:inline;"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này không?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        🗑️ Xóa
-                                    </button>
-                                </form>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ route('admin.san_pham.edit', $sanPham->id) }}" 
+                                       class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                        <i class="bi bi-pencil-square"></i> Sửa
+                                    </a>
+                                    <form action="{{ route('admin.san_pham.destroy', $sanPham->id) }}" 
+                                          method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này không?');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                            <i class="bi bi-trash3"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                Không có sản phẩm nào.
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox"></i> Không có sản phẩm nào.
                             </td>
                         </tr>
                     @endforelse
@@ -77,5 +83,41 @@
             </table>
         </div>
     </div>
+
 </div>
+
+{{-- 🎨 CSS đồng bộ --}}
+<style>
+.text-gradient {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.table-header {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+}
+.table-row {
+    background-color: #fff;
+    transition: all 0.25s ease-in-out;
+}
+.table-row:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.table-row:hover {
+    background-color: #e9f5ff;
+    transform: scale(1.01);
+}
+.table th {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-bottom: none !important;
+}
+.table td {
+    padding: 1rem 1.2rem;
+    vertical-align: middle;
+}
+.card {
+    border-radius: 1rem;
+}
+</style>
 @endsection

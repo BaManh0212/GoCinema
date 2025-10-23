@@ -125,11 +125,23 @@ class DanhMucController extends Controller
     }
 
     // 🗃️ Danh sách danh mục đã xóa
-    public function trashed()
+    public function trashed(Request $request)
     {
-        $danhmucs = DanhMuc::onlyTrashed()->get();
+        $query = DanhMuc::onlyTrashed();
+
+        // 🔍 Tìm kiếm theo tên
+        if ($request->filled('keyword')) {
+            $query->where('ten', 'like', '%' . $request->keyword . '%');
+        }
+
+        // 🔽 Sắp xếp theo ngày xóa mới nhất
+        $danhmucs = $query->orderByDesc('deleted_at')
+                          ->paginate(10)
+                          ->appends($request->query());
+
         return view('admin.danhmuc.trashed', compact('danhmucs'));
-    }
+}
+
 
     // 🔁 Khôi phục danh mục
     public function restore($id)
