@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">📦 Danh sách sản phẩm</h2>
+        <h2 class="fw-bold text-primary">📦 Danh sách đồ ăn và đồ lưu niệm</h2>
         <div>
             <a href="{{ route('admin.san_pham.create') }}" class="btn btn-success me-2">
                 ➕ Thêm sản phẩm

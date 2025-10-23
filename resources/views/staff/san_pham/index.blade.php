@@ -3,12 +3,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">📦 Danh sách sản phẩm</h2>
-        <div>
-            <a href="{{ route('staff.san_pham.create') }}" class="btn btn-success me-2">
-                ➕ Thêm sản phẩm
-            </a>
-        </div>
+        <h2 class="fw-bold text-primary">📦 Danh sách đồ ăn và đồ lưu niệm</h2>
     </div>
 
     {{-- Bảng danh sách sản phẩm --}}
@@ -21,7 +16,6 @@
                         <th>Tên sản phẩm</th>
                         <th>Giá (VNĐ)</th>
                         <th>Số lượng</th>
-                        <th width="200px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -31,21 +25,6 @@
                             <td>{{ $sanPham->ten }}</td>
                             <td class="text-end">{{ number_format($sanPham->gia, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $sanPham->so_luong }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('staff.san_pham.edit', $sanPham->id) }}" class="btn btn-sm btn-outline-primary me-1">
-                                    ✏️ Sửa
-                                </a>
-                                <form action="{{ route('staff.san_pham.destroy', $sanPham->id) }}" 
-                                      method="POST" 
-                                      style="display:inline;"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này không?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        🗑️ Xóa
-                                    </button>
-                                </form>
-                            </td>
                         </tr>
                     @empty
                         <tr>

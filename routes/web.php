@@ -25,6 +25,7 @@ use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
 use App\Http\Controllers\Staff\PhimController as StaffPhimController;
 use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
+use App\Http\Controllers\Staff\ComboController as StaffComboController;
 
 /*
 |--------------------------------------------------------------------------
@@ -177,8 +178,11 @@ Route::prefix('staff')
 
         // Quản lý sản phẩm
         Route::resource('san_pham', StaffSanPhamController::class)->except(['show']);
-    });
 
+        // Quản lý combo
+        Route::resource('combo', StaffComboController::class)->names('combo');
+    });
+    
 /*
 |--------------------------------------------------------------------------
 | Auth routes (đăng nhập, đăng ký, v.v.)
