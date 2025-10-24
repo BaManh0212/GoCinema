@@ -22,35 +22,31 @@
     </div>
 
     {{-- 🔍 Bộ lọc --}}
-    <form method="GET" action="{{ route('admin.danhmuc.index') }}" class="card shadow-sm mb-4 p-3 bg-light border-0">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input 
-                    type="text" 
-                    name="search" 
-                    class="form-control" 
-                    placeholder="🔍 Tìm kiếm danh mục..." 
-                    value="{{ request('search') }}">
-            </div>
-            <div class="col-md-3">
-                <select name="sort" class="form-select">
-                    <option value="">-- Sắp xếp theo --</option>
+<div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.danhmuc.index') }}" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm theo tên danh mục" 
+                        value="{{ $filters['q'] ?? '' }}">
+                </div>
+                <div class="col-auto">
+                    <select name="sort" class="form-select">
+                        <option value="">-- Sắp xếp theo --</option>
                     <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A → Z)</option>
                     <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z → A)</option>
                     <option value="phim_count_desc" {{ request('sort') == 'phim_count_desc' ? 'selected' : '' }}>Nhiều phim nhất</option>
                     <option value="phim_count_asc" {{ request('sort') == 'phim_count_asc' ? 'selected' : '' }}>Ít phim nhất</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-grid">
-                <button class="btn btn-primary"><i class="bi bi-funnel"></i> Lọc</button>
-            </div>
-            <div class="col-md-2 d-grid">
-                <a href="{{ route('admin.danhmuc.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-repeat"></i> Làm mới
-                </a>
-            </div>
+                    </select>
+                </div>
+
+                <div class="ms-auto text-end">
+                    <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">Tìm kiếm</button>
+                    <a href="{{ route('admin.danhmuc.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">Đặt lại</a>
+                </div>
+            </form>
+
         </div>
-    </form>
+    </div>
 
     {{-- ✅ Thông báo --}}
     @if (session('success'))
@@ -176,6 +172,12 @@
 
 .card {
     border-radius: 1rem;
+}
+.ms-auto {
+    margin-left: auto !important;
+}
+.text-end {
+    text-align: right !important;
 }
 </style>
 @endsection
