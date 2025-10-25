@@ -118,6 +118,29 @@
                                 placeholder="VD: 13+, 18+, P">
                             @error('do_tuoi_gioi_han') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">🗓️ Ngày kết thúc chiếu</label>
+                            <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}"
+                                   class="form-control form-control-lg @error('ngay_ket_thuc') is-invalid @enderror">
+                            @error('ngay_ket_thuc') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">🎛️ Trạng thái</label>
+                            <select name="trang_thai" class="form-select form-select-lg @error('trang_thai') is-invalid @enderror">
+                                <option value="1" {{ old('trang_thai') == '1' ? 'selected' : '' }}>Đang chiếu</option>
+                                <option value="2" {{ old('trang_thai') == '2' ? 'selected' : '' }}>Sắp chiếu</option>
+                                <option value="0" {{ old('trang_thai') == '0' ? 'selected' : '' }}>Ngừng chiếu</option>
+                            </select>
+                            @error('trang_thai') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">📐 Định dạng</label>
+                            <input type="text" name="dinh_dang" value="{{ old('dinh_dang', '2D') }}" class="form-control form-control-lg @error('dinh_dang') is-invalid @enderror" placeholder="2D, 3D...">
+                            @error('dinh_dang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
                     </div>
                 </div>
 
@@ -148,6 +171,12 @@
                         <img id="preview" src="#" alt="Xem trước poster"
                              class="img-fluid rounded shadow-sm d-none" style="max-height: 250px;">
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold"> Banner ngang</label>
+                    <input type="file" name="banner" class="form-control form-control-lg @error('banner') is-invalid @enderror" accept="image/*">
+                    @error('banner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 {{-- NÚT LƯU --}}

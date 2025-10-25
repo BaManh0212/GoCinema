@@ -11,20 +11,34 @@ class Phim extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'phim';
-   protected $fillable = [
-    'tieu_de',
-    'mo_ta',
-    'anh_poster',
-    'trailer',
-    'phu_de',
-    'thoi_luong',
-    'ngay_cong_chieu',
-    'do_tuoi_gioi_han',
-    'danh_muc_id',
-    'ngon_ngu_id',
-    'dao_dien',
-    'dien_vien',
-];
+    protected $fillable = [
+        'tieu_de',
+        'slug',
+        'mo_ta',
+        'anh_poster',
+        'banner',
+        'trailer',
+        'phu_de',
+        'thoi_luong',
+        'ngay_cong_chieu',
+        'ngay_ket_thuc',
+        'dao_dien',
+        'dien_vien',
+        'do_tuoi_gioi_han',
+        'dinh_dang',
+        'trang_thai',
+        'danh_gia',
+        'luot_xem',
+        'danh_muc_id',
+        'ngon_ngu_id',
+    ];
+
+    protected $casts = [
+        'phu_de' => 'boolean',
+        'ngay_cong_chieu' => 'date',
+        'ngay_ket_thuc' => 'date',
+        'danh_gia' => 'float',
+    ];
 
 
     public function danhMuc()

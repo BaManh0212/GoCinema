@@ -8,6 +8,7 @@ use App\Models\DanhMuc;
 use App\Models\NgonNgu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class PhimController extends Controller
 {
@@ -25,7 +26,8 @@ class PhimController extends Controller
 
     public function create()
     {
-        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+        // đảm bảo đang đăng nhập và có vai trò quản lý
+        if (!Auth::check() || Auth::user()->vaiTro->ten !== 'quan_ly') {
             return redirect()->back()->with('error', '🚫 Bạn không có quyền thêm phim!');
         }
         $danhMucs = DanhMuc::all();
@@ -35,9 +37,9 @@ class PhimController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
-    abort(403, 'Bạn không có quyền thực hiện thao tác này.');
-    }
+        if (!Auth::check() || Auth::user()->vaiTro->ten !== 'quan_ly') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
 
         $validated = $request->validate([
             'tieu_de' => 'required|string|max:255|unique:phim,tieu_de',
@@ -50,7 +52,11 @@ class PhimController extends Controller
             'ngon_ngu_id' => 'required|exists:ngon_ngu,id',
             'trailer' => 'nullable|string|max:255',
             'phu_de' => 'boolean',
+            'banner' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:4096',
             'ngay_cong_chieu' => 'required|date',
+            'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_cong_chieu',
+            'trang_thai' => 'nullable|in:0,1,2',
+            'dinh_dang' => 'nullable|string|max:10',
             'do_tuoi_gioi_han' => 'nullable|string|max:10',
             'anh_poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
@@ -78,15 +84,25 @@ class PhimController extends Controller
             $posterPath = $request->file('anh_poster')->store('posters', 'public');
         }
 
+
+        $bannerPath = null;
+        if ($request->hasFile('banner')) {
+            $bannerPath = $request->file('banner')->store('banners', 'public');
+        }
+
         $phim = Phim::create([
             'tieu_de' => $validated['tieu_de'],
             'mo_ta' => $validated['mo_ta'] ?? null,
             'thoi_luong' => $validated['thoi_luong'],
             'ngon_ngu_id' => $validated['ngon_ngu_id'],
             'anh_poster' => $posterPath,
+            'banner' => $bannerPath,
             'trailer' => $validated['trailer'] ?? null,
             'phu_de' => $validated['phu_de'] ?? false,
             'ngay_cong_chieu' => $validated['ngay_cong_chieu'],
+            'ngay_ket_thuc' => $validated['ngay_ket_thuc'] ?? null,
+            'trang_thai' => $validated['trang_thai'] ?? 1,
+            'dinh_dang' => $validated['dinh_dang'] ?? '2D',
             'do_tuoi_gioi_han' => $validated['do_tuoi_gioi_han'] ?? null,
             'dao_dien' => $validated['dao_dien'],
             'dien_vien' => $validated['dien_vien'],
@@ -145,7 +161,19 @@ class PhimController extends Controller
             $validated['anh_poster'] = $request->file('anh_poster')->store('posters', 'public');
         }
 
-        $phim->update($validated);
+        // poster field removed — no action
+
+        if ($request->hasFile('banner')) {
+            if ($phim->banner) {
+                Storage::disk('public')->delete($phim->banner);
+            }
+            $validated['banner'] = $request->file('banner')->store('banners', 'public');
+        }
+
+    $validated['trang_thai'] = $validated['trang_thai'] ?? $phim->trang_thai ?? 1;
+    $validated['dinh_dang'] = $validated['dinh_dang'] ?? $phim->dinh_dang ?? '2D';
+
+    $phim->update($validated);
         $phim->danhMucs()->sync($validated['danh_muc_ids']);
 
         return redirect()->route('staff.phim.index')->with('success', '🎬 Cập nhật phim thành công!');
@@ -159,7 +187,7 @@ class PhimController extends Controller
 
     public function destroy($id)
     {
-        if (auth()->user()->vaiTro->ten !== 'quan_ly') {
+        if (!Auth::check() || Auth::user()->vaiTro->ten !== 'quan_ly') {
             return redirect()->back()->with('error', '🚫 Bạn không có quyền xóa phim!');
         }
         $phim = Phim::findOrFail($id);
