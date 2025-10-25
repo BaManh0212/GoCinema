@@ -92,6 +92,28 @@
                     <input type="text" name="do_tuoi_gioi_han" value="{{ old('do_tuoi_gioi_han', $phim->do_tuoi_gioi_han) }}" class="form-control @error('do_tuoi_gioi_han') is-invalid @enderror" placeholder="VD: 13+, 18+, P">
                     @error('do_tuoi_gioi_han') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Ngày kết thúc chiếu</label>
+                    <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc', $phim->ngay_ket_thuc?->format('Y-m-d')) }}" class="form-control @error('ngay_ket_thuc') is-invalid @enderror">
+                    @error('ngay_ket_thuc') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Trạng thái</label>
+                    <select name="trang_thai" class="form-select @error('trang_thai') is-invalid @enderror">
+                        <option value="1" {{ old('trang_thai', $phim->trang_thai) == 1 ? 'selected' : '' }}>Đang chiếu</option>
+                        <option value="2" {{ old('trang_thai', $phim->trang_thai) == 2 ? 'selected' : '' }}>Sắp chiếu</option>
+                        <option value="0" {{ old('trang_thai', $phim->trang_thai) == 0 ? 'selected' : '' }}>Ngừng chiếu</option>
+                    </select>
+                    @error('trang_thai') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Định dạng</label>
+                    <input type="text" name="dinh_dang" value="{{ old('dinh_dang', $phim->dinh_dang ?? '2D') }}" class="form-control @error('dinh_dang') is-invalid @enderror" placeholder="2D, 3D...">
+                    @error('dinh_dang') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                </div>
             </div>
         </div>
 
@@ -126,6 +148,18 @@
                      class="img-fluid rounded shadow-sm {{ $phim->anh_poster ? '' : 'd-none' }}"
                      style="max-height: 250px; border: 1px solid #ddd; padding: 5px;">
             </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Banner ngang</label>
+            <input type="file" name="banner" class="form-control @error('banner') is-invalid @enderror" accept="image/*">
+            @error('banner') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+
+            @if($phim->banner)
+                <div class="mt-3">
+                    <img src="{{ asset('storage/' . $phim->banner) }}" alt="Banner" style="max-height:120px;width:100%;object-fit:cover;" class="rounded shadow-sm">
+                </div>
+            @endif
         </div>
 
         {{-- Nút hành động --}}

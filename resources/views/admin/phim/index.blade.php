@@ -61,7 +61,8 @@
                 <ul class="list-unstyled small text-secondary mb-2">
                     <li>⏱️ <strong>Thời lượng:</strong> {{ $phim->thoi_luong }} phút</li>
                     <li>📅 <strong>Công chiếu:</strong> {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}</li>
-                    <li>🗣️ <strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</li>
+                    <li>� <strong>Ngày kết thúc:</strong> {{ optional($phim->ngay_ket_thuc) ? \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') : '—' }}</li>
+                    <li>�🗣️ <strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu->ten ?? '—' }}</li>
                     <li>🎬 <strong>Đạo diễn:</strong> {{ $phim->dao_dien ?? '—' }}</li>
                     <li>👥 <strong>Diễn viên:</strong> {{ $phim->dien_vien ?? '—' }}</li>
                     <li>📁 <strong>Danh mục:</strong>

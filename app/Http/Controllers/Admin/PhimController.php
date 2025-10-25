@@ -8,6 +8,7 @@ use App\Models\DanhMuc;
 use App\Models\NgonNgu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PhimController extends Controller
 {
@@ -43,7 +44,11 @@ class PhimController extends Controller
             'ngon_ngu_id' => 'required|exists:ngon_ngu,id',
             'trailer' => 'nullable|string|max:255',
             'phu_de' => 'boolean',
+            'banner' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:4096',
             'ngay_cong_chieu' => 'required|date',
+            'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_cong_chieu',
+            'trang_thai' => 'nullable|in:0,1,2',
+            'dinh_dang' => 'nullable|string|max:10',
             'do_tuoi_gioi_han' => 'nullable|string|max:10',
             'anh_poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
@@ -71,15 +76,34 @@ class PhimController extends Controller
             $posterPath = $request->file('anh_poster')->store('posters', 'public');
         }
 
+
+        $bannerPath = null;
+        if ($request->hasFile('banner')) {
+            $bannerPath = $request->file('banner')->store('banners', 'public');
+        }
+
+        // Tạo slug thân thiện SEO và đảm bảo duy nhất
+        $slug = Str::slug($validated['tieu_de']);
+        $originalSlug = $slug;
+        $counter = 1;
+        while (Phim::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $counter++;
+        }
+
         $phim = Phim::create([
             'tieu_de' => $validated['tieu_de'],
+            'slug' => $slug,
             'mo_ta' => $validated['mo_ta'] ?? null,
             'thoi_luong' => $validated['thoi_luong'],
             'ngon_ngu_id' => $validated['ngon_ngu_id'],
             'anh_poster' => $posterPath,
+            'banner' => $bannerPath,
             'trailer' => $validated['trailer'] ?? null,
             'phu_de' => $validated['phu_de'] ?? false,
             'ngay_cong_chieu' => $validated['ngay_cong_chieu'],
+            'ngay_ket_thuc' => $validated['ngay_ket_thuc'] ?? null,
+            'trang_thai' => $validated['trang_thai'] ?? 1,
+            'dinh_dang' => $validated['dinh_dang'] ?? '2D',
             'do_tuoi_gioi_han' => $validated['do_tuoi_gioi_han'] ?? null,
             'dao_dien' => $validated['dao_dien'],
             'dien_vien' => $validated['dien_vien'],
@@ -111,11 +135,15 @@ class PhimController extends Controller
             'phu_de' => 'required|boolean',
             'thoi_luong' => 'required|integer|min:1',
             'ngay_cong_chieu' => 'required|date',
+            'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_cong_chieu',
             'do_tuoi_gioi_han' => 'nullable|string|max:10',
             'danh_muc_ids' => 'required|array',
             'danh_muc_ids.*' => 'exists:danh_muc,id',
             'ngon_ngu_id' => 'required|exists:ngon_ngu,id',
             'anh_poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'banner' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:4096',
+            'trang_thai' => 'nullable|in:0,1,2',
+            'dinh_dang' => 'nullable|string|max:10',
         ], [
             'tieu_de.required' => 'Vui lòng nhập tiêu đề phim.',
             'tieu_de.unique' => 'Tiêu đề phim đã tồn tại.',
@@ -138,7 +166,28 @@ class PhimController extends Controller
             $validated['anh_poster'] = $request->file('anh_poster')->store('posters', 'public');
         }
 
-        $phim->update($validated);
+
+        if ($request->hasFile('banner')) {
+            if ($phim->banner) {
+                Storage::disk('public')->delete($phim->banner);
+            }
+            $validated['banner'] = $request->file('banner')->store('banners', 'public');
+        }
+
+        // Nếu tiêu đề thay đổi, sinh slug mới và đảm bảo duy nhất
+        $newSlug = Str::slug($validated['tieu_de']);
+        $original = $newSlug;
+        $i = 1;
+        while (Phim::where('slug', $newSlug)->where('id', '!=', $phim->id)->exists()) {
+            $newSlug = $original . '-' . $i++;
+        }
+        $validated['slug'] = $newSlug;
+
+    // Ensure default values if not provided
+    $validated['trang_thai'] = $validated['trang_thai'] ?? $phim->trang_thai ?? 1;
+    $validated['dinh_dang'] = $validated['dinh_dang'] ?? $phim->dinh_dang ?? '2D';
+
+    $phim->update($validated);
         $phim->danhMucs()->sync($validated['danh_muc_ids']);
 
         return redirect()->route('admin.phim.index')->with('success', '🎬 Cập nhật phim thành công!');
