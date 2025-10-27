@@ -31,6 +31,7 @@
                     <h5 class="text-primary fw-bold mb-3">📄 Thông tin phim</h5>
 
                     <p><strong>🎬 Tiêu đề:</strong> {{ $phim->tieu_de }}</p>
+                    <p><strong>🔗 Slug:</strong> {{ $phim->slug }}</p>
                     <p><strong>📜 Mô tả:</strong> {{ $phim->mo_ta ?? '—' }}</p>
                     <p><strong>⏱️ Thời lượng:</strong> {{ $phim->thoi_luong }} phút</p>
                     <p><strong>📅 Ngày công chiếu:</strong> {{ $phim->ngay_cong_chieu ? \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') : '—' }}</p>
@@ -42,9 +43,16 @@
                     <p><strong>📐 Định dạng:</strong> {{ $phim->dinh_dang ?? '2D' }}</p>
                     <p><strong>🎛️ Trạng thái:</strong>
                         @php
-                            $statusMap = [1 => 'Đang chiếu', 2 => 'Sắp chiếu', 0 => 'Ngừng chiếu'];
+                            $trangThai = $phim->trang_thai_tu_dong;
+                            $class = match($trangThai) {
+                            'Sắp chiếu' => 'bg-info text-dark',
+                            'Đang chiếu' => 'bg-success',
+                            'Ngưng chiếu' => 'bg-secondary text-white',
+                            default => 'bg-light text-dark'
+                            };
                         @endphp
-                        {{ $statusMap[$phim->trang_thai] ?? '—' }}
+
+                        <span class="badge {{ $class }}">{{ $trangThai }}</span>
                     </p>
                     <p><strong>⭐ Đánh giá:</strong> {{ $phim->danh_gia ?? 0 }} / 10</p>
                     <p><strong>👁️ Lượt xem:</strong> {{ $phim->luot_xem ?? 0 }}</p>
