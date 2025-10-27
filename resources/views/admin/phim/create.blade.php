@@ -147,16 +147,17 @@
                 {{-- DANH MỤC --}}
                 <div class="mb-4 mt-3">
                     <label class="form-label fw-semibold">📂 Danh mục phim</label>
-                    <select name="danh_muc_ids[]" multiple
-                        class="form-select form-select-lg @error('danh_muc_ids') is-invalid @enderror">
+                    <select id="danh_muc_select" name="danh_muc_ids[]" multiple
+                        class="form-select @error('danh_muc_ids') is-invalid @enderror">
                         @foreach($danhMucs as $dm)
                             <option value="{{ $dm->id }}" {{ collect(old('danh_muc_ids'))->contains($dm->id) ? 'selected' : '' }}>
                                 {{ $dm->ten }}
                             </option>
                         @endforeach
                     </select>
-                    <small class="text-muted">Giữ Ctrl (hoặc Cmd) để chọn nhiều danh mục</small>
-                    @error('danh_muc_ids') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('danh_muc_ids') 
+                        <div class="invalid-feedback">{{ $message }}</div> 
+                    @enderror
                 </div>
 
                 {{-- POSTER --}}
@@ -190,16 +191,50 @@
     </div>
 </div>
 
-{{-- SCRIPT XEM TRƯỚC ẢNH --}}
-<script>
-function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        const output = document.getElementById('preview');
-        output.src = reader.result;
-        output.classList.remove('d-none');
-    };
-    reader.readAsDataURL(event.target.files[0]);
+<style>
+.select2-container--bootstrap-5 .select2-selection--multiple {
+    min-height: 45px; /* chiều cao hợp lý hơn */
 }
-</script>
+.select2-container--bootstrap-5 .select2-selection__choice {
+    line-height: 30px;
+}
+</style>
+
 @endsection
+
+@push('scripts')
+    {{-- 🧩 Select2 CSS --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+    {{-- 🧠 Select2 JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    {{-- SCRIPT XEM TRƯỚC ẢNH + KHỞI TẠO SELECT2 --}}
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('preview');
+                output.src = reader.result;
+                output.classList.remove('d-none');
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        $(document).ready(function() {
+            $('#danh_muc_select').select2({
+                placeholder: "📂 Chọn danh mục phim",
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap-5',
+                closeOnSelect: false,
+                language: {
+                    noResults: function() {
+                        return "Không tìm thấy danh mục nào";
+                    }
+                }
+            });
+        });
+    </script>
+@endpush
