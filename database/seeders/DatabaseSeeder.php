@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             NgonNguSeeder::class,
             DinhDangSeeder::class,
-            DanhMucSeeder::class
+            DanhMucSeeder::class,
+            RapSeeder::class,
         ]);
 
 
