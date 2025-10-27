@@ -58,8 +58,45 @@ class Phim extends Model
         return $this->belongsToMany(DinhDang::class, 'phim_dinh_dang', 'phim_id', 'dinh_dang_id');
     }
     public function danhMucs()
-{
-    return $this->belongsToMany(DanhMuc::class, 'phim_danh_muc', 'phim_id', 'danh_muc_id');
-}
+    {
+        return $this->belongsToMany(DanhMuc::class, 'phim_danh_muc', 'phim_id', 'danh_muc_id');
+    }
+    // 📅 Getter tùy chỉnh
+    public function getNgayCongChieuFormattedAttribute()
+    {
+        return $this->ngay_cong_chieu?->format('d/m/Y');
+    }
+
+    public function getNgayKetThucFormattedAttribute()
+    {
+        return $this->ngay_ket_thuc?->format('d/m/Y');
+    }
+
+    // 🔍 Scopes lọc
+    public function scopeDangChieu($query)
+    {
+        return $query->where('trang_thai', 1);
+    }
+
+    public function scopeSapChieu($query)
+    {
+        return $query->where('trang_thai', 2);
+    }
+
+    public function scopeNgungChieu($query)
+    {
+        return $query->where('trang_thai', 0);
+    }
+    public function getTrangThaiTuDongAttribute()
+    {
+    $today = now()->startOfDay();
+    $start = $this->ngay_cong_chieu ? \Carbon\Carbon::parse($this->ngay_cong_chieu)->startOfDay() : null;
+    $end = $this->ngay_ket_thuc ? \Carbon\Carbon::parse($this->ngay_ket_thuc)->endOfDay() : null;
+
+    if (!$start) return 'Không xác định';
+    if ($today->lt($start)) return 'Sắp chiếu';
+    if ($end && $today->gt($end)) return 'Ngưng chiếu';
+    return 'Đang chiếu';
+    }
 
 }

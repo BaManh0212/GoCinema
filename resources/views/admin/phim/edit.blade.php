@@ -52,8 +52,9 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Ngày công chiếu</label>
-                    <input type="date" name="ngay_cong_chieu" value="{{ old('ngay_cong_chieu', $phim->ngay_cong_chieu) }}" class="form-control @error('ngay_cong_chieu') is-invalid @enderror">
-                    @error('ngay_cong_chieu') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                    <input type="date" name="ngay_cong_chieu"
+                    value="{{ old('ngay_cong_chieu', $phim->ngay_cong_chieu ? $phim->ngay_cong_chieu->format('Y-m-d') : '') }}"
+                    class="form-control @error('ngay_cong_chieu') is-invalid @enderror">
                 </div>
             </div>
 
@@ -97,16 +98,6 @@
                     <label class="form-label fw-bold">Ngày kết thúc chiếu</label>
                     <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc', $phim->ngay_ket_thuc?->format('Y-m-d')) }}" class="form-control @error('ngay_ket_thuc') is-invalid @enderror">
                     @error('ngay_ket_thuc') <div class="text-danger mt-1">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Trạng thái</label>
-                    <select name="trang_thai" class="form-select @error('trang_thai') is-invalid @enderror">
-                        <option value="1" {{ old('trang_thai', $phim->trang_thai) == 1 ? 'selected' : '' }}>Đang chiếu</option>
-                        <option value="2" {{ old('trang_thai', $phim->trang_thai) == 2 ? 'selected' : '' }}>Sắp chiếu</option>
-                        <option value="0" {{ old('trang_thai', $phim->trang_thai) == 0 ? 'selected' : '' }}>Ngừng chiếu</option>
-                    </select>
-                    @error('trang_thai') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="mb-3">
