@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
@@ -13,36 +13,10 @@ class ComboController extends Controller
     /** =============================
      * 🧩 DANH SÁCH COMBO
      * ============================== */
-    public function index(Request $request)
+    public function index()
     {
-        $query = Combo::query();
-
-        // Tìm theo tên combo
-        if ($request->filled('q')) {
-            $query->where('ten', 'like', '%' . $request->q . '%');
-        }
-
-        // Sắp xếp
-        $sortType = $request->sort ?? 'moi_nhat'; // mặc định mới nhất
-        switch ($sortType) {
-            case 'gia_asc':
-                $query->orderBy('gia', 'asc');
-                break;
-            case 'gia_desc':
-                $query->orderBy('gia', 'desc');
-                break;
-            case 'cu_nhat':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'moi_nhat':
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
-
-        $combos = $query->get();
-        $filters = $request->only(['q', 'sort']);
-
-        return view('admin.combo.index', compact('combos', 'filters'));
+        $combos = Combo::all();
+        return view('staff.combo.index', compact('combos'));
     }
 
     /** =============================
@@ -51,7 +25,7 @@ class ComboController extends Controller
     public function create()
     {
         $sanPhams = SanPham::all();
-        return view('admin.combo.create', compact('sanPhams'));
+        return view('staff.combo.create', compact('sanPhams'));
     }
 
     /** =============================
@@ -148,7 +122,7 @@ public function store(Request $request)
     }
 
     return redirect()
-        ->route('admin.combo.index')
+        ->route('staff.combo.index')
         ->with('success', "✅ Combo đã được thêm thành công! 
         (Tối đa bạn có thể tạo {$maxCombo} combo dựa trên tồn kho hiện tại.)");
 }
@@ -160,7 +134,7 @@ public function store(Request $request)
     public function edit(Combo $combo)
     {
         $sanPhams = SanPham::all();
-        return view('admin.combo.edit', compact('combo', 'sanPhams'));
+        return view('staff.combo.edit', compact('combo', 'sanPhams'));
     }
 
     /** =============================
@@ -250,7 +224,7 @@ public function store(Request $request)
         $sp->save();
     }
 
-    return redirect()->route('admin.combo.index')->with('success', '✅ Combo đã được cập nhật thành công.');
+    return redirect()->route('staff.combo.index')->with('success', '✅ Combo đã được cập nhật thành công.');
 }
 
 
@@ -268,44 +242,17 @@ public function store(Request $request)
         }
 
         $combo->delete();
-        return redirect()->route('admin.combo.index')->with('success', '🗑️ Combo đã được xóa (và hoàn kho).');
+        return redirect()->route('staff.combo.index')->with('success', '🗑️ Combo đã được xóa (và hoàn kho).');
     }
 
     /** =============================
- * 🧰 DANH SÁCH COMBO ĐÃ XÓA (CÓ LỌC)
- * ============================== */
-public function trashed(Request $request)
-{
-    $query = Combo::onlyTrashed();
-
-    // 🔍 Lọc theo tên combo
-    if ($request->filled('q')) {
-        $query->where('ten', 'like', '%' . $request->q . '%');
+     * 🧰 DANH SÁCH COMBO ĐÃ XÓA
+     * ============================== */
+    public function trashed()
+    {
+        $combos = Combo::onlyTrashed()->get();
+        return view('staff.combo.trashed', compact('combos'));
     }
-
-    // 📊 Sắp xếp
-    $sortType = $request->sort ?? 'moi_nhat'; // mặc định mới nhất
-    switch ($sortType) {
-        case 'gia_asc':
-            $query->orderBy('gia', 'asc');
-            break;
-        case 'gia_desc':
-            $query->orderBy('gia', 'desc');
-            break;
-        case 'cu_nhat':
-            $query->orderBy('deleted_at', 'asc');
-            break;
-        case 'moi_nhat':
-            $query->orderBy('deleted_at', 'desc');
-            break;
-    }
-
-    $combos = $query->get();
-    $filters = $request->only(['q', 'sort']);
-
-    return view('admin.combo.trashed', compact('combos', 'filters'));
-}
-
 
     /** =============================
      * 🔄 KHÔI PHỤC COMBO
@@ -331,7 +278,7 @@ public function trashed(Request $request)
     // Nếu có lỗi → rollback restore (soft delete lại) và báo lỗi
     if (!empty($errors)) {
         $combo->delete(); // soft delete lại combo
-        return redirect()->route('admin.combo.trashed')->withErrors($errors);
+        return redirect()->route('staff.combo.trashed')->withErrors($errors);
     }
 
     // Nếu đủ hàng → trừ kho
@@ -341,7 +288,7 @@ public function trashed(Request $request)
         $sp->save();
     }
 
-    return redirect()->route('admin.combo.trashed')->with('success', '✅ Combo đã được khôi phục và trừ kho thành công.');
+    return redirect()->route('staff.combo.trashed')->with('success', '✅ Combo đã được khôi phục và trừ kho thành công.');
 }
 
 
@@ -352,6 +299,6 @@ public function trashed(Request $request)
     {
         ComboChiTiet::where('combo_id', $id)->delete();
         Combo::onlyTrashed()->findOrFail($id)->forceDelete();
-        return redirect()->route('admin.combo.trashed')->with('success', '🗑️ Combo đã bị xóa vĩnh viễn.');
+        return redirect()->route('staff.combo.trashed')->with('success', '🗑️ Combo đã bị xóa vĩnh viễn.');
     }
 }

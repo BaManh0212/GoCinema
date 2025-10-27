@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Quản lý Combo')
 
@@ -12,14 +12,6 @@
                 <i class="bi bi-box-seam"></i> Danh sách Combo
             </h2>
             <small class="text-muted">Xem, quản lý và lọc các Combo hiện có</small>
-        </div>
-        <div>
-            <a href="{{ route('admin.combo.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm Combo
-            </a>
-            <a href="{{ route('admin.combo.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
-                <i class="bi bi-trash"></i> Thùng rác
-            </a>
         </div>
     </div>
 
@@ -35,33 +27,6 @@
         </div>
     @endif
 
-    {{-- 🔍 Tìm kiếm và Lọc --}}
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('admin.combo.index') }}" class="row g-3 align-items-center">
-                <div class="col-auto">
-                    <input type="text" name="q" class="form-control" placeholder="Tìm theo tên combo" 
-                        value="{{ $filters['q'] ?? '' }}">
-                </div>
-                <div class="col-auto">
-                    <select name="sort" class="form-select">
-                        <option value="">-- Sắp xếp --</option>
-                        <option value="moi_nhat" {{ ($filters['sort'] ?? '') == 'moi_nhat' ? 'selected' : '' }}>Mới nhất</option>
-                        <option value="cu_nhat" {{ ($filters['sort'] ?? '') == 'cu_nhat' ? 'selected' : '' }}>Cũ nhất</option>
-                        <option value="gia_desc" {{ ($filters['sort'] ?? '') == 'gia_desc' ? 'selected' : '' }}>Giá giảm dần</option>
-                        <option value="gia_asc" {{ ($filters['sort'] ?? '') == 'gia_asc' ? 'selected' : '' }}>Giá tăng dần</option>
-                    </select>
-                </div>
-
-                <div class="ms-auto text-end">
-                    <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">Tìm kiếm</button>
-                    <a href="{{ route('admin.combo.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">Đặt lại</a>
-                </div>
-            </form>
-
-        </div>
-    </div>
-
     {{-- 📋 Bảng Combo --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
@@ -76,7 +41,6 @@
                         <th class="text-start">Sản phẩm trong Combo</th>
                         <th class="text-start">Mô tả</th>
                         <th class="text-center">Ngày tạo</th>
-                        <th style="width:180px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -120,22 +84,6 @@
                             <td class="text-start">{{ $combo->mo_ta }}</td>
                             <td class="text-center">
                                 {{ $combo->created_at ? $combo->created_at->format('d/m/Y H:i') : '-' }}
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('admin.combo.edit', $combo->id) }}" 
-                                       class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
-                                        <i class="bi bi-pencil-square"></i> Sửa
-                                    </a>
-                                    <form action="{{ route('admin.combo.destroy', $combo->id) }}" 
-                                          method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa Combo này không?');" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
-                                            <i class="bi bi-trash3"></i> Xóa
-                                        </button>
-                                    </form>
-                                </div>
                             </td>
                         </tr>
                     @empty
@@ -184,14 +132,6 @@
 }
 .card {
     border-radius: 1rem;
-}
-
-/*nút lọc và đặt lại nằm bên phải */
-.ms-auto {
-    margin-left: auto !important;
-}
-.text-end {
-    text-align: right !important;
 }
 </style>
 @endsection

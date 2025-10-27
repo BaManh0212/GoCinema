@@ -9,7 +9,7 @@ class Ghe extends Model
 {
     use HasFactory;
 
-    protected $table = 'ghe'; // tên bảng
+    protected $table = 'ghe';
 
     protected $fillable = [
         'phong_id',
@@ -17,11 +17,15 @@ class Ghe extends Model
         'cot',
         'loai',
         'trang_thai',
+        'ngay_tao',
+        'ngay_cap_nhat',
+        'ngay_xoa'
     ];
 
-    // Quan hệ với phòng chiếu
-    public function phongChieu()
+    public $timestamps = false;
+
+    public function phong()
     {
-        return $this->belongsTo(PhongChieu::class, 'phong_id', 'id');
+        return $this->belongsTo(PhongChieu::class, 'phong_id');
     }
 }

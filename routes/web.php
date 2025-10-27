@@ -19,12 +19,13 @@ use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
-
+use App\Http\Controllers\Admin\GheController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
 use App\Http\Controllers\Staff\PhimController as StaffPhimController;
 use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
+use App\Http\Controllers\Staff\ComboController as StaffComboController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,9 +102,13 @@ Route::prefix('admin')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Quản lý rạp
-        Route::resource('rap', AdminRapController::class)->names('rap');
+        Route::get('/rap', [AdminRapController::class, 'index'])->name('rap.index');
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
+        // Quản lý ghế theo từng phòng
+        Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
         // Quản lý suất chiếu
         Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
         // Quản lý danh mục
@@ -128,12 +133,12 @@ Route::prefix('admin')
         // Quản lý combo
         Route::resource('combo', AdminComboController::class)->except(['show'])->names('combo');
         Route::get('combo/thung-rac', [AdminComboController::class, 'trashed'])->name('combo.trashed');
-        Route::post('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
+        Route::put('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
 
         // Quản lý người dùng
-        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
         Route::patch('/nguoi-dung/{id}/toggle', [AdminNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle');
+        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
 
 
         // Quản lý điểm tích lũy
@@ -173,8 +178,11 @@ Route::prefix('staff')
 
         // Quản lý sản phẩm
         Route::resource('san_pham', StaffSanPhamController::class)->except(['show']);
-    });
 
+        // Quản lý combo
+        Route::resource('combo', StaffComboController::class)->names('combo');
+    });
+    
 /*
 |--------------------------------------------------------------------------
 | Auth routes (đăng nhập, đăng ký, v.v.)
