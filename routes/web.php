@@ -150,6 +150,11 @@ Route::prefix('admin')
         Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
 
         // Quản lý voucher
+        // 🧺 Thùng rác
+        Route::get('/trashed', [VoucherController::class, 'trashed'])->name('voucher.trashed');
+        Route::delete('/{id}', [VoucherController::class, 'destroy'])->name('voucher.destroy');
+        Route::put('/{id}/restore', [VoucherController::class, 'restore'])->name('voucher.restore');
+        Route::delete('/{id}/force', [VoucherController::class, 'forceDelete'])->name('voucher.forceDelete');
         Route::resource('voucher', VoucherController::class)->names('voucher');
         Route::post('voucher/{id}/toggle-status', [VoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
         Route::get('voucher-statistics', [VoucherController::class, 'statistics'])->name('voucher.statistics');

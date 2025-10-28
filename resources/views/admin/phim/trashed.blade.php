@@ -18,6 +18,70 @@
         </a>
     </div>
 
+    {{-- 🎯 Bộ lọc phim --}}
+    <div class="card border-0 shadow-sm mb-4 rounded-4">
+        <div class="card-body py-3">
+            <form method="GET" action="{{ route('admin.phim.trashed') }}">
+                <div class="row g-3 align-items-center">
+
+                    {{-- 🔍 Tìm kiếm theo tên phim --}}
+                    <div class="col-lg-3 col-md-6">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            class="form-control rounded-pill ps-4"
+                            placeholder="🔍 Tìm theo tên phim...">
+                    </div>
+
+                    {{-- 📁 Lọc theo danh mục --}}
+                    <div class="col-lg-2 col-md-4">
+                        <select name="danh_muc_id" class="form-select rounded-pill">
+                            <option value="">📂 Danh mục</option>
+                            @foreach($danhMucs as $dm)
+                                <option value="{{ $dm->id }}" {{ request('danh_muc_id') == $dm->id ? 'selected' : '' }}>
+                                    {{ $dm->ten }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- 🗣️ Lọc theo ngôn ngữ --}}
+                    <div class="col-lg-2 col-md-4">
+                        <select name="ngon_ngu_id" class="form-select rounded-pill">
+                            <option value="">🗣️ Ngôn ngữ</option>
+                            @foreach($ngonNgus as $nn)
+                                <option value="{{ $nn->id }}" {{ request('ngon_ngu_id') == $nn->id ? 'selected' : '' }}>
+                                    {{ $nn->ten }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- 🎞️ Lọc theo trạng thái --}}
+                    <div class="col-lg-2 col-md-4">
+                        <select name="trang_thai" class="form-select rounded-pill">
+                            <option value="">🎞️ Trạng thái</option>
+                            <option value="2" {{ request('trang_thai') == '2' ? 'selected' : '' }}>Sắp chiếu</option>
+                            <option value="1" {{ request('trang_thai') == '1' ? 'selected' : '' }}>Đang chiếu</option>
+                            <option value="0" {{ request('trang_thai') == '0' ? 'selected' : '' }}>Ngưng chiếu</option>
+                        </select>
+                    </div>
+
+                    {{-- 🔘 Nút thao tác --}}
+                    <div class="col-lg-3 col-md-12 text-end">
+                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-funnel"></i> Lọc
+                            </button>
+                            <a href="{{ route('admin.phim.trashed') }}" class="btn btn-outline-danger rounded-pill px-4">
+                                <i class="bi bi-x-circle"></i> Xóa lọc
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ✅ Thông báo --}}
     @if (session('success'))
         <div class="alert alert-success shadow-sm rounded-3">
@@ -36,7 +100,7 @@
             @if ($phims->count() > 0)
                 <div class="table-responsive">
                     <table class="table align-middle text-center mb-0">
-                        <thead class="bg-gradient text-white"
+                        <thead class="text-white"
                             style="background: linear-gradient(90deg, #007bff, #00c3ff);">
                             <tr>
                                 <th width="5%">ID</th>
@@ -44,6 +108,7 @@
                                 <th class="text-start">Tên phim</th>
                                 <th>Danh mục</th>
                                 <th>Ngôn ngữ</th>
+                                <th>Trạng thái</th>
                                 <th>Ngày xóa</th>
                                 <th width="25%">Hành động</th>
                             </tr>
@@ -73,6 +138,18 @@
                                         @endif
                                     </td>
                                     <td>{{ $phim->ngonNgu->ten ?? '—' }}</td>
+                                    <td>
+                                        @switch($phim->trang_thai)
+                                            @case(1)
+                                                <span class="badge bg-success">Đang chiếu</span>
+                                                @break
+                                            @case(2)
+                                                <span class="badge bg-info text-dark">Sắp chiếu</span>
+                                                @break
+                                            @default
+                                                <span class="badge bg-secondary">Ngưng chiếu</span>
+                                        @endswitch
+                                    </td>
                                     <td class="text-muted">
                                         {{ $phim->deleted_at ? \Carbon\Carbon::parse($phim->deleted_at)->format('d/m/Y H:i') : '—' }}
                                     </td>

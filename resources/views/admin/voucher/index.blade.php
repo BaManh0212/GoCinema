@@ -15,7 +15,10 @@
         </div>
         <div>
             <a href="{{ route('admin.voucher.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm Voucher
+                <i class="bi bi-plus-circle"></i> Thêm Voucher Mới
+            </a>
+            <a href="{{ route('admin.voucher.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+                <i class="bi bi-trash"></i> Thùng rác
             </a>
         </div>
     </div>
@@ -41,21 +44,21 @@
                            value="{{ request('search') }}">
                 </div>
                 <div class="col-lg-2 col-md-4">
-                    <select name="loai" class="form-select">
+                    <select name="loai" class="form-select rounded-pill">
                         <option value="">-- Loại --</option>
                         <option value="phan_tram" {{ request('loai') == 'phan_tram' ? 'selected' : '' }}>Phần trăm</option>
                         <option value="so_tien" {{ request('loai') == 'so_tien' ? 'selected' : '' }}>Số tiền</option>
                     </select>
                 </div>
                 <div class="col-lg-2 col-md-4">
-                    <select name="kich_hoat" class="form-select">
+                    <select name="kich_hoat" class="form-select rounded-pill">
                         <option value="">-- Trạng thái --</option>
                         <option value="1" {{ request('kich_hoat') == '1' ? 'selected' : '' }}>Đang bật</option>
                         <option value="0" {{ request('kich_hoat') == '0' ? 'selected' : '' }}>Đang tắt</option>
                     </select>
                 </div>
                 <div class="col-lg-2 col-md-4">
-                    <select name="ap_dung_cho" class="form-select" disabled>
+                    <select name="ap_dung_cho" class="form-select rounded-pill" disabled>
                         <option value="">Vé phim</option>
                     </select>
                 </div>
@@ -73,12 +76,6 @@
 
     {{-- ====== DANH SÁCH VOUCHER ====== --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-            <h5 class="fw-semibold mb-0 text-gradient">
-                <i class="bi bi-ticket-detailed"></i> Danh sách Voucher
-            </h5>
-            <span class="badge bg-primary px-3 py-2 shadow-sm">{{ $vouchers->total() }} voucher</span>
-        </div>
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
