@@ -70,6 +70,7 @@
                     <tr>
                         <th style="width:70px;">STT</th>
                         <th class="text-start">Tên Combo</th>
+                        <th class="text-start">Slug</th> {{-- 🆕 Thêm cột slug --}}
                         <th class="text-end">Giá (VNĐ)</th>
                         <th class="text-center">Số lượng</th>
                         <th class="text-center">Tổng SP</th>
@@ -87,6 +88,7 @@
                         <tr class="table-row">
                             <td class="text-center fw-bold text-muted">{{ $combo->id }}</td>
                             <td class="fw-semibold text-start">{{ $combo->ten }}</td>
+                            <td class="text-start text-muted">{{ $combo->slug }}</td>
                             <td class="text-end">{{ number_format($combo->gia, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $combo->so_luong }}</td>
                             <td class="text-center">{{ $tongSanPham }}</td>
