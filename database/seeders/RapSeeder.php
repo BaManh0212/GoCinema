@@ -12,6 +12,7 @@ class RapSeeder extends Seeder
         DB::table('rap')->insert([
             [
                 'ten' => 'Gocinema',
+                'slug' => 'go-cinema',
                 'logo' => 'logo-datn.png',
                 'dia_chi' => '13 Trịnh Văn Bô, Hà Nội',
                 'so_dien_thoai' => '0359445669',

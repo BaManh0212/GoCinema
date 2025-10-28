@@ -68,6 +68,7 @@
                     <tr>
                         <th style="width:70px;">ID</th>
                         <th class="text-start">Tên sản phẩm</th>
+                        <th class="text-start">Slug</th>
                         <th class="text-end">Giá (VNĐ)</th>
                         <th class="text-center">Số lượng</th>
                         <th style="width:180px;">Hành động</th>
@@ -78,6 +79,7 @@
                         <tr class="table-row">
                             <td class="text-center fw-bold text-muted">{{ $sanPham->id }}</td>
                             <td class="fw-semibold text-start">{{ $sanPham->ten }}</td>
+                            <td class="text-start text-muted">{{ $sanPham->slug }}</td>
                             <td class="text-end">{{ number_format($sanPham->gia, 0, ',', '.') }}</td>
                             <td class="text-center">{{ $sanPham->so_luong }}</td>
                             <td class="text-center">

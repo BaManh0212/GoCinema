@@ -12,12 +12,20 @@ class Rap extends Model
     protected $table = 'rap'; // Tên bảng trong database
 
     protected $fillable = [
-    'ten', 'dia_chi', 'so_dien_thoai', 'email', 'logo'
+    'ten', 'dia_chi', 'so_dien_thoai', 'email', 'logo', 'slug'
 ];
 
     public function phongchieus()
 {
     return $this->hasMany(PhongChieu::class, 'rap_id');
 }
+protected static function booted()
+    {
+        static::creating(function ($rap) {
+            if (empty($rap->slug)) {
+                $rap->slug = Str::slug($rap->ten);
+            }
+        });
+    }
 
 }
