@@ -104,13 +104,20 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                @if($voucher->conHieuLuc())
-                                    <span class="badge bg-success bg-opacity-75 px-3 py-2 shadow-sm">
-                                        <i class="bi bi-check-circle"></i> Hoạt động
+                                @if(!$voucher->kich_hoat)
+                                    <span class="badge rounded-pill bg-secondary bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-pause-circle fs-6"></i>
+                                        <span>Đã tắt</span>
+                                    </span>
+                                @elseif(!$voucher->conHieuLuc())
+                                    <span class="badge rounded-pill bg-danger bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-x-circle fs-6"></i>
+                                        <span>Hết hạn</span>
                                     </span>
                                 @else
-                                    <span class="badge bg-danger bg-opacity-75 px-3 py-2 shadow-sm">
-                                        <i class="bi bi-x-circle"></i> Hết hạn
+                                    <span class="badge rounded-pill bg-success bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-check-circle fs-6"></i>
+                                        <span>Hoạt động</span>
                                     </span>
                                 @endif
                             </td>
@@ -253,6 +260,17 @@ function confirmDelete(id) {
 .table td .d-flex > .btn {
     min-width: 56px;
 }
+.badge {
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+}
+.badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.4rem 0.8rem rgba(0,0,0,0.2);
+}
+
 
 </style>
 @endpush
