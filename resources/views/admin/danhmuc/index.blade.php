@@ -30,7 +30,7 @@
                         value="{{ $filters['q'] ?? '' }}">
                 </div>
                 <div class="col-auto">
-                    <select name="sort" class="form-select">
+                    <select name="sort" class="form-select rounded-pill">
                         <option value="">-- Sắp xếp theo --</option>
                     <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A → Z)</option>
                     <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z → A)</option>

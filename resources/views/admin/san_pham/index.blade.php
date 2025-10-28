@@ -44,7 +44,7 @@
                            value="{{ $filters['q'] ?? '' }}">
                 </div>
                 <div class="col-auto">
-                    <select name="sort" class="form-select">
+                    <select name="sort" class="form-select rounded-pill">
                         <option value="">-- Sắp xếp --</option>
                         <option value="gia_desc" {{ ($filters['sort'] ?? '') == 'gia_desc' ? 'selected' : '' }}>Giá giảm dần</option>
                         <option value="gia_asc" {{ ($filters['sort'] ?? '') == 'gia_asc' ? 'selected' : '' }}>Giá tăng dần</option>

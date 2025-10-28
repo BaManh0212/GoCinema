@@ -72,11 +72,63 @@ class PhimController extends Controller
 }
 
 
-    public function trashed()
+   public function trashed(Request $request)
     {
-        $phims = Phim::onlyTrashed()->with(['danhMucs', 'ngonNgu'])->paginate(10);
-        return view('admin.phim.trashed', compact('phims'));
+        $query = Phim::onlyTrashed()->with(['danhMucs', 'ngonNgu']);
+
+        // 🔍 Tìm kiếm theo tiêu đề
+        if ($request->filled('search')) {
+            $query->where('tieu_de', 'like', '%' . $request->search . '%');
+        }
+
+        // 🗂️ Lọc theo danh mục
+        if ($request->filled('danh_muc_id')) {
+            $query->whereHas('danhMucs', function ($q) use ($request) {
+                $q->where('danh_muc.id', $request->danh_muc_id);
+            });
+        }
+
+        // 🗣️ Lọc theo ngôn ngữ
+        if ($request->filled('ngon_ngu_id')) {
+            $query->where('ngon_ngu_id', $request->ngon_ngu_id);
+        }
+
+        // 🎞️ Lọc theo trạng thái (0: ngưng chiếu, 1: đang chiếu, 2: sắp chiếu)
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+
+        // 📅 Sắp xếp theo ngày công chiếu giảm dần
+        $query->orderByDesc('ngay_cong_chieu');
+
+        // 📄 Phân trang
+        $phims = $query->paginate(10)->appends($request->query());
+
+        // ⚙️ Xác định trạng thái chiếu (để hiển thị label màu)
+        foreach ($phims as $phim) {
+            $today = now();
+            $ngayBatDau = $phim->ngay_cong_chieu ? Carbon::parse($phim->ngay_cong_chieu) : null;
+            $ngayKetThuc = $phim->ngay_ket_thuc ? Carbon::parse($phim->ngay_ket_thuc) : null;
+
+            if ($ngayBatDau && $today->lt($ngayBatDau)) {
+                $phim->trang_thai_chieu = 'Sắp chiếu';
+                $phim->trang_thai_mau = 'bg-info text-dark';
+            } elseif ($ngayKetThuc && $today->gt($ngayKetThuc)) {
+                $phim->trang_thai_chieu = 'Ngưng chiếu';
+                $phim->trang_thai_mau = 'bg-secondary text-white';
+            } else {
+                $phim->trang_thai_chieu = 'Đang chiếu';
+                $phim->trang_thai_mau = 'bg-success text-white';
+            }
+        }
+
+        // Danh sách dữ liệu cho dropdown
+        $danhMucs = DanhMuc::all();
+        $ngonNgus = NgonNgu::all();
+
+        return view('admin.phim.trashed', compact('phims', 'danhMucs', 'ngonNgus'));
     }
+
 
     public function create()
     {

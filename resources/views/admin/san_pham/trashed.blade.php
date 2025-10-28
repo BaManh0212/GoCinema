@@ -26,7 +26,7 @@
                         value="{{ $filters['q'] ?? '' }}">
                 </div>
                 <div class="col-auto">
-                    <select name="sort" class="form-select">
+                    <select name="sort" class="form-select rounded-pill">
                         <option value="">-- Sắp xếp --</option>
                         <option value="moi_nhat" {{ ($filters['sort'] ?? '') == 'moi_nhat' ? 'selected' : '' }}>Mới nhất</option>
                             <option value="cu_nhat" {{ ($filters['sort'] ?? '') == 'cu_nhat' ? 'selected' : '' }}>Cũ nhất</option>

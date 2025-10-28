@@ -178,14 +178,20 @@ class VoucherController extends Controller
 }
 
 
+    public function trashed()
+    {
+        $vouchers = Voucher::onlyTrashed()->paginate(10);
+        return view('admin.voucher.trashed', compact('vouchers'));
+    }
+
     /**
-     * Xóa voucher
+     * Xóa mềm voucher
      */
     public function destroy($id)
     {
         $voucher = Voucher::findOrFail($id);
 
-        // Kiểm tra xem có người dùng nào đã đổi voucher này chưa
+        // ⚠️ Kiểm tra xem có người dùng nào đã đổi voucher này chưa
         $daDuocDoi = DB::table('voucher_nguoi_dung')
             ->where('voucher_id', $id)
             ->exists();
@@ -194,12 +200,36 @@ class VoucherController extends Controller
             return back()->with('error', 'Không thể xóa voucher này vì đã có người dùng đổi!');
         }
 
+        // 🗑️ Xóa mềm
         $voucher->delete();
 
         return redirect()->route('admin.voucher.index')
-            ->with('success', 'Xóa voucher thành công!');
+            ->with('success', 'Voucher đã được chuyển vào thùng rác!');
     }
 
+    /**
+     * Khôi phục voucher từ thùng rác
+     */
+    public function restore($id)
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $voucher->restore();
+
+        return redirect()->route('admin.voucher.trashed')
+            ->with('success', 'Voucher đã được khôi phục thành công!');
+    }
+
+    /**
+     * Xóa vĩnh viễn voucher
+     */
+    public function forceDelete($id)
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $voucher->forceDelete();
+
+        return redirect()->route('admin.voucher.trashed')
+            ->with('success', 'Voucher đã bị xóa vĩnh viễn!');
+    }
     /**
      * Bật/tắt kích hoạt voucher
      */
