@@ -26,7 +26,7 @@
                                        name="ten" 
                                        value="{{ old('ten', $voucher->ten) }}"
                                        placeholder="Ví dụ: Voucher 1.000.000đ"
-                                       required>
+                                        >
                                 @error('ten')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -41,7 +41,7 @@
                                        value="{{ old('diem_can', $voucher->diem_can) }}"
                                        min="1"
                                        placeholder="VD: 200"
-                                       required>
+                                        >
                                 @error('diem_can')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -55,7 +55,7 @@
                                         id="loai" 
                                         name="loai"
                                         onchange="toggleGiamToiDa()" 
-                                        required>
+                                         >
                                     <option value="">-- Chọn loại --</option>
                                     <option value="phan_tram" {{ old('loai', $voucher->loai) == 'phan_tram' ? 'selected' : '' }}>Phần trăm (%)</option>
                                     <option value="so_tien" {{ old('loai', $voucher->loai) == 'so_tien' ? 'selected' : '' }}>Số tiền (đ)</option>
@@ -75,7 +75,7 @@
                                        min="0"
                                        step="0.01"
                                        placeholder="VD: 10 hoặc 50000"
-                                       required>
+                                        >
                                 @error('gia_tri')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -102,7 +102,7 @@
                                 <select class="form-select @error('ap_dung_cho') is-invalid @enderror" 
                                         id="ap_dung_cho" 
                                         name="ap_dung_cho" 
-                                        required>
+                                         >
                                     <option value="tat_ca" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 'tat_ca' ? 'selected' : '' }}>Tất cả</option>
                                     <option value="ve" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 've' ? 'selected' : '' }}>Vé xem phim</option>
                                     <option value="san_pham" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 'san_pham' ? 'selected' : '' }}>Sản phẩm</option>
@@ -139,7 +139,7 @@
                                        value="{{ old('so_luong_toi_da', $voucher->so_luong_toi_da) }}"
                                        min="1"
                                        placeholder="VD: 100"
-                                       required>
+                                        >
                                 @error('so_luong_toi_da')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -154,7 +154,7 @@
                                        name="so_lan_su_dung" 
                                        value="{{ old('so_lan_su_dung', $voucher->so_lan_su_dung) }}"
                                        min="1"
-                                       required>
+                                        >
                                 @error('so_lan_su_dung')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

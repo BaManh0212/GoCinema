@@ -15,7 +15,7 @@ use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
-use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
@@ -150,9 +150,9 @@ Route::prefix('admin')
         Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
 
         // Quản lý voucher
-        Route::resource('voucher', AdminVoucherController::class)->names('voucher');
-        Route::post('voucher/{id}/toggle-status', [AdminVoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
-        Route::get('voucher-statistics', [AdminVoucherController::class, 'statistics'])->name('voucher.statistics');
+        Route::resource('voucher', VoucherController::class)->names('voucher');
+        Route::post('voucher/{id}/toggle-status', [VoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
+        Route::get('voucher-statistics', [VoucherController::class, 'statistics'])->name('voucher.statistics');
 
         // Quản lý đơn vé
         Route::resource('donve', AdminDonDatVeController::class)->names('donve');
