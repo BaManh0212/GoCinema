@@ -50,4 +50,26 @@ class GheController extends Controller
 
         return back()->with('success', 'Đã xóa ghế thành công!');
     }
+   public function updateMap(Request $request, $phong_id)
+{
+    $seats = $request->input('seats', []);
+
+    foreach ($seats as $seat) {
+        Ghe::updateOrCreate(
+            [
+                'phong_id' => $phong_id,
+                'hang' => $seat['hang'],
+                'cot' => $seat['cot'],
+            ],
+            [
+                'loai' => $seat['loai'],
+                'trang_thai' => $seat['trang_thai'],
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    return response()->json(['success' => true]);
+}
+
 }

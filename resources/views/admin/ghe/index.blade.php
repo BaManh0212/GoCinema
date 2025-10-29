@@ -1,104 +1,151 @@
 @extends('admin.layouts.admin')
 
+@section('title', 'Sơ đồ ghế phòng chiếu')
+
 @section('content')
-<div class="container mt-4">
-    <h2 class="fw-bold text-primary mb-3">
-        🎟️ Quản lý ghế - {{ $phong->ten }}
-    </h2>
+<div class="container">
+    <h4 class="mb-4 text-primary fw-bold">🎬 Sơ đồ ghế phòng chiếu</h4>
 
-    {{-- Thông báo --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    {{-- Chú thích màu --}}
+    <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
+        <div><span class="legend-box seat-vip"></span> Ghế VIP</div>
+        <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
+        <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
+        <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
+    </div>
 
-    <div class="card shadow-sm border-0 rounded-4 p-4">
-        <div class="d-flex justify-content-between mb-3">
-            <a href="{{ route('admin.phongchieu.index') }}" class="btn btn-secondary">
-                ← Quay lại danh sách phòng chiếu
-            </a>
+    {{-- Sơ đồ ghế --}}
+    <div class="seat-map p-4 border rounded bg-white shadow-sm">
+        <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
 
-            {{-- Form thêm ghế --}}
-            <form action="{{ route('admin.phongchieu.ghe.store', $phong->id) }}" method="POST" class="d-flex gap-2">
-                @csrf
-                <input type="text" name="hang" class="form-control" placeholder="Hàng (A, B...)" style="width:100px">
-                <input type="number" name="cot" class="form-control" placeholder="Cột (1,2...)" style="width:100px">
-                <select name="loai" class="form-select" style="width:130px">
-                    <option value="thuong">Thường</option>
-                    <option value="vip">VIP</option>
-                    <option value="doi">Đôi</option>
-                </select>
-                <button class="btn btn-primary">➕ Thêm ghế</button>
-            </form>
-        </div>
+        <div class="d-flex flex-column align-items-center">
+            @php
+                $hangs = range('A', 'K'); // 11 hàng
+                $soCot = 13;
+            @endphp
 
-        {{-- Sơ đồ ghế --}}
-        <div class="seat-map text-center mt-4">
-            @forelse($ghes as $hang => $danhSachGhe)
-                <div class="d-flex justify-content-center align-items-center mb-3">
-                    <strong class="me-3">{{ $hang }}</strong>
+            @foreach ($hangs as $index => $hang)
+                @php
+                    if ($index < 3) $loai = 'vip';
+                    elseif ($index < 6) $loai = 'doi';
+                    else $loai = 'thuong';
+                @endphp
 
-                    {{-- Dãy 1 --}}
-                    <div class="d-flex me-5">
-                        @foreach($danhSachGhe->slice(0, 5) as $ghe)
-                            <form action="{{ route('admin.phongchieu.ghe.destroy', $ghe->id) }}" 
-                                  method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa ghế {{ $hang }}{{ $ghe->cot }} không?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="seat border-0 
-                                    @if($ghe->trang_thai === 'hong') bg-danger
-                                    @elseif($ghe->trang_thai === 'bao_tri') bg-warning
-                                    @else bg-success @endif
-                                    text-white rounded-2 me-1"
-                                    style="width:40px; height:40px;" 
-                                    title="Xóa ghế {{ $hang }}{{ $ghe->cot }}">
-                                    {{ $ghe->cot }}
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
-
-                    {{-- Dãy 2 --}}
-                    <div class="d-flex ms-5">
-                        @foreach($danhSachGhe->slice(5) as $ghe)
-                            <form action="{{ route('admin.phongchieu.ghe.destroy', $ghe->id) }}" 
-                                  method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa ghế {{ $hang }}{{ $ghe->cot }} không?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="seat border-0 
-                                    @if($ghe->trang_thai === 'hong') bg-danger
-                                    @elseif($ghe->trang_thai === 'bao_tri') bg-warning
-                                    @else bg-success @endif
-                                    text-white rounded-2 me-1"
-                                    style="width:40px; height:40px;" 
-                                    title="Xóa ghế {{ $hang }}{{ $ghe->cot }}">
-                                    {{ $ghe->cot }}
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
+                <div class="d-flex mb-2">
+                    @for ($cot = 1; $cot <= $soCot; $cot++)
+                        <div class="seat seat-{{ $loai }}"
+                             data-hang="{{ $hang }}"
+                             data-cot="{{ $cot }}"
+                             data-loai="{{ $loai }}"
+                             data-trangthai="hoat_dong">
+                            {{ $hang }}{{ $cot }}
+                        </div>
+                    @endfor
                 </div>
-            @empty
-                <p class="text-muted">Chưa có ghế nào trong phòng này.</p>
-            @endforelse
+
+                @if ($hang == 'F')
+                    <div style="height: 20px;"></div>
+                @endif
+            @endforeach
         </div>
     </div>
-</div>
 
+    {{-- Nút lưu sơ đồ --}}
+    <div class="mt-4 text-end">
+        <button id="btnSaveLayout" class="btn btn-success px-4">💾 Lưu sơ đồ</button>
+    </div>
+</div>
+@endsection
+
+@push('styles')
 <style>
 .seat {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    width: 45px;
+    height: 45px;
+    margin: 4px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+    line-height: 45px;
+    font-size: 12px;
     cursor: pointer;
-    transition: 0.2s;
+    font-weight: 500;
+    color: #222;
+    user-select: none;
+}
+.seat-vip { background-color: #FFD700; }
+.seat-doi { background-color: #98FB98; }
+.seat-thuong { background-color: #87CEFA; }
+.seat-bao-tri { background-color: #d1d5db !important; }
+
+.legend-box {
+    display: inline-block;
+    width: 25px; height: 25px;
+    margin-right: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+.screen {
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+    font-weight: 600;
+    padding: 10px 0;
+    border-radius: 5px;
+    width: 60%;
+    margin: 0 auto;
+    letter-spacing: 2px;
 }
 .seat:hover {
-    transform: scale(1.1);
-    opacity: 0.8;
+    transform: scale(1.08);
+    transition: 0.15s;
 }
 </style>
-@endsection
+@endpush
+
+@push('scripts')
+<script>
+// Toggle trạng thái ghế
+document.querySelectorAll('.seat').forEach(seat => {
+    seat.addEventListener('click', () => {
+        const isBaoTri = seat.dataset.trangthai === 'bao_tri';
+
+        if (isBaoTri) {
+            seat.dataset.trangthai = 'hoat_dong';
+            seat.classList.remove('seat-bao-tri');
+            seat.classList.add('seat-' + seat.dataset.loai);
+        } else {
+            seat.dataset.trangthai = 'bao_tri';
+            seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong');
+            seat.classList.add('seat-bao-tri');
+        }
+    });
+});
+
+// Gửi dữ liệu lên server
+document.getElementById('btnSaveLayout').addEventListener('click', () => {
+    const seats = Array.from(document.querySelectorAll('.seat')).map(seat => ({
+        hang: seat.dataset.hang,
+        cot: seat.dataset.cot,
+        loai: seat.dataset.loai,
+        trang_thai: seat.dataset.trangthai
+    }));
+
+    fetch(`{{ route('admin.admin.phongchieu.ghe.updateMap', $phong->id ?? 21) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ seats })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) alert('✅ Đã lưu trạng thái ghế thành công!');
+        else alert('❌ Lưu thất bại!');
+    })
+    .catch(() => alert('❌ Lỗi kết nối!'));
+});
+</script>
+@endpush

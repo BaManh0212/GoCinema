@@ -3,27 +3,29 @@
 @section('content')
 <div class="container mt-4">
     <h2 class="fw-bold text-primary mb-4">
-        <i class="bi bi-plus-circle"></i> 🎬 Thêm mới suất chiếu
+        <i class="bi bi-plus-circle"></i> 🎬 Tạo lịch suất chiếu tự động
     </h2>
 
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body">
-            <form action="{{ route('admin.suatchieu.store') }}" method="POST">
+            <form action="{{ route('admin.admin.suatchieu.autoStore') }}" method="POST">
                 @csrf
 
+                {{-- 🎞 Chọn phim --}}
                 <div class="mb-3">
                     <label for="phim_id" class="form-label fw-bold">Phim</label>
                     <select name="phim_id" id="phim_id" class="form-select @error('phim_id') is-invalid @enderror">
                         <option value="">-- Chọn phim --</option>
                         @foreach ($phims as $phim)
                             <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
-                                {{ $phim->tieu_de }}
+                                {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
                             </option>
                         @endforeach
                     </select>
                     @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- 🏢 Chọn phòng chiếu --}}
                 <div class="mb-3">
                     <label for="phong_id" class="form-label fw-bold">Phòng chiếu</label>
                     <select name="phong_id" id="phong_id" class="form-select @error('phong_id') is-invalid @enderror">
@@ -37,27 +39,29 @@
                     @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- 📅 Ngày bắt đầu - kết thúc --}}
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="gio_bat_dau" class="form-label fw-bold">Giờ bắt đầu</label>
-                        <input type="datetime-local" name="gio_bat_dau" id="gio_bat_dau"
-                            value="{{ old('gio_bat_dau') }}" class="form-control @error('gio_bat_dau') is-invalid @enderror">
-                        @error('gio_bat_dau') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label fw-bold">Ngày bắt đầu</label>
+                        <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control">
                     </div>
-
                     <div class="col-md-6 mb-3">
-                        <label for="gio_ket_thuc" class="form-label fw-bold">Giờ kết thúc</label>
-                        <input type="datetime-local" name="gio_ket_thuc" id="gio_ket_thuc"
-                            value="{{ old('gio_ket_thuc') }}" class="form-control @error('gio_ket_thuc') is-invalid @enderror">
-                        @error('gio_ket_thuc') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label fw-bold">Ngày kết thúc</label>
+                        <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control">
                     </div>
                 </div>
 
+                {{-- 🕒 Giờ bắt đầu đầu tiên trong ngày --}}
                 <div class="mb-3">
-                    <label for="gia_ve" class="form-label fw-bold">Giá vé (VNĐ)</label>
-                    <input type="number" name="gia_ve" id="gia_ve" min="0" step="1000"
-                        value="{{ old('gia_ve') }}" class="form-control @error('gia_ve') is-invalid @enderror">
-                    @error('gia_ve') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <label class="form-label fw-bold">Giờ chiếu đầu tiên trong ngày</label>
+                    <input type="time" name="gio_bat_dau_ngay" value="{{ old('gio_bat_dau_ngay', '08:00') }}" class="form-control">
+                </div>
+
+                {{-- 💰 Giá vé --}}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Giá vé (VNĐ)</label>
+                    <input type="number" name="gia_ve" min="0" step="1000"
+                        value="{{ old('gia_ve', 70000) }}" class="form-control">
                 </div>
 
                 <div class="d-flex justify-content-end">
@@ -65,7 +69,7 @@
                         <i class="bi bi-arrow-left"></i> Quay lại
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Lưu suất chiếu
+                        <i class="bi bi-save"></i> Tạo tự động
                     </button>
                 </div>
             </form>

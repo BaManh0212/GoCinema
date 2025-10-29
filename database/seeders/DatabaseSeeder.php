@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             NgonNguSeeder::class,
             DinhDangSeeder::class,
-            DanhMucSeeder::class
+            DanhMucSeeder::class,
+            RapSeeder::class,
         ]);
 
 
@@ -51,6 +52,7 @@ class DatabaseSeeder extends Seeder
                 'vai_tro_id' => $manager->id,
             ]);
         }
+        $this->call(PhimSeeder::class);
 
     }
 }

@@ -58,38 +58,50 @@ class VoucherController extends Controller
      * Lưu voucher mới
      */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'ten' => 'required|string|max:255',
-            'loai' => 'required|in:phan_tram,so_tien',
-            'gia_tri' => 'required|numeric|min:0',
-            'gia_tri_don_hang_toi_thieu' => 'nullable|numeric|min:0',
-            'ap_dung_cho' => 'required|in:ve,san_pham,tat_ca',
-            'so_lan_su_dung' => 'required|integer|min:1',
-            'diem_can' => 'required|integer|min:1',
-            'ngay_bat_dau' => 'nullable|date',
-            'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
-            'kich_hoat' => 'boolean'
-        ], [
-            'ten.required' => 'Vui lòng nhập tên voucher',
-            'loai.required' => 'Vui lòng chọn loại voucher',
-            'gia_tri.required' => 'Vui lòng nhập giá trị voucher',
-            'gia_tri.min' => 'Giá trị voucher phải lớn hơn 0',
-            'ap_dung_cho.required' => 'Vui lòng chọn loại áp dụng',
-            'so_lan_su_dung.required' => 'Vui lòng nhập số lần sử dụng',
-            'so_lan_su_dung.min' => 'Số lần sử dụng phải lớn hơn 0',
-            'diem_can.required' => 'Vui lòng nhập số điểm cần để đổi',
-            'diem_can.min' => 'Số điểm phải lớn hơn 0',
-            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'
-        ]);
+{
+    // ✅ Chuyển checkbox sang true/false để validate đúng kiểu boolean
+    $request->merge([
+        'kich_hoat' => $request->has('kich_hoat')
+    ]);
 
-        $validated['kich_hoat'] = $request->has('kich_hoat');
+    // ✅ Để Laravel tự xử lý lỗi validate
+    $validated = $request->validate([
+        'ten' => 'required|string|max:255',
+        'loai' => 'required|in:phan_tram,so_tien',
+        'gia_tri' => 'required|numeric|min:0',
+        'gia_tri_don_hang_toi_thieu' => 'nullable|numeric|min:0',
+        'ap_dung_cho' => 'required|in:ve,san_pham,tat_ca',
+        'so_lan_su_dung' => 'required|integer|min:1',
+        'diem_can' => 'required|integer|min:1',
+        'ngay_bat_dau' => 'nullable|date',
+        'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
+        'kich_hoat' => 'boolean'
+    ], [
+        'ten.required' => 'Vui lòng nhập tên voucher',
+        'loai.required' => 'Vui lòng chọn loại voucher',
+        'gia_tri.required' => 'Vui lòng nhập giá trị voucher',
+        'gia_tri.min' => 'Giá trị voucher phải lớn hơn 0',
+        'ap_dung_cho.required' => 'Vui lòng chọn loại áp dụng',
+        'so_lan_su_dung.required' => 'Vui lòng nhập số lần sử dụng',
+        'so_lan_su_dung.min' => 'Số lần sử dụng phải lớn hơn 0',
+        'diem_can.required' => 'Vui lòng nhập số điểm cần để đổi',
+        'diem_can.min' => 'Số điểm phải lớn hơn 0',
+        'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'
+    ]);
 
-        Voucher::create($validated);
+    try {
+        // ✅ Gán giá trị mặc định cho các cột hệ thống
+        $validated['so_luong_da_dung'] = 0;
+        $validated['so_luong_toi_da'] = $request->input('so_luong_toi_da', 0);
+
+        \App\Models\Voucher::create($validated);
 
         return redirect()->route('admin.voucher.index')
             ->with('success', 'Tạo voucher đổi điểm thành công!');
+    } catch (\Throwable $e) {
+        return back()->with('error', 'Lỗi khi lưu: ' . $e->getMessage());
     }
+}
 
     /**
      * Hiển thị chi tiết voucher
@@ -126,49 +138,60 @@ class VoucherController extends Controller
      * Cập nhật voucher
      */
     public function update(Request $request, $id)
+{
+    $voucher = Voucher::findOrFail($id);
+
+    // ✅ Chuyển checkbox sang true/false TRƯỚC KHI validate
+    $request->merge([
+        'kich_hoat' => $request->has('kich_hoat')
+    ]);
+
+    $validated = $request->validate([
+        'ten' => 'required|string|max:255',
+        'loai' => 'required|in:phan_tram,so_tien',
+        'gia_tri' => 'required|numeric|min:0',
+        'gia_tri_don_hang_toi_thieu' => 'nullable|numeric|min:0',
+        'ap_dung_cho' => 'required|in:ve,san_pham,tat_ca',
+        'so_lan_su_dung' => 'required|integer|min:1',
+        'diem_can' => 'required|integer|min:1',
+        'ngay_bat_dau' => 'nullable|date',
+        'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
+        'kich_hoat' => 'boolean'
+    ], [
+        'ten.required' => 'Vui lòng nhập tên voucher',
+        'loai.required' => 'Vui lòng chọn loại voucher',
+        'gia_tri.required' => 'Vui lòng nhập giá trị voucher',
+        'gia_tri.min' => 'Giá trị voucher phải lớn hơn 0',
+        'ap_dung_cho.required' => 'Vui lòng chọn loại áp dụng',
+        'so_lan_su_dung.required' => 'Vui lòng nhập số lần sử dụng',
+        'so_lan_su_dung.min' => 'Số lần sử dụng phải lớn hơn 0',
+        'diem_can.required' => 'Vui lòng nhập số điểm cần để đổi',
+        'diem_can.min' => 'Số điểm phải lớn hơn 0',
+        'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'
+    ]);
+
+    // Không cần set lại ở đây nữa (đã merge ở trên)
+    $voucher->update($validated);
+
+    return redirect()->route('admin.voucher.index')
+        ->with('success', 'Cập nhật voucher thành công!');
+}
+
+
+    public function trashed()
     {
-        $voucher = Voucher::findOrFail($id);
-
-        $validated = $request->validate([
-            'ten' => 'required|string|max:255',
-            'loai' => 'required|in:phan_tram,so_tien',
-            'gia_tri' => 'required|numeric|min:0',
-            'gia_tri_don_hang_toi_thieu' => 'nullable|numeric|min:0',
-            'ap_dung_cho' => 'required|in:ve,san_pham,tat_ca',
-            'so_lan_su_dung' => 'required|integer|min:1',
-            'diem_can' => 'required|integer|min:1',
-            'ngay_bat_dau' => 'nullable|date',
-            'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
-            'kich_hoat' => 'boolean'
-        ], [
-            'ten.required' => 'Vui lòng nhập tên voucher',
-            'loai.required' => 'Vui lòng chọn loại voucher',
-            'gia_tri.required' => 'Vui lòng nhập giá trị voucher',
-            'gia_tri.min' => 'Giá trị voucher phải lớn hơn 0',
-            'ap_dung_cho.required' => 'Vui lòng chọn loại áp dụng',
-            'so_lan_su_dung.required' => 'Vui lòng nhập số lần sử dụng',
-            'so_lan_su_dung.min' => 'Số lần sử dụng phải lớn hơn 0',
-            'diem_can.required' => 'Vui lòng nhập số điểm cần để đổi',
-            'diem_can.min' => 'Số điểm phải lớn hơn 0',
-            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'
-        ]);
-
-        $validated['kich_hoat'] = $request->has('kich_hoat');
-
-        $voucher->update($validated);
-
-        return redirect()->route('admin.voucher.index')
-            ->with('success', 'Cập nhật voucher thành công!');
+        $vouchers = Voucher::onlyTrashed()->paginate(10);
+        return view('admin.voucher.trashed', compact('vouchers'));
     }
 
     /**
-     * Xóa voucher
+     * Xóa mềm voucher
      */
     public function destroy($id)
     {
         $voucher = Voucher::findOrFail($id);
 
-        // Kiểm tra xem có người dùng nào đã đổi voucher này chưa
+        // ⚠️ Kiểm tra xem có người dùng nào đã đổi voucher này chưa
         $daDuocDoi = DB::table('voucher_nguoi_dung')
             ->where('voucher_id', $id)
             ->exists();
@@ -177,12 +200,36 @@ class VoucherController extends Controller
             return back()->with('error', 'Không thể xóa voucher này vì đã có người dùng đổi!');
         }
 
+        // 🗑️ Xóa mềm
         $voucher->delete();
 
         return redirect()->route('admin.voucher.index')
-            ->with('success', 'Xóa voucher thành công!');
+            ->with('success', 'Voucher đã được chuyển vào thùng rác!');
     }
 
+    /**
+     * Khôi phục voucher từ thùng rác
+     */
+    public function restore($id)
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $voucher->restore();
+
+        return redirect()->route('admin.voucher.trashed')
+            ->with('success', 'Voucher đã được khôi phục thành công!');
+    }
+
+    /**
+     * Xóa vĩnh viễn voucher
+     */
+    public function forceDelete($id)
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $voucher->forceDelete();
+
+        return redirect()->route('admin.voucher.trashed')
+            ->with('success', 'Voucher đã bị xóa vĩnh viễn!');
+    }
     /**
      * Bật/tắt kích hoạt voucher
      */

@@ -13,10 +13,36 @@ class ComboController extends Controller
     /** =============================
      * 🧩 DANH SÁCH COMBO
      * ============================== */
-    public function index()
+    public function index(Request $request)
     {
-        $combos = Combo::all();
-        return view('admin.combo.index', compact('combos'));
+        $query = Combo::query();
+
+        // Tìm theo tên combo
+        if ($request->filled('q')) {
+            $query->where('ten', 'like', '%' . $request->q . '%');
+        }
+
+        // Sắp xếp
+        $sortType = $request->sort ?? 'moi_nhat'; // mặc định mới nhất
+        switch ($sortType) {
+            case 'gia_asc':
+                $query->orderBy('gia', 'asc');
+                break;
+            case 'gia_desc':
+                $query->orderBy('gia', 'desc');
+                break;
+            case 'cu_nhat':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'moi_nhat':
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $combos = $query->get();
+        $filters = $request->only(['q', 'sort']);
+
+        return view('admin.combo.index', compact('combos', 'filters'));
     }
 
     /** =============================
@@ -246,13 +272,40 @@ public function store(Request $request)
     }
 
     /** =============================
-     * 🧰 DANH SÁCH COMBO ĐÃ XÓA
-     * ============================== */
-    public function trashed()
-    {
-        $combos = Combo::onlyTrashed()->get();
-        return view('admin.combo.trashed', compact('combos'));
+ * 🧰 DANH SÁCH COMBO ĐÃ XÓA (CÓ LỌC)
+ * ============================== */
+public function trashed(Request $request)
+{
+    $query = Combo::onlyTrashed();
+
+    // 🔍 Lọc theo tên combo
+    if ($request->filled('q')) {
+        $query->where('ten', 'like', '%' . $request->q . '%');
     }
+
+    // 📊 Sắp xếp
+    $sortType = $request->sort ?? 'moi_nhat'; // mặc định mới nhất
+    switch ($sortType) {
+        case 'gia_asc':
+            $query->orderBy('gia', 'asc');
+            break;
+        case 'gia_desc':
+            $query->orderBy('gia', 'desc');
+            break;
+        case 'cu_nhat':
+            $query->orderBy('deleted_at', 'asc');
+            break;
+        case 'moi_nhat':
+            $query->orderBy('deleted_at', 'desc');
+            break;
+    }
+
+    $combos = $query->get();
+    $filters = $request->only(['q', 'sort']);
+
+    return view('admin.combo.trashed', compact('combos', 'filters'));
+}
+
 
     /** =============================
      * 🔄 KHÔI PHỤC COMBO

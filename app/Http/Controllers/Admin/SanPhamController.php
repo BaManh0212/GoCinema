@@ -12,10 +12,31 @@ class SanPhamController extends Controller
     /**
      * 🧾 Hiển thị danh sách sản phẩm
      */
-    public function index()
+    public function index(Request $request)
     {
-        $sanPhams = SanPham::orderBy('id', 'desc')->get();
-        return view('admin.san_pham.index', compact('sanPhams'));
+        // Lấy query builder để thêm điều kiện lọc
+        $query = SanPham::query();
+
+        // Lọc theo từ khóa tên
+        if ($request->filled('q')) {
+            $query->where('ten', 'like', '%' . $request->q . '%');
+        }
+
+        // Sắp xếp
+        $sortType = $request->sort ?? 'gia_desc'; // mặc định giá giảm dần
+        switch ($sortType) {
+            case 'gia_asc':
+                $query->orderBy('gia', 'asc');
+                break;
+            case 'gia_desc':
+                $query->orderBy('gia', 'desc');
+                break;
+        }
+
+        $sanPhams = $query->get();
+        $filters = $request->only(['q', 'sort']);
+
+        return view('admin.san_pham.index', compact('sanPhams', 'filters'));
     }
 
     /**
@@ -113,13 +134,40 @@ class SanPhamController extends Controller
 }
 
     /**
-     * 🧺 Hiển thị danh sách sản phẩm đã xóa (thùng rác)
-     */
-    public function trashed()
-    {
-        $sanPhams = SanPham::onlyTrashed()->orderBy('deleted_at', 'desc')->get();
-        return view('admin.san_pham.trashed', compact('sanPhams'));
+ * 🧺 Hiển thị danh sách sản phẩm đã xóa (có lọc và sắp xếp)
+ */
+public function trashed(Request $request)
+{
+    $query = SanPham::onlyTrashed();
+
+    // 🔍 Tìm kiếm theo tên
+    if ($request->filled('q')) {
+        $query->where('ten', 'like', '%' . $request->q . '%');
     }
+
+    // 📊 Sắp xếp
+    $sortType = $request->sort ?? 'moi_nhat'; // mặc định: mới nhất
+    switch ($sortType) {
+        case 'gia_asc':
+            $query->orderBy('gia', 'asc');
+            break;
+        case 'gia_desc':
+            $query->orderBy('gia', 'desc');
+            break;
+        case 'cu_nhat':
+            $query->orderBy('deleted_at', 'asc');
+            break;
+        case 'moi_nhat':
+            $query->orderBy('deleted_at', 'desc');
+            break;
+    }
+
+    $sanPhams = $query->get();
+    $filters = $request->only(['q', 'sort']);
+
+    return view('admin.san_pham.trashed', compact('sanPhams', 'filters'));
+}
+
 
     /**
      * ♻️ Khôi phục sản phẩm đã xóa

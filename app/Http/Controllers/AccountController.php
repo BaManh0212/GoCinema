@@ -56,7 +56,7 @@ class AccountController extends Controller
             $user = Auth::user();
             $voucher = Voucher::findOrFail($voucherId);
             
-            // Kiểm tra voucher CHỈ DÀNH CHO VÉ
+            // Kiểm tra voucher CHỈ DÀNH CHỎ VÉ
             if ($voucher->ap_dung_cho !== 've') {
                 return back()->with('error', 'Voucher này không dành cho vé phim!');
             }
@@ -64,6 +64,11 @@ class AccountController extends Controller
             // Kiểm tra voucher còn hiệu lực
             if (!$voucher->conHieuLuc() || !$voucher->kich_hoat) {
                 return back()->with('error', 'Voucher này hiện không khả dụng!');
+            }
+            
+            // KIỂM TRA SỐ LƯỢNG CÒN LẠI
+            if (!$voucher->conVoucherDeDoi()) {
+                return back()->with('error', 'Voucher này đã hết! Vui lòng chọn voucher khác.');
             }
             
             // Kiểm tra điểm
@@ -86,6 +91,9 @@ class AccountController extends Controller
                 'ngay_han' => $ngayHan, // NGÀY ĐỔI + 30 NGÀY
                 'trang_thai' => 'chua_su_dung'
             ]);
+
+            // TĂNG SỐ LƯỢNG ĐÃ DÙNG
+            $voucher->increment('so_luong_da_dung');
 
             DB::commit();
 

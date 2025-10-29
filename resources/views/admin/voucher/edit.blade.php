@@ -26,7 +26,7 @@
                                        name="ten" 
                                        value="{{ old('ten', $voucher->ten) }}"
                                        placeholder="Ví dụ: Voucher 1.000.000đ"
-                                       required>
+                                        >
                                 @error('ten')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -41,7 +41,7 @@
                                        value="{{ old('diem_can', $voucher->diem_can) }}"
                                        min="1"
                                        placeholder="VD: 200"
-                                       required>
+                                        >
                                 @error('diem_can')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -49,12 +49,13 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="loai" class="form-label">Loại voucher <span class="text-danger">*</span></label>
                                 <select class="form-select @error('loai') is-invalid @enderror" 
                                         id="loai" 
-                                        name="loai" 
-                                        required>
+                                        name="loai"
+                                        onchange="toggleGiamToiDa()" 
+                                         >
                                     <option value="">-- Chọn loại --</option>
                                     <option value="phan_tram" {{ old('loai', $voucher->loai) == 'phan_tram' ? 'selected' : '' }}>Phần trăm (%)</option>
                                     <option value="so_tien" {{ old('loai', $voucher->loai) == 'so_tien' ? 'selected' : '' }}>Số tiền (đ)</option>
@@ -64,7 +65,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="gia_tri" class="form-label">Giá trị <span class="text-danger">*</span></label>
                                 <input type="number" 
                                        class="form-control @error('gia_tri') is-invalid @enderror" 
@@ -73,19 +74,35 @@
                                        value="{{ old('gia_tri', $voucher->gia_tri) }}"
                                        min="0"
                                        step="0.01"
-                                       placeholder="VD: 100000"
-                                       required>
+                                       placeholder="VD: 10 hoặc 50000"
+                                        >
                                 @error('gia_tri')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3" id="giam_toi_da_group" style="display: none;">
+                                <label for="giam_toi_da" class="form-label">Giảm tối đa</label>
+                                <input type="number" 
+                                       class="form-control @error('giam_toi_da') is-invalid @enderror" 
+                                       id="giam_toi_da" 
+                                       name="giam_toi_da" 
+                                       value="{{ old('giam_toi_da', $voucher->giam_toi_da) }}"
+                                       min="0"
+                                       step="0.01"
+                                       placeholder="VD: 50000">
+                                @error('giam_toi_da')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Chỉ cho voucher %</small>
+                            </div>
+
+                            <div class="col-md-3">
                                 <label for="ap_dung_cho" class="form-label">Áp dụng cho <span class="text-danger">*</span></label>
                                 <select class="form-select @error('ap_dung_cho') is-invalid @enderror" 
                                         id="ap_dung_cho" 
                                         name="ap_dung_cho" 
-                                        required>
+                                         >
                                     <option value="tat_ca" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 'tat_ca' ? 'selected' : '' }}>Tất cả</option>
                                     <option value="ve" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 've' ? 'selected' : '' }}>Vé xem phim</option>
                                     <option value="san_pham" {{ old('ap_dung_cho', $voucher->ap_dung_cho) == 'san_pham' ? 'selected' : '' }}>Sản phẩm</option>
@@ -114,6 +131,22 @@
                             </div>
 
                             <div class="col-md-4">
+                                <label for="so_luong_toi_da" class="form-label">Số lượng voucher <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control @error('so_luong_toi_da') is-invalid @enderror" 
+                                       id="so_luong_toi_da" 
+                                       name="so_luong_toi_da" 
+                                       value="{{ old('so_luong_toi_da', $voucher->so_luong_toi_da) }}"
+                                       min="1"
+                                       placeholder="VD: 100"
+                                        >
+                                @error('so_luong_toi_da')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Đã dùng: {{ $voucher->so_luong_da_dung }}/{{ $voucher->so_luong_toi_da }}</small>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label for="so_lan_su_dung" class="form-label">Số lần sử dụng <span class="text-danger">*</span></label>
                                 <input type="number" 
                                        class="form-control @error('so_lan_su_dung') is-invalid @enderror" 
@@ -121,13 +154,15 @@
                                        name="so_lan_su_dung" 
                                        value="{{ old('so_lan_su_dung', $voucher->so_lan_su_dung) }}"
                                        min="1"
-                                       required>
+                                        >
                                 @error('so_lan_su_dung')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                        </div>
 
-                            <div class="col-md-4">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
                                 <label class="form-label d-block">Trạng thái</label>
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" 
@@ -187,6 +222,27 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Toggle hiển thị trường "Giảm tối đa" khi chọn loại voucher
+function toggleGiamToiDa() {
+    const loai = document.getElementById('loai').value;
+    const giamToiDaGroup = document.getElementById('giam_toi_da_group');
+    
+    if (loai === 'phan_tram') {
+        giamToiDaGroup.style.display = 'block';
+    } else {
+        giamToiDaGroup.style.display = 'none';
+    }
+}
+
+// Gọi khi load trang
+document.addEventListener('DOMContentLoaded', function() {
+    toggleGiamToiDa();
+});
+</script>
+@endpush
 
 @push('scripts')
 <script>

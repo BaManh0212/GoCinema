@@ -76,10 +76,12 @@
                     @foreach($vouchers as $voucher)
                         @php
                             $duDiem = $user->diem >= $voucher->diem_can;
+                            $conVoucher = $voucher->conVoucherDeDoi();
+                            $coTheDoiDuoc = $duDiem && $conVoucher;
                         @endphp
                         
                         <div class="col-md-6 mb-4">
-                            <div class="card h-100 {{ $duDiem ? '' : 'opacity-75' }}">
+                            <div class="card h-100 {{ $coTheDoiDuoc ? '' : 'opacity-75' }}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title">
@@ -116,6 +118,25 @@
                                         </div>
                                     </div>
 
+                                    <!-- Số lượng còn lại -->
+                                    <div class="mb-3">
+                                        @php
+                                            $conLai = $voucher->so_luong_toi_da - $voucher->so_luong_da_dung;
+                                            $phanTram = ($voucher->so_luong_toi_da > 0) ? ($conLai / $voucher->so_luong_toi_da * 100) : 0;
+                                        @endphp
+                                        <small class="text-muted">Số lượng còn lại:</small>
+                                        <div>
+                                            <span class="badge {{ $phanTram > 50 ? 'bg-success' : ($phanTram > 20 ? 'bg-warning' : 'bg-danger') }} fs-6">
+                                                {{ $conLai }}/{{ $voucher->so_luong_toi_da }}
+                                            </span>
+                                            @if($conLai <= 10 && $conLai > 0)
+                                                <span class="text-danger ms-2"><i class="fas fa-fire"></i> Sắp hết!</span>
+                                            @elseif($conLai == 0)
+                                                <span class="text-danger ms-2"><i class="fas fa-times-circle"></i> Đã hết!</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
                                     <!-- Hiển thị áp dụng cho VÉ -->
                                     <div class="mb-3">
                                         <span class="badge bg-primary">
@@ -139,7 +160,7 @@
                                             <div class="fw-bold text-primary">{{ number_format($voucher->diem_can) }} điểm</div>
                                         </div>
                                         
-                                        @if($duDiem)
+                                        @if($coTheDoiDuoc)
                                             <form action="{{ route('account.redeem-voucher', $voucher->id) }}" method="POST" 
                                                   onsubmit="return confirm('Bạn có chắc muốn đổi {{ number_format($voucher->diem_can) }} điểm lấy voucher này?')">
                                                 @csrf
@@ -147,6 +168,10 @@
                                                     <i class="fas fa-exchange-alt me-2"></i>Đổi ngay
                                                 </button>
                                             </form>
+                                        @elseif(!$conVoucher)
+                                            <button class="btn btn-danger" disabled>
+                                                <i class="fas fa-ban me-2"></i>Đã hết
+                                            </button>
                                         @else
                                             <button class="btn btn-secondary" disabled>
                                                 <i class="fas fa-lock me-2"></i>Chưa đủ điểm

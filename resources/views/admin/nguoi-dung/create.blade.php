@@ -59,15 +59,6 @@
                          <input type="hidden" name="vai_tro_id" value="2">
 
                         <div class="row mb-3">
-                            <label class="col-sm-3 col-form-label">Điểm tích lũy</label>
-                            <div class="col-sm-9">
-                                <input type="number" name="diem_tich_luy" class="form-control" 
-                                       value="{{ old('diem_tich_luy', 0) }}" min="0">
-                                <small class="text-muted">Điểm ban đầu cho người dùng</small>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
                             <label class="col-sm-3 col-form-label">Trạng thái</label>
                             <div class="col-sm-9">
                                 <div class="form-check form-switch">
