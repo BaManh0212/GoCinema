@@ -36,6 +36,7 @@
             @csrf
             @method('PUT')
 
+            {{-- Tên danh mục --}}
             <div class="mb-3">
                 <label class="form-label fw-semibold">
                     <i class="bi bi-tag"></i> Tên danh mục
@@ -56,6 +57,7 @@
                 @enderror
             </div>
 
+            {{-- Slug (tự động) --}}
             <div class="mb-3">
                 <label class="form-label fw-semibold">
                     <i class="bi bi-link-45deg"></i> Slug (tự động)
@@ -70,6 +72,27 @@
                 >
             </div>
 
+            {{-- Mô tả --}}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-card-text"></i> Mô tả
+                </label>
+                <textarea
+                    name="mo_ta"
+                    id="mo_ta"
+                    rows="5"
+                    class="form-control form-control-lg @error('mo_ta') is-invalid @enderror"
+                    placeholder="Nhập mô tả cho danh mục (tùy chọn)..."
+                >{{ old('mo_ta', $danhmuc->mo_ta) }}</textarea>
+                @error('mo_ta')
+                    <div class="invalid-feedback mt-1">
+                        {{ $message }}
+                    </div>
+                @enderror
+                <div class="form-text">Mô tả ngắn sẽ hiển thị ở trang danh mục (tối đa 500 ký tự).</div>
+            </div>
+
+            {{-- Nút hành động --}}
             <div class="d-flex justify-content-start gap-3 mt-4">
                 <button type="submit" class="btn btn-success shadow-sm rounded-pill px-4">
                     <i class="bi bi-save"></i> Cập nhật

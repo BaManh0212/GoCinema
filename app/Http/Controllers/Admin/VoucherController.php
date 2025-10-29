@@ -13,38 +13,56 @@ class VoucherController extends Controller
      * Hiển thị danh sách voucher đổi điểm
      */
     public function index(Request $request)
-    {
-        $query = Voucher::query();
+{
+    $query = Voucher::query();
 
-        // Tìm kiếm theo tên
-        if ($request->filled('search')) {
-            $query->where('ten', 'like', '%' . $request->search . '%');
-        }
-
-        // Lọc theo loại
-        if ($request->filled('loai')) {
-            $query->where('loai', $request->loai);
-        }
-
-        // Lọc theo áp dụng cho
-        if ($request->filled('ap_dung_cho')) {
-            $query->where('ap_dung_cho', $request->ap_dung_cho);
-        }
-
-        // Lọc theo trạng thái kích hoạt
-        if ($request->filled('kich_hoat')) {
-            $query->where('kich_hoat', $request->kich_hoat == '1');
-        }
-
-        // Sắp xếp
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        $vouchers = $query->paginate(10)->withQueryString();
-
-        return view('admin.voucher.index', compact('vouchers'));
+    // Tìm kiếm theo tên
+    if ($request->filled('search')) {
+        $query->where('ten', 'like', '%' . $request->search . '%');
     }
+
+    // Lọc theo loại
+    if ($request->filled('loai')) {
+        $query->where('loai', $request->loai);
+    }
+
+    // Lọc theo trạng thái (tổng hợp)
+    if ($request->filled('trang_thai')) {
+        $now = now();
+
+        switch ($request->trang_thai) {
+            case 'hoat_dong':
+                $query->where('kich_hoat', true)
+                      ->where('ngay_bat_dau', '<=', $now)
+                      ->where('ngay_ket_thuc', '>=', $now);
+                break;
+
+            case 'sap_hoat_dong':
+                $query->where('kich_hoat', true)
+                      ->where('ngay_bat_dau', '>', $now);
+                break;
+
+            case 'het_han':
+                $query->where('kich_hoat', true)
+                      ->where('ngay_ket_thuc', '<', $now);
+                break;
+
+            case 'da_tat':
+                $query->where('kich_hoat', false);
+                break;
+        }
+    }
+
+    // Sắp xếp
+    $sortBy = $request->get('sort_by', 'created_at');
+    $sortOrder = $request->get('sort_order', 'desc');
+    $query->orderBy($sortBy, $sortOrder);
+
+    $vouchers = $query->paginate(10)->withQueryString();
+
+    return view('admin.voucher.index', compact('vouchers'));
+}
+
 
     /**
      * Hiển thị form tạo voucher mới
