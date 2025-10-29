@@ -51,4 +51,9 @@ class Combo extends Model
             }
         });
     }
+    public function donDatVeCombo()
+{
+    return $this->hasMany(DonDatVeCombo::class, 'combo_id');
+}
+
 }

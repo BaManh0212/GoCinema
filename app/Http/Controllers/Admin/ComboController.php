@@ -229,6 +229,7 @@ public function store(Request $request)
     // 5️⃣ Cập nhật combo
     $combo->update([
         'ten' => $request->ten,
+        'slug' => $request->slug,
         'gia' => $request->gia,
         'mo_ta' => $request->mo_ta,
         'so_luong' => $request->so_luong,
@@ -259,6 +260,12 @@ public function store(Request $request)
      * ============================== */
     public function destroy(Combo $combo)
     {
+        // ⚠️ Nếu combo đã được mua → chặn xóa
+        if ($combo->donDatVeCombo()->exists()) {
+        return redirect()
+            ->route('admin.combo.index')
+            ->withErrors(['error' => '❌ Combo này đã được mua, không thể xóa.']);
+    }
         // ✅ Hoàn lại số lượng khi xóa
         $chiTiet = ComboChiTiet::where('combo_id', $combo->id)->get();
         foreach ($chiTiet as $ct) {
@@ -350,8 +357,20 @@ public function trashed(Request $request)
      * ============================== */
     public function forceDelete($id)
     {
+        $combo = Combo::onlyTrashed()->findOrFail($id);
+
+        // ⚠️ Nếu combo đã được mua → chặn xóa vĩnh viễn
+        if ($combo->donDatVeCombo()->exists()) {
+            return redirect()
+                ->route('admin.combo.trashed')
+                ->withErrors(['error' => '❌ Combo này đã được mua, không thể xóa vĩnh viễn.']);
+        }
+
         ComboChiTiet::where('combo_id', $id)->delete();
-        Combo::onlyTrashed()->findOrFail($id)->forceDelete();
-        return redirect()->route('admin.combo.trashed')->with('success', '🗑️ Combo đã bị xóa vĩnh viễn.');
+        $combo->forceDelete();
+
+        return redirect()
+            ->route('admin.combo.trashed')
+            ->with('success', '🗑️ Combo đã bị xóa vĩnh viễn.');
     }
 }

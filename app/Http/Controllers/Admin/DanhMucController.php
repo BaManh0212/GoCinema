@@ -61,6 +61,7 @@ class DanhMucController extends Controller
     {
         $request->validate([
             'ten' => 'required|string|max:255|unique:danh_muc,ten',
+            'mo_ta' => 'nullable|string',
         ], [
             'ten.required' => 'Tên danh mục không được để trống.',
             'ten.unique' => 'Tên danh mục này đã tồn tại.',
@@ -69,6 +70,7 @@ class DanhMucController extends Controller
         DanhMuc::create([
             'ten' => $request->ten,
             'slug' => Str::slug($request->ten),
+            'mo_ta' => $request->mo_ta,
         ]);
 
         return redirect()->route('admin.danhmuc.index')
@@ -89,6 +91,7 @@ class DanhMucController extends Controller
 
         $request->validate([
             'ten' => 'required|string|max:255|unique:danh_muc,ten,' . $id,
+            'mo_ta' => 'nullable|string',
         ], [
             'ten.required' => 'Tên danh mục không được để trống.',
             'ten.unique' => 'Tên danh mục này đã tồn tại.',
@@ -97,6 +100,7 @@ class DanhMucController extends Controller
         $danhmuc->update([
             'ten' => $request->ten,
             'slug' => Str::slug($request->ten),
+            'mo_ta' => $request->mo_ta,
         ]);
 
         return redirect()->route('admin.danhmuc.index')
