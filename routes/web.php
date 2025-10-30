@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\MaGiamGiaController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
@@ -168,8 +169,35 @@ Route::prefix('admin')
         Route::post('voucher/{id}/toggle-status', [VoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
         Route::get('voucher-statistics', [VoucherController::class, 'statistics'])->name('voucher.statistics');
 
-        // Quản lý đơn vé
-        Route::resource('donve', AdminDonDatVeController::class)->names('donve');
+    // Quản lý đơn vé
+    Route::resource('donve', AdminDonDatVeController::class)->names('donve');
+    // Trang check-in (form)
+    Route::get('donve/checkin', [AdminDonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
+    // Thay đổi trạng thái đơn (logic chuyển trạng thái server-side)
+    Route::post('donve/{id}/change-status', [AdminDonDatVeController::class, 'changeStatus'])->name('donve.changeStatus');
+    // Check-in bằng mã đơn (admin)
+    Route::post('donve/checkin-code', [AdminDonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
+    // In vé (PDF)
+    Route::get('donve/{id}/print', [AdminDonDatVeController::class, 'print'])->name('donve.print');
+
+        // Quản lý mã giảm giá
+        // Quản lý mã giảm giá
+Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
+    // Thùng rác
+    Route::get('trash', [MaGiamGiaController::class, 'trash'])->name('trash');
+
+    // Khôi phục & xóa vĩnh viễn
+    Route::put('{id}/restore', [MaGiamGiaController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force', [MaGiamGiaController::class, 'forceDelete'])->name('forceDelete');
+
+    // Bật/tắt kích hoạt
+    Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
+});
+
+// Resource CRUD
+Route::resource('ma_giam_gia', MaGiamGiaController::class)
+    ->names('ma_giam_gia')
+    ->parameters(['ma_giam_gia' => 'maGiamGia']);
     });
 
 /*
@@ -195,6 +223,9 @@ Route::prefix('staff')
 
         // Quản lý combo
         Route::resource('combo', StaffComboController::class)->names('combo');
+        // Check-in bằng mã đơn (nhân viên)
+        Route::get('donve/checkin', [\App\Http\Controllers\Admin\DonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
+        Route::post('donve/checkin-code', [\App\Http\Controllers\Admin\DonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
     });
     
 /*

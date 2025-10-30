@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('suat_chieu_id')->constrained('suat_chieu');
             $table->foreignId('ma_giam_gia_id')->nullable()->constrained('ma_giam_gia');
             $table->decimal('tong_tien', 12, 2);
-            $table->enum('trang_thai', ['cho_thanh_toan','da_thanh_toan','da_huy','dat_coc']);
+            $table->enum('trang_thai', ['cho_thanh_toan','da_thanh_toan','da_huy',]);
             $table->timestamps();
         });
     }

@@ -157,8 +157,8 @@
         </a>
         <div id="menuGiamGia" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
             </div>
         </div>
     </li>
@@ -201,7 +201,7 @@
         <div id="menuDon" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="{{ route('admin.donve.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách đơn</a>
-                <a class="collapse-item" href="#"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
+                <a class="collapse-item" href="{{ route('admin.donve.checkin') }}"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
             </div>
         </div>
     </li>
