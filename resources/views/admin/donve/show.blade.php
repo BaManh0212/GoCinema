@@ -6,6 +6,23 @@
 <div class="container mt-4">
     <h2 class="fw-bold text-primary mb-3">🎫 Chi tiết đơn: {{ $donVe->ma_don }}</h2>
 
+    {{-- Hiển thị flash messages / lỗi --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('info'))
+        <div class="alert alert-info">{{ session('info') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="fw-bold mb-3 text-secondary">Thông tin khách hàng</h5>
@@ -65,6 +82,17 @@
     </div>
 
     <div class="text-end">
+        {{-- Form đổi trạng thái --}}
+        <form action="{{ route('admin.donve.changeStatus', $donVe->id) }}" method="POST" class="d-inline-block me-2">
+            @csrf
+            <select name="trang_thai" class="form-select d-inline-block" style="width:220px; display:inline-block; vertical-align:middle;">
+                <option value="cho_thanh_toan" {{ $donVe->trang_thai == 'cho_thanh_toan' ? 'selected' : '' }}>Chờ thanh toán</option>
+                <option value="da_thanh_toan" {{ $donVe->trang_thai == 'da_thanh_toan' ? 'selected' : '' }}>Đã thanh toán</option>
+                <option value="da_huy" {{ $donVe->trang_thai == 'da_huy' ? 'selected' : '' }}>Đã hủy</option>
+            </select>
+            <button type="submit" class="btn btn-primary ms-2">Cập nhật trạng thái</button>
+        </form>
+
         <a href="{{ route('admin.donve.print', $donVe->id) }}" class="btn btn-success">
             <i class="bi bi-printer"></i> In vé
         </a>
