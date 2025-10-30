@@ -92,12 +92,28 @@
                             <td>{{ $don->created_at->format('d/m/Y') }}</td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('admin.donve.show', $don->id) }}" class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm">
-                                        <i class="bi bi-eye"></i> Xem
-                                    </a>
-                                    <a href="{{ route('admin.donve.print', $don->id) }}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
-                                        <i class="bi bi-printer"></i> In vé
-                                    </a>
+                                    @if($don->trang_thai === 'da_huy')
+                                        <button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm" disabled title="Đơn đã hủy">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm" disabled title="Đơn đã hủy">
+                                            <i class="bi bi-printer"></i> In vé
+                                        </button>
+                                    @else
+                                        <a href="{{ route('admin.donve.show', $don->id) }}" class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </a>
+                                        @php $canPrint = in_array($don->trang_thai, ['da_thanh_toan','da_checkin']); @endphp
+                                        @if($canPrint)
+                                            <a href="{{ route('admin.donve.print', $don->id) }}" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                                                <i class="bi bi-printer"></i> In vé
+                                            </a>
+                                        @else
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm" disabled title="Chỉ in khi đã thanh toán hoặc đã check-in">
+                                                <i class="bi bi-printer"></i> In vé
+                                            </button>
+                                        @endif
+                                    @endif
                                 </div>
                             </td>
                         </tr>
