@@ -31,7 +31,16 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
+                        <div class="col-md-6">
+                            <label for="slug" class="form-label fw-semibold">Slug</label>
+                            <input type="text" name="slug" id="slug"
+                                class="form-control form-control-lg @error('slug') is-invalid @enderror"
+                                placeholder="Tự động tạo từ tên hoặc nhập slug riêng..."
+                                value="{{ old('slug', $combo->slug) }}">
+                            @error('slug')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                    </div>
                     {{-- Giá --}}
                     <div class="col-md-6">
                         <label for="gia" class="form-label fw-semibold">Giá Combo (VNĐ)</label>
@@ -238,6 +247,34 @@
         } else {
             hint.textContent = `👉 Có thể tạo tối đa ${maxCombo} combo theo tồn kho hiện tại.`;
         }
-    }
+    };
+    // 🔤 Tự động tạo slug từ tên Combo
+document.addEventListener('DOMContentLoaded', function () {
+    const tenEl = document.getElementById('ten');
+    const slugEl = document.getElementById('slug');
+
+    if (!tenEl || !slugEl) return;
+
+    const makeSlug = (str) => {
+        return String(str || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    };
+
+    let userEdited = false;
+
+    slugEl.addEventListener('input', () => userEdited = true);
+
+    tenEl.addEventListener('input', function () {
+        if (!userEdited) slugEl.value = makeSlug(this.value);
+    });
+})();
+
 </script>
 @endsection
+

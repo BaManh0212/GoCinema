@@ -28,6 +28,15 @@
                 </div>
             @enderror
         </div>
+                <div class="form-group mb-3">
+            <label for="slug">Slug (tự động tạo)</label>
+            <input type="text" 
+                name="slug" 
+                id="slug" 
+                class="form-control bg-light" 
+                value="{{ old('slug', $sanPham->slug) }}" 
+                readonly>
+        </div>
 
         {{-- ✅ Giá --}}
         <div class="form-group mb-3">
@@ -61,4 +70,20 @@
 
         <button type="submit" class="btn btn-success">Cập nhật</button>
     </form>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tenInput = document.getElementById('ten');
+    const slugInput = document.getElementById('slug');
+
+    tenInput.addEventListener('input', function() {
+        const slug = this.value
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu
+            .replace(/[^a-z0-9\s-]/g, '') // bỏ ký tự đặc biệt
+            .trim()
+            .replace(/\s+/g, '-');
+        slugInput.value = slug;
+    });
+});
+</script>
 @endsection

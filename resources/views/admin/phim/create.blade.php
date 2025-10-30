@@ -127,16 +127,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">🎛️ Trạng thái</label>
-                            <select name="trang_thai" class="form-select form-select-lg @error('trang_thai') is-invalid @enderror">
-                                <option value="1" {{ old('trang_thai') == '1' ? 'selected' : '' }}>Đang chiếu</option>
-                                <option value="2" {{ old('trang_thai') == '2' ? 'selected' : '' }}>Sắp chiếu</option>
-                                <option value="0" {{ old('trang_thai') == '0' ? 'selected' : '' }}>Ngừng chiếu</option>
-                            </select>
-                            @error('trang_thai') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="mb-3">
                             <label class="form-label fw-semibold">📐 Định dạng</label>
                             <input type="text" name="dinh_dang" value="{{ old('dinh_dang', '2D') }}" class="form-control form-control-lg @error('dinh_dang') is-invalid @enderror" placeholder="2D, 3D...">
                             @error('dinh_dang') <div class="invalid-feedback">{{ $message }}</div> @enderror

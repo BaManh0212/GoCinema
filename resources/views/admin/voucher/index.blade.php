@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container-fluid px-4 py-4">
-
     {{-- ====== TIÊU ĐỀ & NÚT HÀNH ĐỘNG ====== --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -15,7 +14,7 @@
         </div>
         <div>
             <a href="{{ route('admin.voucher.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm Voucher Mới
+                <i class="bi bi-plus-circle"></i> Thêm Voucher
             </a>
             <a href="{{ route('admin.voucher.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
                 <i class="bi bi-trash"></i> Thùng rác
@@ -40,7 +39,7 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.voucher.index') }}" class="row g-3 align-items-center">
                 <div class="col-lg-3 col-md-6">
-                    <input type="text" name="search" class="form-control" placeholder="Tìm theo tên voucher"
+                    <input type="text" name="search" class="form-control" placeholder="🔍 Tìm theo tên voucher"
                            value="{{ request('search') }}">
                 </div>
                 <div class="col-lg-2 col-md-4">
@@ -51,10 +50,12 @@
                     </select>
                 </div>
                 <div class="col-lg-2 col-md-4">
-                    <select name="kich_hoat" class="form-select rounded-pill">
+                    <select name="trang_thai" class="form-select rounded-pill">
                         <option value="">-- Trạng thái --</option>
-                        <option value="1" {{ request('kich_hoat') == '1' ? 'selected' : '' }}>Đang bật</option>
-                        <option value="0" {{ request('kich_hoat') == '0' ? 'selected' : '' }}>Đang tắt</option>
+                        <option value="hoat_dong" {{ request('trang_thai') == 'hoat_dong' ? 'selected' : '' }}>Hoạt động</option>
+                        <option value="sap_hoat_dong" {{ request('trang_thai') == 'sap_hoat_dong' ? 'selected' : '' }}>Sắp hoạt động</option>
+                        <option value="het_han" {{ request('trang_thai') == 'het_han' ? 'selected' : '' }}>Hết hạn</option>
+                        <option value="da_tat" {{ request('trang_thai') == 'da_tat' ? 'selected' : '' }}>Đã tắt</option>
                     </select>
                 </div>
                 <div class="col-lg-2 col-md-4">
@@ -78,8 +79,8 @@
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
-                <thead class="table-header text-white">
-                    <tr class="text-center">
+                <thead class="table-header text-white text-center">
+                    <tr>
                         <th class="text-start ps-4">Tên Voucher</th>
                         <th>Loại</th>
                         <th>Trạng thái</th>
@@ -93,6 +94,11 @@
                 </thead>
                 <tbody>
                     @forelse($vouchers as $voucher)
+                        @php
+                            $startsAt = $voucher->bat_dau ?? $voucher->ngay_bat_dau ?? $voucher->ap_dung_tu ?? $voucher->start_at ?? null;
+                            $isFuture = $startsAt ? \Carbon\Carbon::parse($startsAt)->isFuture() : false;
+                        @endphp
+
                         <tr class="table-row">
                             <td class="text-start ps-4 fw-semibold">
                                 {{ $voucher->ten }}
@@ -105,19 +111,21 @@
                             </td>
                             <td class="text-center">
                                 @if(!$voucher->kich_hoat)
-                                    <span class="badge rounded-pill bg-secondary bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-pause-circle fs-6"></i>
-                                        <span>Đã tắt</span>
+                                    <span class="badge rounded-pill bg-secondary px-3 py-2 shadow-sm">
+                                        <i class="bi bi-pause-circle"></i> Đã tắt
+                                    </span>
+                                @elseif($isFuture)
+                                    <span class="badge rounded-pill bg-info text-dark px-3 py-2 shadow-sm" 
+                                          title="Bắt đầu: {{ \Carbon\Carbon::parse($startsAt)->format('d/m/Y H:i') }}">
+                                        <i class="bi bi-clock-history"></i> Sắp hoạt động
                                     </span>
                                 @elseif(!$voucher->conHieuLuc())
-                                    <span class="badge rounded-pill bg-danger bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-x-circle fs-6"></i>
-                                        <span>Hết hạn</span>
+                                    <span class="badge rounded-pill bg-danger px-3 py-2 shadow-sm">
+                                        <i class="bi bi-x-circle"></i> Hết hạn
                                     </span>
                                 @else
-                                    <span class="badge rounded-pill bg-success bg-opacity-75 px-3 py-2 shadow-sm text-white d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-check-circle fs-6"></i>
-                                        <span>Hoạt động</span>
+                                    <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
+                                        <i class="bi bi-check-circle"></i> Hoạt động
                                     </span>
                                 @endif
                             </td>
@@ -136,27 +144,23 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <div class="d-flex align-items-center justify-content-center" style="height:56px;">
-                                    <div class="form-check form-switch m-0">
-                                        <input type="checkbox" class="form-check-input align-middle"
-                                            {{ $voucher->kich_hoat ? 'checked' : '' }}
-                                            onchange="toggleStatus({{ $voucher->id }})"
-                                            style="cursor:pointer;">
-                                    </div>
+                                <div class="form-check form-switch m-0 d-flex justify-content-center">
+                                    <input type="checkbox" class="form-check-input" style="cursor:pointer;"
+                                           onchange="toggleStatus({{ $voucher->id }})"
+                                           {{ $voucher->kich_hoat ? 'checked' : '' }}>
                                 </div>
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <a href="{{ route('admin.voucher.show', $voucher->id) }}"
-                                       class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                       class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm">
                                         <i class="bi bi-eye"></i> Xem
                                     </a>
                                     <a href="{{ route('admin.voucher.edit', $voucher->id) }}"
-                                       class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                       class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm">
                                         <i class="bi bi-pencil-square"></i> Sửa
                                     </a>
-                                    <button type="button"
-                                            class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm d-flex align-items-center gap-1"
+                                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm"
                                             onclick="confirmDelete({{ $voucher->id }})">
                                         <i class="bi bi-trash3"></i> Xóa
                                     </button>
@@ -233,36 +237,8 @@ function confirmDelete(id) {
     border-bottom: none !important;
 }
 .table td { padding: 1rem 1.2rem; vertical-align: middle; }
-.table td .form-check.form-switch {
-    --bs-switch-width: 42px;  /* tuỳ chỉnh nếu muốn nhỏ/lớn hơn */
-    --bs-switch-height: 22px;
-    margin: 0;                /* đảm bảo không có margin thừa */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Nếu muốn switch to hơn (desktop) */
-.table td .form-check-input {
-    width: var(--bs-switch-width);
-    height: var(--bs-switch-height);
-    margin: 0; /* ngăn bootstrap thêm left margin */
-    transform: translateY(0); /* reset bất kỳ transform mặc định nào */
-}
-
-/* Giữ khoảng padding hàng, tránh nội dung ép sát */
-.table td {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
-
-/* Nếu dùng rounded-pill buttons ở action, giữ center */
-.table td .d-flex > .btn {
-    min-width: 56px;
-}
 .badge {
     font-size: 0.9rem;
-    letter-spacing: 0.3px;
     box-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.15);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s;
 }
@@ -270,8 +246,6 @@ function confirmDelete(id) {
     transform: translateY(-2px);
     box-shadow: 0 0.4rem 0.8rem rgba(0,0,0,0.2);
 }
-
-
 </style>
 @endpush
 @endsection
