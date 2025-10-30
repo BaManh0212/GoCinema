@@ -75,20 +75,6 @@
                         </div>
 
                         <div class="row mb-3">
-                            <label class="col-sm-3 col-form-label">Điểm tích lũy</label>
-                            <div class="col-sm-9">
-                                <input type="number" class="form-control" 
-                                       value="{{ $nguoiDung->diem_tich_luy }}" disabled>
-                                <small class="text-muted">
-                                    Để thay đổi điểm, vui lòng sử dụng chức năng 
-                                    <a href="{{ route('admin.diem-tich-luy.create') }}?nguoi_dung_id={{ $nguoiDung->id }}">
-                                        Thêm/Trừ điểm
-                                    </a>
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
                             <label class="col-sm-3 col-form-label">Trạng thái</label>
                             <div class="col-sm-9">
                                 <div class="form-check form-switch">

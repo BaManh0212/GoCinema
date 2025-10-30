@@ -30,7 +30,7 @@
                         value="{{ $filters['q'] ?? '' }}">
                 </div>
                 <div class="col-auto">
-                    <select name="sort" class="form-select">
+                    <select name="sort" class="form-select rounded-pill">
                         <option value="">-- Sắp xếp theo --</option>
                     <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A → Z)</option>
                     <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z → A)</option>
@@ -69,6 +69,7 @@
                         <th style="width: 70px;">STT</th>
                         <th class="text-start">Tên danh mục</th>
                         <th class="text-start">Slug</th>
+                        <th class="text-start">Mô tả</th>
                         <th style="width: 160px;">Số lượng phim</th>
                         <th style="width: 220px;">Hành động</th>
                     </tr>
@@ -79,6 +80,7 @@
                             <td class="text-center fw-bold text-muted">{{ $dm->id }}</td>
                             <td class="fw-semibold">{{ $dm->ten }}</td>
                             <td class="text-muted">{{ $dm->slug }}</td>
+                            <td class="text-truncate" style="max-width: 300px;">{{ $dm->mo_ta ?? '-' }}</td>
                             <td class="text-center">
                                 <span class="badge bg-info bg-opacity-75 px-3 py-2 shadow-sm">
                                     {{ $dm->phims_count }}

@@ -48,28 +48,28 @@
                             <p class="fs-5">{{ $rap->ten }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="fw-semibold mb-1 text-secondary">Số điện thoại:</p>
-                            <p class="fs-5">{{ $rap->so_dien_thoai }}</p>
+                            <p class="fw-semibold mb-1 text-secondary">Slug:</p>
+                            <p class="fs-5">{{ $rap->slug }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="fw-semibold mb-1 text-secondary">Số điện thoại:</p>
+                            <p class="fs-5">{{ $rap->so_dien_thoai }}</p>
+                        </div>
                         <div class="col-md-6">
                             <p class="fw-semibold mb-1 text-secondary">Email:</p>
                             <p class="fs-5">{{ $rap->email }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <p class="fw-semibold mb-1 text-secondary">Địa chỉ:</p>
-                            <p class="fs-5">{{ $rap->dia_chi }}</p>
-                        </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p class="fw-semibold mb-1 text-secondary">Ngày tạo:</p>
-                            <p class="fs-6 text-muted">{{ $rap->created_at->format('d/m/Y H:i') }}</p>
+                            <p class="fw-semibold mb-1 text-secondary">Địa chỉ:</p>
+                            <p class="fs-6 text-muted">{{ $rap->dia_chi }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="fw-semibold mb-1 text-secondary">Cập nhật gần nhất:</p>
-                            <p class="fs-6 text-muted">{{ $rap->updated_at->format('d/m/Y H:i') }}</p>
+                            <p class="fw-semibold mb-1 text-secondary">Ngày tạo:</p>
+                            <p class="fs-6 text-muted">{{ $rap->created_at->format('d/m/Y H:i') }}</p>
                         </div>
                     </div>
                 </div>

@@ -39,23 +39,6 @@
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-
-                    {{-- Tổng ghế --}}
-                    <div class="mb-3">
-                        <label for="tong_ghe" class="form-label fw-bold">Tổng số ghế <span class="text-danger">*</span></label>
-                        <input 
-                            type="number"
-                            id="tong_ghe"
-                            name="tong_ghe"
-                            class="form-control @error('tong_ghe') is-invalid @enderror"
-                            value="{{ old('tong_ghe') }}"
-                            placeholder="Nhập tổng số ghế"
-                            min="1">
-                        @error('tong_ghe')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     {{-- Định dạng --}}
                     <div class="mb-3">
                         <label for="dinh_dang_id" class="form-label fw-bold">Định dạng</label>

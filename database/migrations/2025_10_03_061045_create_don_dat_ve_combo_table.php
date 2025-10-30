@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('don_dat_ve_combo', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('don_dat_ve_id')->constrained('don_dat_ve');
-            $table->foreignId('combo_id')->constrained('combo');
+            $table->foreignId('don_dat_ve_id')->constrained('don_dat_ve')->onDelete('cascade');
+            $table->foreignId('combo_id')->constrained('combo')->onDelete('cascade');
             $table->integer('so_luong');
             $table->decimal('gia', 12, 2);
             $table->timestamps();
