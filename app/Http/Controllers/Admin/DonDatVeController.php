@@ -38,6 +38,11 @@ class DonDatVeController extends Controller
             'chiTietVes.ghe'
         ])->findOrFail($id);
 
+        // Nếu đơn đã hủy thì không cho xem chi tiết
+        if ($donVe->trang_thai === 'da_huy') {
+            return redirect()->route('admin.donve.index')->withErrors(['error' => 'Đơn đã hủy, không thể xem chi tiết.']);
+        }
+
         return view('admin.donve.show', compact('donVe'));
     }
 
@@ -53,6 +58,12 @@ class DonDatVeController extends Controller
             'chiTietVes.ghe'
         ])->findOrFail($id);
 
+        // Chỉ cho in nếu đơn đã thanh toán hoặc đã check-in
+        $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
+        if (! in_array($donVe->trang_thai, $allowedToPrint)) {
+            return redirect()->route('admin.donve.index')->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
+        }
+
         $pdf = Pdf::loadView('admin.donve.print', compact('donVe'));
         return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
     }
@@ -64,7 +75,7 @@ class DonDatVeController extends Controller
     public function changeStatus(Request $request, $id)
     {
         $validated = $request->validate([
-            'trang_thai' => 'required|in:cho_thanh_toan,da_thanh_toan,da_huy',
+            'trang_thai' => 'required|in:cho_thanh_toan,da_thanh_toan,da_checkin,da_huy',
         ]);
 
         $donVe = DonDatVe::with('chiTietVes')->findOrFail($id);
@@ -78,7 +89,8 @@ class DonDatVeController extends Controller
         // Định nghĩa các chuyển trạng thái hợp lệ
         $allowed = [
             'cho_thanh_toan' => ['da_thanh_toan', 'da_huy'],
-            'da_thanh_toan' => ['da_huy'], // cho phép hủy (hoàn tiền) từ đã thanh toán
+            'da_thanh_toan' => ['da_huy', 'da_checkin'], // cho phép hủy (hoàn tiền) hoặc check-in từ đã thanh toán
+            'da_checkin' => [], // đã check-in, không cho chuyển tiếp (bạn có thể thay đổi nếu muốn)
             'da_huy' => [], // không thể chuyển tiếp
         ];
 
@@ -100,6 +112,11 @@ class DonDatVeController extends Controller
             if ($target === 'da_thanh_toan') {
                 foreach ($donVe->chiTietVes as $ct) {
                     $ct->trang_thai = 'da_thanh_toan';
+                    $ct->save();
+                }
+            } elseif ($target === 'da_checkin') {
+                foreach ($donVe->chiTietVes as $ct) {
+                    $ct->trang_thai = 'da_su_dung';
                     $ct->save();
                 }
             } elseif ($target === 'da_huy') {

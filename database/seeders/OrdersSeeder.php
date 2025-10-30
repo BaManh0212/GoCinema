@@ -91,10 +91,20 @@ class OrdersSeeder extends Seeder
 
         // Tạo 5 đơn đặt vé, mỗi đơn 2 vé
         $geList = Ghe::where('phong_id', $phong->id)->get()->values();
+        $possibleOrderStatuses = ['cho_thanh_toan', 'da_thanh_toan', 'da_checkin', 'da_huy'];
         for ($i = 0; $i < 5; $i++) {
             $user = $users[$i % count($users)];
             $suatId = $suatChieuIds[$i % count($suatChieuIds)];
             $gia = SuatChieu::find($suatId)->gia_ve ?? 80000;
+
+            // pick a status with some weighting (more cho_thanh_toan, some paid, some checked-in)
+            $status = $possibleOrderStatuses[array_rand($possibleOrderStatuses)];
+            // prefer cho_thanh_toan more often
+            if (rand(1, 100) <= 50) {
+                $status = 'cho_thanh_toan';
+            } elseif (rand(1, 100) <= 80) {
+                $status = 'da_thanh_toan';
+            }
 
             $don = DonDatVe::create([
                 'ma_don' => strtoupper(Str::random(8)),
@@ -102,12 +112,22 @@ class OrdersSeeder extends Seeder
                 'suat_chieu_id' => $suatId,
                 'ma_giam_gia_id' => null,
                 'tong_tien' => $gia * 2,
-                'trang_thai' => 'cho_thanh_toan',
+                'trang_thai' => $status,
             ]);
 
             // Tạo 2 chi tiết vé
             $seat1 = $geList->shift() ?? $geList->first();
             $seat2 = $geList->shift() ?? $geList->first();
+
+            // set ChiTietVe statuses consistent with order status
+            $ctStatus = 'cho_thanh_toan';
+            if ($status === 'da_thanh_toan') {
+                $ctStatus = 'da_thanh_toan';
+            } elseif ($status === 'da_checkin') {
+                $ctStatus = 'da_su_dung';
+            } elseif ($status === 'da_huy') {
+                $ctStatus = 'da_huy';
+            }
 
             if ($seat1) {
                 ChiTietVe::create([
@@ -115,7 +135,7 @@ class OrdersSeeder extends Seeder
                     'ghe_id' => $seat1->id,
                     'gia' => $gia,
                     'loai_ghe' => $seat1->loai ?? 'thuong',
-                    'trang_thai' => 'cho_thanh_toan',
+                    'trang_thai' => $ctStatus,
                 ]);
             }
             if ($seat2) {
@@ -124,7 +144,7 @@ class OrdersSeeder extends Seeder
                     'ghe_id' => $seat2->id,
                     'gia' => $gia,
                     'loai_ghe' => $seat2->loai ?? 'thuong',
-                    'trang_thai' => 'cho_thanh_toan',
+                    'trang_thai' => $ctStatus,
                 ]);
             }
         }
