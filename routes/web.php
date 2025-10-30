@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\MaGiamGiaController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
@@ -170,6 +171,25 @@ Route::prefix('admin')
 
         // Quản lý đơn vé
         Route::resource('donve', AdminDonDatVeController::class)->names('donve');
+
+        // Quản lý mã giảm giá
+        // Quản lý mã giảm giá
+Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
+    // Thùng rác
+    Route::get('trash', [MaGiamGiaController::class, 'trash'])->name('trash');
+
+    // Khôi phục & xóa vĩnh viễn
+    Route::put('{id}/restore', [MaGiamGiaController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force', [MaGiamGiaController::class, 'forceDelete'])->name('forceDelete');
+
+    // Bật/tắt kích hoạt
+    Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
+});
+
+// Resource CRUD
+Route::resource('ma_giam_gia', MaGiamGiaController::class)
+    ->names('ma_giam_gia')
+    ->parameters(['ma_giam_gia' => 'maGiamGia']);
     });
 
 /*
