@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\LichSuDiem;
-use App\Models\Combo;
+use App\Models\Voucher;
+use App\Models\VoucherNguoiDung;
 
 class AccountController extends Controller
 {
@@ -27,46 +29,96 @@ class AccountController extends Controller
     }
 
     /**
-     * Hiển thị trang đổi điểm
+     * Hiển thị trang đổi điểm lấy voucher (CHỈ VOUCHER VÉ)
      */
     public function rewards()
     {
         $user = Auth::user();
         
-        // Lấy danh sách combo có thể đổi
-        $combos = Combo::with('chiTiet.sanPham')
-            ->orderBy('gia', 'asc')
+        // Lấy danh sách voucher DÀNH CHO VÉ, đang kích hoạt và còn hiệu lực
+        $vouchers = Voucher::where('kich_hoat', true)
+            ->where('ap_dung_cho', 've') // CHỈ LẤY VOUCHER VÉ
+            ->conHieuLuc()
+            ->orderBy('diem_can', 'asc')
             ->get();
 
-        return view('account.rewards', compact('user', 'combos'));
+        return view('account.rewards', compact('user', 'vouchers'));
     }
 
     /**
-     * Xử lý đổi điểm lấy combo
+     * Xử lý đổi điểm lấy voucher (HSD = Ngày đổi + 30 ngày)
      */
-    public function redeemCombo(Request $request, $comboId)
+    public function redeemVoucher(Request $request, $voucherId)
     {
         try {
+            DB::beginTransaction();
+
             $user = Auth::user();
-            $combo = Combo::findOrFail($comboId);
+            $voucher = Voucher::findOrFail($voucherId);
             
-            // Quy đổi: 1000 đ = 1 điểm
-            $diemCanThiet = ceil($combo->gia / 1000);
+            // Kiểm tra voucher CHỈ DÀNH CHỎ VÉ
+            if ($voucher->ap_dung_cho !== 've') {
+                return back()->with('error', 'Voucher này không dành cho vé phim!');
+            }
+            
+            // Kiểm tra voucher còn hiệu lực
+            if (!$voucher->conHieuLuc() || !$voucher->kich_hoat) {
+                return back()->with('error', 'Voucher này hiện không khả dụng!');
+            }
+            
+            // KIỂM TRA SỐ LƯỢNG CÒN LẠI
+            if (!$voucher->conVoucherDeDoi()) {
+                return back()->with('error', 'Voucher này đã hết! Vui lòng chọn voucher khác.');
+            }
             
             // Kiểm tra điểm
-            if ($user->diem < $diemCanThiet) {
-                return back()->with('error', "Bạn cần {$diemCanThiet} điểm để đổi combo này. Hiện tại bạn có {$user->diem} điểm.");
+            if ($user->diem < $voucher->diem_can) {
+                return back()->with('error', "Bạn cần {$voucher->diem_can} điểm để đổi voucher này. Hiện tại bạn có {$user->diem} điểm.");
             }
 
             // Trừ điểm
-            $user->truDiem($diemCanThiet, "Đổi điểm lấy combo: {$combo->ten}");
+            $user->truDiem($voucher->diem_can, "Đổi voucher: {$voucher->ten}");
 
-            return redirect()->route('account.rewards')
-                ->with('success', "Đổi điểm thành công! Bạn đã nhận combo: {$combo->ten}. Vui lòng đến quầy để nhận hàng.");
+            // HSD = Ngày đổi + 30 ngày
+            $ngayHan = now()->addDays(30)->endOfDay();
+
+            // Tạo bản ghi voucher_nguoi_dung
+            VoucherNguoiDung::create([
+                'nguoi_dung_id' => $user->id,
+                'voucher_id' => $voucher->id,
+                'diem_da_doi' => $voucher->diem_can,
+                'ngay_doi' => now(),
+                'ngay_han' => $ngayHan, // NGÀY ĐỔI + 30 NGÀY
+                'trang_thai' => 'chua_su_dung'
+            ]);
+
+            // TĂNG SỐ LƯỢNG ĐÃ DÙNG
+            $voucher->increment('so_luong_da_dung');
+
+            DB::commit();
+
+            return redirect()->route('account.my-vouchers')
+                ->with('success', "Đổi điểm thành công! Bạn đã nhận voucher: {$voucher->ten}. Voucher có hiệu lực đến {$ngayHan->format('d/m/Y')}. Vui lòng kiểm tra trong mục 'Voucher của tôi'.");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Hiển thị voucher của người dùng
+     */
+    public function myVouchers()
+    {
+        $user = Auth::user();
+        
+        $vouchers = VoucherNguoiDung::with('voucher')
+            ->where('nguoi_dung_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('account.my-vouchers', compact('user', 'vouchers'));
     }
 
     /**

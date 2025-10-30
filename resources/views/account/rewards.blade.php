@@ -25,6 +25,9 @@
                     <a href="{{ route('account.rewards') }}" class="list-group-item list-group-item-action active">
                         <i class="fas fa-gift me-2"></i> Đổi điểm thưởng
                     </a>
+                    <a href="{{ route('account.my-vouchers') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-ticket-alt me-2"></i> Voucher của tôi
+                    </a>
                     <a href="{{ route('account.point-history') }}" class="list-group-item list-group-item-action">
                         <i class="fas fa-history me-2"></i> Lịch sử điểm
                     </a>
@@ -52,73 +55,123 @@
             <!-- Header -->
             <div class="card mb-4 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-white text-center py-4">
-                    <h2 class="mb-3"><i class="fas fa-gift me-2"></i>Đổi điểm lấy ưu đãi</h2>
-                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Quy đổi: 1000đ = 1 điểm</p>
+                    <h2 class="mb-3"><i class="fas fa-ticket-alt me-2"></i>Đổi điểm lấy voucher VÉ PHIM</h2>
+                    <p class="lead mb-0">Bạn có <strong>{{ number_format($user->diem) }} điểm</strong> - Sử dụng điểm để đổi voucher giảm giá vé phim</p>
+                    <small class="text-white-50">Voucher chỉ áp dụng cho vé xem phim, có hiệu lực 30 ngày từ ngày đổi</small>
                 </div>
             </div>
 
-            <!-- Danh sách combo -->
-            <h4 class="mb-4">Combo có thể đổi</h4>
+            <!-- Danh sách voucher -->
+            <h4 class="mb-4">
+                <i class="fas fa-film me-2"></i>Voucher giảm giá vé phim
+                <span class="badge bg-info ms-2">Chỉ dành cho vé</span>
+            </h4>
             
-            @if($combos->isEmpty())
+            @if($vouchers->isEmpty())
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>Hiện tại chưa có combo nào để đổi điểm.
+                    <i class="fas fa-info-circle me-2"></i>Hiện tại chưa có voucher nào để đổi điểm.
                 </div>
             @else
                 <div class="row">
-                    @foreach($combos as $combo)
+                    @foreach($vouchers as $voucher)
                         @php
-                            $diemCanThiet = ceil($combo->gia / 1000);
-                            $duDiem = $user->diem >= $diemCanThiet;
+                            $duDiem = $user->diem >= $voucher->diem_can;
+                            $conVoucher = $voucher->conVoucherDeDoi();
+                            $coTheDoiDuoc = $duDiem && $conVoucher;
                         @endphp
                         
                         <div class="col-md-6 mb-4">
-                            <div class="card h-100 {{ $duDiem ? '' : 'opacity-75' }}">
+                            <div class="card h-100 {{ $coTheDoiDuoc ? '' : 'opacity-75' }}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title">
-                                            <i class="fas fa-box text-primary me-2"></i>{{ $combo->ten }}
+                                            <i class="fas fa-ticket-alt text-primary me-2"></i>{{ $voucher->ten }}
                                         </h5>
                                         <span class="badge {{ $duDiem ? 'bg-success' : 'bg-secondary' }} fs-6">
-                                            {{ number_format($diemCanThiet) }} điểm
+                                            {{ number_format($voucher->diem_can) }} điểm
                                         </span>
                                     </div>
                                     
-                                    @if($combo->mo_ta)
-                                        <p class="text-muted">{{ $combo->mo_ta }}</p>
+                                    @if($voucher->mo_ta)
+                                        <p class="text-muted">{{ $voucher->mo_ta }}</p>
                                     @endif
                                     
-                                    <!-- Chi tiết combo -->
-                                    @if($combo->chiTiet && $combo->chiTiet->count() > 0)
-                                        <div class="mb-3">
-                                            <strong>Bao gồm:</strong>
-                                            <ul class="list-unstyled ms-3 mt-2">
-                                                @foreach($combo->chiTiet as $ct)
-                                                    <li>
-                                                        <i class="fas fa-check-circle text-success me-2"></i>
-                                                        {{ $ct->so_luong }}x {{ $ct->sanPham->ten ?? 'Sản phẩm' }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                    <!-- Chi tiết voucher -->
+                                    <div class="mb-3">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Loại voucher:</small>
+                                                <div class="fw-bold">
+                                                    @if($voucher->loai == 'phan_tram')
+                                                        <i class="fas fa-percent text-success"></i> Giảm theo %
+                                                    @else
+                                                        <i class="fas fa-money-bill text-success"></i> Giảm theo tiền
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Giá trị:</small>
+                                                <div class="fw-bold text-success">
+                                                    {{ $voucher->moTaGiaTri }}
+                                                </div>
+                                            </div>
                                         </div>
-                                    @endif
+                                    </div>
+
+                                    <!-- Số lượng còn lại -->
+                                    <div class="mb-3">
+                                        @php
+                                            $conLai = $voucher->so_luong_toi_da - $voucher->so_luong_da_dung;
+                                            $phanTram = ($voucher->so_luong_toi_da > 0) ? ($conLai / $voucher->so_luong_toi_da * 100) : 0;
+                                        @endphp
+                                        <small class="text-muted">Số lượng còn lại:</small>
+                                        <div>
+                                            <span class="badge {{ $phanTram > 50 ? 'bg-success' : ($phanTram > 20 ? 'bg-warning' : 'bg-danger') }} fs-6">
+                                                {{ $conLai }}/{{ $voucher->so_luong_toi_da }}
+                                            </span>
+                                            @if($conLai <= 10 && $conLai > 0)
+                                                <span class="text-danger ms-2"><i class="fas fa-fire"></i> Sắp hết!</span>
+                                            @elseif($conLai == 0)
+                                                <span class="text-danger ms-2"><i class="fas fa-times-circle"></i> Đã hết!</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Hiển thị áp dụng cho VÉ -->
+                                    <div class="mb-3">
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-film me-1"></i> Chỉ dành cho VÉ PHIM
+                                        </span>
+                                    </div>
+
+                                    <!-- HSD = 30 ngày từ ngày đổi -->
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>Hiệu lực: 
+                                            <span class="text-info fw-bold">30 ngày</span> kể từ ngày đổi
+                                        </small>
+                                    </div>
                                     
                                     <hr>
                                     
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <small class="text-muted">Giá gốc:</small>
-                                            <div class="text-decoration-line-through">{{ number_format($combo->gia) }}đ</div>
+                                            <small class="text-muted">Điểm cần thiết:</small>
+                                            <div class="fw-bold text-primary">{{ number_format($voucher->diem_can) }} điểm</div>
                                         </div>
                                         
-                                        @if($duDiem)
-                                            <form action="{{ route('account.redeem-combo', $combo->id) }}" method="POST" 
-                                                  onsubmit="return confirm('Bạn có chắc muốn đổi {{ number_format($diemCanThiet) }} điểm lấy combo này?')">
+                                        @if($coTheDoiDuoc)
+                                            <form action="{{ route('account.redeem-voucher', $voucher->id) }}" method="POST" 
+                                                  onsubmit="return confirm('Bạn có chắc muốn đổi {{ number_format($voucher->diem_can) }} điểm lấy voucher này?')">
                                                 @csrf
                                                 <button type="submit" class="btn btn-primary">
                                                     <i class="fas fa-exchange-alt me-2"></i>Đổi ngay
                                                 </button>
                                             </form>
+                                        @elseif(!$conVoucher)
+                                            <button class="btn btn-danger" disabled>
+                                                <i class="fas fa-ban me-2"></i>Đã hết
+                                            </button>
                                         @else
                                             <button class="btn btn-secondary" disabled>
                                                 <i class="fas fa-lock me-2"></i>Chưa đủ điểm
@@ -135,12 +188,14 @@
             <!-- Hướng dẫn tích điểm -->
             <div class="card bg-light mt-4">
                 <div class="card-body">
-                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm</h5>
+                    <h5><i class="fas fa-question-circle text-info me-2"></i>Cách tích điểm & sử dụng voucher vé phim</h5>
                     <ul class="mb-0">
                         <li>Mỗi lần đặt vé xem phim, bạn sẽ nhận được điểm thưởng</li>
                         <li>Điểm được quy đổi: 1000đ chi tiêu = 1 điểm tích lũy</li>
-                        <li>Sử dụng điểm để đổi lấy combo ưu đãi tại rạp</li>
-                        <li>Điểm tích lũy không có hạn sử dụng</li>
+                        <li>Sử dụng điểm để đổi lấy voucher giảm giá <strong class="text-danger">VÉ PHIM</strong></li>
+                        <li><strong class="text-primary">Voucher có hiệu lực 30 ngày</strong> kể từ ngày đổi</li>
+                        <li>Voucher sẽ được lưu trong mục "Voucher của tôi" sau khi đổi thành công</li>
+                        <li>Voucher <strong>CHỈ ÁP DỤNG CHO VÉ XEM PHIM</strong>, không áp dụng cho bắp nước hoặc sản phẩm khác</li>
                     </ul>
                 </div>
             </div>

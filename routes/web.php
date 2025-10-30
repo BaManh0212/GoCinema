@@ -18,14 +18,18 @@ use App\Http\Controllers\Admin\PhimController as AdminPhimController;
 use App\Http\Controllers\Admin\ComboController as AdminComboController;
 use App\Http\Controllers\Admin\NguoiDungController as AdminNguoiDungController;
 use App\Http\Controllers\Admin\DiemTichLuyController as AdminDiemTichLuyController;
+use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\MaGiamGiaController;
 use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController;
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
-
+use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
+use App\Http\Controllers\Admin\GheController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
 use App\Http\Controllers\Staff\PhimController as StaffPhimController;
 use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
+use App\Http\Controllers\Staff\ComboController as StaffComboController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,10 +78,11 @@ Route::middleware('auth')->group(function () {
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'index'])->name('index');
         Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
+        Route::get('/my-vouchers', [AccountController::class, 'myVouchers'])->name('my-vouchers');
         Route::get('/point-history', [AccountController::class, 'pointHistory'])->name('point-history');
         Route::put('/update-profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
-        Route::post('/redeem-combo/{comboId}', [AccountController::class, 'redeemCombo'])->name('redeem-combo');
+        Route::post('/redeem-voucher/{voucherId}', [AccountController::class, 'redeemVoucher'])->name('redeem-voucher');
     });
 });
 
@@ -132,11 +137,24 @@ Route::prefix('admin')
         });
 
         // Quản lý rạp
-        Route::resource('rap', AdminRapController::class)->names('rap');
+        Route::get('/rap', [AdminRapController::class, 'index'])->name('rap.index');
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
+        // Quản lý ghế theo từng phòng
+        // Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+
+        Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        Route::post('phongchieu/{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+        Route::post('admin/phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
+        ->name('admin.phongchieu.ghe.updateMap');
         // Quản lý suất chiếu
         Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
+        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])->name('admin.suatchieu.autoStore');
+        Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
+        ->name('admin.suatchieu.ghe');
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
         Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');
@@ -159,12 +177,12 @@ Route::prefix('admin')
         // Quản lý combo
         Route::resource('combo', AdminComboController::class)->except(['show'])->names('combo');
         Route::get('combo/thung-rac', [AdminComboController::class, 'trashed'])->name('combo.trashed');
-        Route::post('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
+        Route::put('combo/{id}/restore', [AdminComboController::class, 'restore'])->name('combo.restore');
         Route::delete('combo/{id}/force-delete', [AdminComboController::class, 'forceDelete'])->name('combo.forceDelete');
 
         // Quản lý người dùng
-        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
         Route::patch('/nguoi-dung/{id}/toggle', [AdminNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle');
+        Route::resource('nguoi-dung', AdminNguoiDungController::class)->names('nguoi-dung');
 
 
         // Quản lý điểm tích lũy
@@ -174,6 +192,46 @@ Route::prefix('admin')
         Route::get('diem-tich-luy/statistics', [AdminDiemTichLuyController::class, 'statistics'])->name('diem-tich-luy.statistics');
         Route::get('diem-tich-luy/{nguoiDungId}', [AdminDiemTichLuyController::class, 'show'])->name('diem-tich-luy.show');
         Route::delete('diem-tich-luy/{id}', [AdminDiemTichLuyController::class, 'destroy'])->name('diem-tich-luy.destroy');
+
+        // Quản lý voucher
+        // 🧺 Thùng rác
+        Route::get('/trashed', [VoucherController::class, 'trashed'])->name('voucher.trashed');
+        Route::delete('/{id}', [VoucherController::class, 'destroy'])->name('voucher.destroy');
+        Route::put('/{id}/restore', [VoucherController::class, 'restore'])->name('voucher.restore');
+        Route::delete('/{id}/force', [VoucherController::class, 'forceDelete'])->name('voucher.forceDelete');
+        Route::resource('voucher', VoucherController::class)->names('voucher');
+        Route::post('voucher/{id}/toggle-status', [VoucherController::class, 'toggleStatus'])->name('voucher.toggle-status');
+        Route::get('voucher-statistics', [VoucherController::class, 'statistics'])->name('voucher.statistics');
+
+    // Quản lý đơn vé
+    Route::resource('donve', AdminDonDatVeController::class)->names('donve');
+    // Trang check-in (form)
+    Route::get('donve/checkin', [AdminDonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
+    // Thay đổi trạng thái đơn (logic chuyển trạng thái server-side)
+    Route::post('donve/{id}/change-status', [AdminDonDatVeController::class, 'changeStatus'])->name('donve.changeStatus');
+    // Check-in bằng mã đơn (admin)
+    Route::post('donve/checkin-code', [AdminDonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
+    // In vé (PDF)
+    Route::get('donve/{id}/print', [AdminDonDatVeController::class, 'print'])->name('donve.print');
+
+        // Quản lý mã giảm giá
+        // Quản lý mã giảm giá
+Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
+    // Thùng rác
+    Route::get('trash', [MaGiamGiaController::class, 'trash'])->name('trash');
+
+    // Khôi phục & xóa vĩnh viễn
+    Route::put('{id}/restore', [MaGiamGiaController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force', [MaGiamGiaController::class, 'forceDelete'])->name('forceDelete');
+
+    // Bật/tắt kích hoạt
+    Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
+});
+
+// Resource CRUD
+Route::resource('ma_giam_gia', MaGiamGiaController::class)
+    ->names('ma_giam_gia')
+    ->parameters(['ma_giam_gia' => 'maGiamGia']);
     });
 
 /*
@@ -196,8 +254,14 @@ Route::prefix('staff')
 
         // Quản lý sản phẩm
         Route::resource('san_pham', StaffSanPhamController::class)->except(['show']);
-    });
 
+        // Quản lý combo
+        Route::resource('combo', StaffComboController::class)->names('combo');
+        // Check-in bằng mã đơn (nhân viên)
+        Route::get('donve/checkin', [\App\Http\Controllers\Admin\DonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
+        Route::post('donve/checkin-code', [\App\Http\Controllers\Admin\DonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
+    });
+    
 /*
 |--------------------------------------------------------------------------
 | Auth routes (đăng nhập, đăng ký, v.v.)

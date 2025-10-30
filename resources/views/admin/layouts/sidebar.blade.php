@@ -70,20 +70,10 @@
 
     <!-- Rạp -->
     <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuRap" aria-expanded="false" aria-controls="menuRap">
-            <i class="fas fa-fw fa-building"></i>
+        <a class="nav-link" href="{{ route('admin.rap.index') }}">
+            <i class="fas fa-cubes"></i>
             <span>Rạp chiếu</span>
         </a>
-        <div id="menuRap" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('admin/rap') ? 'active' : '' }}" href="{{ route('admin.rap.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách rạp
-                </a>
-                <a class="collapse-item {{ request()->is('admin/rap/create') ? 'active' : '' }}" href="{{ route('admin.rap.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm rạp mới
-                </a>
-            </div>
-        </div>
     </li>
     <!-- Phòng chiếu -->
     <li class="nav-item">
@@ -121,7 +111,23 @@
         </div>
     </div>
 </li>
-
+   {{-- <li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuGhe"
+        aria-expanded="false" aria-controls="menuGhe">
+        <i class="fas fa-fw fa-chair"></i>
+        <span>Ghế</span>
+    </a>
+    <div id="menuGhe" class="collapse" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="#">
+                <i class="fas fa-list fa-sm mr-2"></i> Danh sách ghế
+            </a>
+            <a class="collapse-item" href="#">
+                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm ghế mới
+            </a>
+        </div>
+    </div>
+</li> --}}
 
 
     <!-- Divider -->
@@ -140,7 +146,7 @@
     <li class="nav-item {{ request()->is('admin/san_pham*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.san_pham.index') }}">
             <i class="fas fa-box-open"></i>
-            <span>Sản phẩm</span>
+            <span>Đồ ăn và đồ lưu niệm</span>
         </a>
     </li>
 
@@ -151,8 +157,20 @@
         </a>
         <div id="menuGiamGia" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
-                <a class="collapse-item" href="#"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
+            </div>
+        </div>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDoiDiem" aria-expanded="false" aria-controls="menuDoiDiem">
+            <i class="fas fa-fw fa-percent"></i>
+            <span>Ưu đãi đổi điểm</span>
+        </a>
+        <div id="menuDoiDiem" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('admin.voucher.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
+                <a class="collapse-item" href="{{ route('admin.voucher.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
             </div>
         </div>
     </li>
@@ -182,8 +200,8 @@
         </a>
         <div id="menuDon" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="#"><i class="fas fa-list fa-sm mr-2"></i> Danh sách đơn</a>
-                <a class="collapse-item" href="#"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
+                <a class="collapse-item" href="{{ route('admin.donve.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách đơn</a>
+                <a class="collapse-item" href="{{ route('admin.donve.checkin') }}"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
             </div>
         </div>
     </li>

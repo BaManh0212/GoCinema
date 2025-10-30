@@ -31,4 +31,10 @@ class SuatChieu extends Model
     {
         return $this->belongsTo(PhongChieu::class, 'phong_id');
     }
+
+    // backward-compatible alias: some views/controllers expect phongChieu relation
+    public function phongChieu()
+    {
+        return $this->belongsTo(PhongChieu::class, 'phong_id');
+    }
 }

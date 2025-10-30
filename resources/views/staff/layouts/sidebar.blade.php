@@ -71,7 +71,13 @@
     <li class="nav-item {{ request()->is('staff/san_pham*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('staff.san_pham.index') }}">
             <i class="fas fa-box-open"></i>
-            <span>Combo & Sản phẩm</span>
+            <span>Đồ ăn và đồ lưu niệm</span>
+        </a>
+    </li>
+    <li class="nav-item {{ request()->is('staff/san_pham*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('staff.combo.index') }}">
+            <i class="fas fa-box-open"></i>
+            <span>Combo</span>
         </a>
     </li>
 

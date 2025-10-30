@@ -41,7 +41,7 @@
                     </div>
 
                     {{-- Tổng ghế --}}
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="tong_ghe" class="form-label fw-bold">Tổng số ghế <span class="text-danger">*</span></label>
                         <input 
                             type="number"
@@ -53,7 +53,7 @@
                         @error('tong_ghe')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
 
                     {{-- Định dạng --}}
                     <div class="mb-3">
