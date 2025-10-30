@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
                 'vai_tro_id' => $manager->id,
             ]);
         }
+        $this->call(PhimSeeder::class);
 
     }
 }

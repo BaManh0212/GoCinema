@@ -106,11 +106,20 @@ Route::prefix('admin')
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
         // Quản lý ghế theo từng phòng
+        // Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+
         Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
-        Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::post('phongchieu/{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
         Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+        Route::post('admin/phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
+        ->name('admin.phongchieu.ghe.updateMap');
         // Quản lý suất chiếu
         Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
+        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])->name('admin.suatchieu.autoStore');
+        Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
+        ->name('admin.suatchieu.ghe');
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
         Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');

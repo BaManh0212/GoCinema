@@ -204,9 +204,7 @@ function toggleStatus(id) {
         const form = document.getElementById('toggleForm');
         form.action = `/admin/voucher/${id}/toggle-status`;
         form.submit();
-    } else {
-        window.location.reload();
-    }
+    } else window.location.reload();
 }
 
 function confirmDelete(id) {
