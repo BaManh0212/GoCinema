@@ -204,15 +204,23 @@ Route::prefix('admin')
         Route::get('voucher-statistics', [VoucherController::class, 'statistics'])->name('voucher.statistics');
 
     // Quản lý đơn vé
-    Route::resource('donve', AdminDonDatVeController::class)->names('donve');
-    // Trang check-in (form)
-    Route::get('donve/checkin', [AdminDonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
-    // Thay đổi trạng thái đơn (logic chuyển trạng thái server-side)
-    Route::post('donve/{id}/change-status', [AdminDonDatVeController::class, 'changeStatus'])->name('donve.changeStatus');
-    // Check-in bằng mã đơn (admin)
-    Route::post('donve/checkin-code', [AdminDonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
-    // In vé (PDF)
-    Route::get('donve/{id}/print', [AdminDonDatVeController::class, 'print'])->name('donve.print');
+    Route::prefix('donve')->name('donve.')->group(function () {
+        // Các route CRUD cơ bản
+        Route::get('/', [AdminDonDatVeController::class, 'index'])->name('index');
+        Route::get('{id}', [AdminDonDatVeController::class, 'show'])->name('show');
+        
+        // Trang check-in (form)
+        Route::get('checkin/form', [AdminDonDatVeController::class, 'showCheckinForm'])->name('checkin');
+        
+        // Xử lý check-in bằng mã đơn
+        Route::post('checkin/code', [AdminDonDatVeController::class, 'checkInByCode'])->name('checkinByCode');
+        
+        // Thay đổi trạng thái đơn
+        Route::post('{id}/change-status', [AdminDonDatVeController::class, 'changeStatus'])->name('changeStatus');
+        
+        // In vé (PDF)
+        Route::get('{id}/print', [AdminDonDatVeController::class, 'print'])->name('print');
+    });
 
         // Quản lý mã giảm giá
         // Quản lý mã giảm giá
@@ -257,9 +265,11 @@ Route::prefix('staff')
 
         // Quản lý combo
         Route::resource('combo', StaffComboController::class)->names('combo');
-        // Check-in bằng mã đơn (nhân viên)
-        Route::get('donve/checkin', [\App\Http\Controllers\Admin\DonDatVeController::class, 'showCheckinForm'])->name('donve.checkin');
-        Route::post('donve/checkin-code', [\App\Http\Controllers\Admin\DonDatVeController::class, 'checkInByCode'])->name('donve.checkinByCode');
+        // Check-in vé (nhân viên)
+        Route::prefix('donve')->name('donve.')->group(function () {
+            Route::get('checkin/form', [AdminDonDatVeController::class, 'showCheckinForm'])->name('checkin');
+            Route::post('checkin/code', [AdminDonDatVeController::class, 'checkInByCode'])->name('checkinByCode');
+        });
     });
     
 /*
