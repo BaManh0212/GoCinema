@@ -22,18 +22,6 @@
         </div>
     </div>
 
-    {{-- ====== THÔNG BÁO ====== --}}
-    @if(session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
-
     {{-- ====== BỘ LỌC ====== --}}
     <div class="card mb-4 border-0 shadow-sm rounded-4">
         <div class="card-body">

@@ -151,10 +151,25 @@ Route::prefix('admin')
         Route::post('admin/phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
         ->name('admin.phongchieu.ghe.updateMap');
         // Quản lý suất chiếu
-        Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
-        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])->name('admin.suatchieu.autoStore');
-        Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
-        ->name('admin.suatchieu.ghe');
+    Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
+
+    // Tạo nhanh tự động
+    Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])
+        ->name('suatchieu.autoStore');
+
+    // Danh sách ghế trong suất chiếu
+    Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
+        ->name('suatchieu.ghe');
+
+    // Cập nhật trạng thái từng suất
+    Route::patch('suatchieu/{id}/trang-thai', [AdminSuatChieuController::class, 'updateTrangThai'])
+        ->name('suatchieu.updateTrangThai');
+
+    // Cập nhật trạng thái hàng loạt
+    Route::post('suatchieu/bulk-update', [AdminSuatChieuController::class, 'bulkUpdate'])
+        ->name('suatchieu.bulkUpdate');
+
+
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
         Route::put('danhmuc/{id}/khoi-phuc', [AdminDanhMucController::class, 'restore'])->name('danhmuc.restore');

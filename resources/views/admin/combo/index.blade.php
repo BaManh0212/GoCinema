@@ -23,18 +23,6 @@
         </div>
     </div>
 
-    {{-- ✅ Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
-
     {{-- 🔍 Tìm kiếm và Lọc --}}
     <div class="card mb-4">
         <div class="card-body">
