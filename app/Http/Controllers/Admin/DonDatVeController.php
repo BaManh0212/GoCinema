@@ -136,58 +136,67 @@ class DonDatVeController extends Controller
     }
 
     /**
-     * Check-in bằng mã đơn (ma_don).
-     * Yêu cầu: đơn phải ở trạng thái 'da_thanh_toan' mới được check-in.
-     * Nếu thành công sẽ đánh dấu các ChiTietVe liên quan là 'da_su_dung'.
-     */
-    public function checkInByCode(Request $request)
-    {
-        $validated = $request->validate([
-            'ma_don' => 'required|string',
-        ]);
+ * Check-in bằng mã đơn (ma_don).
+ * Yêu cầu: đơn phải ở trạng thái 'da_thanh_toan' mới được check-in.
+ * Nếu thành công sẽ đánh dấu các ChiTietVe liên quan là 'da_su_dung'
+ * và cập nhật trạng thái đơn thành 'da_checkin'.
+ */
+public function checkInByCode(Request $request)
+{
+    $validated = $request->validate([
+        'ma_don' => 'required|string',
+    ]);
 
-        $maDon = trim($validated['ma_don']);
-        $don = DonDatVe::with('chiTietVes')->where('ma_don', $maDon)->first();
+    $maDon = trim($validated['ma_don']);
+    $don = DonDatVe::with('chiTietVes')->where('ma_don', $maDon)->first();
 
-        if (! $don) {
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Mã đơn không tồn tại.'], 404);
-            }
-            return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
+    if (! $don) {
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Mã đơn không tồn tại.'], 404);
         }
-
-        if ($don->trang_thai !== 'da_thanh_toan') {
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);
-            }
-            return back()->withErrors(['ma_don' => 'Đơn chưa được thanh toán nên không thể check-in.']);
-        }
-
-        DB::beginTransaction();
-        try {
-            foreach ($don->chiTietVes as $ct) {
-                // Chỉ cập nhật những vé chưa được sử dụng
-                if ($ct->trang_thai !== 'da_su_dung') {
-                    $ct->trang_thai = 'da_su_dung';
-                    $ct->save();
-                }
-            }
-            DB::commit();
-
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Check-in thành công.', 'ma_don' => $maDon]);
-            }
-
-            return back()->with('success', "Check-in thành công cho mã đơn $maDon");
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            \Log::error('Lỗi khi check-in theo mã đơn: '.$e->getMessage());
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Có lỗi khi check-in.'], 500);
-            }
-            return back()->withErrors(['error' => 'Có lỗi khi check-in. Vui lòng thử lại.']);
-        }
+        return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
     }
+
+    if ($don->trang_thai !== 'da_thanh_toan') {
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);
+        }
+        return back()->withErrors(['ma_don' => 'Đơn chưa được thanh toán nên không thể check-in.']);
+    }
+
+    DB::beginTransaction();
+    try {
+        // ✅ Cập nhật trạng thái chi tiết vé
+        foreach ($don->chiTietVes as $ct) {
+            if ($ct->trang_thai !== 'da_su_dung') {
+                $ct->trang_thai = 'da_su_dung';
+                $ct->save();
+            }
+        }
+
+        // ✅ Cập nhật trạng thái đơn vé tổng
+        $don->trang_thai = 'da_checkin';
+        $don->save();
+
+        DB::commit();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Check-in thành công.', 'ma_don' => $maDon]);
+        }
+
+        return back()->with('success', "✅ Check-in thành công cho mã đơn $maDon");
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        \Log::error('Lỗi khi check-in theo mã đơn: ' . $e->getMessage());
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Có lỗi khi check-in.'], 500);
+        }
+
+        return back()->withErrors(['error' => 'Có lỗi khi check-in. Vui lòng thử lại.']);
+    }
+}
+
 
     /**
      * Hiển thị trang check-in (form nhập mã đơn) cho admin/staff
