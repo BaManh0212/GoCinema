@@ -2,73 +2,110 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2 class="fw-bold text-primary mb-4">
-        <i class="bi bi-plus-circle"></i> 🎬 Tạo lịch suất chiếu tự động
-    </h2>
 
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body">
+    {{-- 🏷️ Tiêu đề --}}
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-calendar2-plus text-primary fs-2 me-2"></i>
+        <h2 class="fw-bold text-primary mb-0">Tạo lịch suất chiếu tự động</h2>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4">
+        <div class="card-body p-4">
             <form action="{{ route('admin.suatchieu.autoStore') }}" method="POST">
                 @csrf
 
-                {{-- 🎞 Chọn phim --}}
-                <div class="mb-3">
-                    <label for="phim_id" class="form-label fw-bold">Phim</label>
-                    <select name="phim_id" id="phim_id" class="form-select @error('phim_id') is-invalid @enderror">
-                        <option value="">-- Chọn phim --</option>
-                        @foreach ($phims as $phim)
-                            <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
-                                {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
+                {{-- 🎞️ Thông tin cơ bản --}}
+                <div class="border-bottom pb-3 mb-4">
+                    <h5 class="fw-bold text-secondary mb-3">
+                        <i class="bi bi-film text-primary me-2"></i>Thông tin phim & phòng chiếu
+                    </h5>
 
-                {{-- 🏢 Chọn phòng chiếu --}}
-                <div class="mb-3">
-                    <label for="phong_id" class="form-label fw-bold">Phòng chiếu</label>
-                    <select name="phong_id" id="phong_id" class="form-select @error('phong_id') is-invalid @enderror">
-                        <option value="">-- Chọn phòng --</option>
-                        @foreach ($phongs as $phong)
-                            <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
-                                {{ $phong->ten }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="phim_id" class="form-label fw-semibold">Phim</label>
+                            <select name="phim_id" id="phim_id" class="form-select select2 @error('phim_id') is-invalid @enderror">
+                                <option value="">-- Chọn phim --</option>
+                                @foreach ($phims as $phim)
+                                    <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
+                                        🎬 {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
 
-                {{-- 📅 Ngày bắt đầu - kết thúc --}}
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Ngày bắt đầu</label>
-                        <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Ngày kết thúc</label>
-                        <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control">
+                        <div class="col-md-6">
+                            <label for="phong_id" class="form-label fw-semibold">Phòng chiếu</label>
+                            <select name="phong_id" id="phong_id" class="form-select select2 @error('phong_id') is-invalid @enderror">
+                                <option value="">-- Chọn phòng --</option>
+                                @foreach ($phongs as $phong)
+                                    <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
+                                        🏢 {{ $phong->ten }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
                     </div>
                 </div>
 
-                {{-- 🕒 Giờ bắt đầu đầu tiên trong ngày --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Giờ chiếu đầu tiên trong ngày</label>
-                    <input type="time" name="gio_bat_dau_ngay" value="{{ old('gio_bat_dau_ngay', '08:00') }}" class="form-control">
+                {{-- 📅 Thời gian --}}
+                <div class="border-bottom pb-3 mb-4">
+                    <h5 class="fw-bold text-secondary mb-3">
+                        <i class="bi bi-clock-history text-primary me-2"></i>Thời gian chiếu
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                            <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control rounded-3 shadow-sm-sm">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ngày kết thúc</label>
+                            <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control rounded-3 shadow-sm-sm">
+                        </div>
+
+                        {{-- Giờ chiếu đầu tiên + gợi ý --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Giờ chiếu đầu tiên trong ngày</label>
+                            <div class="input-group">
+                                <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
+                                    value="{{ old('gio_bat_dau_ngay', '08:00') }}"
+                                    class="form-control rounded-start-3 shadow-sm-sm">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    Gợi ý
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item gio-goi-y" href="#">08:00</a></li>
+                                    <li><a class="dropdown-item gio-goi-y" href="#">10:00</a></li>
+                                    <li><a class="dropdown-item gio-goi-y" href="#">13:00</a></li>
+                                    <li><a class="dropdown-item gio-goi-y" href="#">15:30</a></li>
+                                    <li><a class="dropdown-item gio-goi-y" href="#">18:00</a></li>
+                                    <li><a class="dropdown-item gio-goi-y" href="#">20:30</a></li>
+                                </ul>
+                            </div>
+                            <div class="form-text text-muted">Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- 💰 Giá vé --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Giá vé (VNĐ)</label>
+                <div class="mb-4">
+                    <h5 class="fw-bold text-secondary mb-3">
+                        <i class="bi bi-cash-stack text-primary me-2"></i>Giá vé
+                    </h5>
                     <input type="number" name="gia_ve" min="0" step="1000"
-                        value="{{ old('gia_ve', 70000) }}" class="form-control">
+                        value="{{ old('gia_ve', 70000) }}" class="form-control rounded-3 shadow-sm-sm w-50">
                 </div>
 
-                <div class="d-flex justify-content-end">
-                    <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-secondary me-2">
+                {{-- 🔘 Nút hành động --}}
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary px-4 me-2 rounded-3">
                         <i class="bi bi-arrow-left"></i> Quay lại
                     </a>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
                         <i class="bi bi-save"></i> Tạo tự động
                     </button>
                 </div>
@@ -77,3 +114,61 @@
     </div>
 </div>
 @endsection
+
+
+{{-- ⚙️ Script & CSS --}}
+@push('scripts')
+    {{-- Select2 --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Kích hoạt Select2
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Chọn --',
+                allowClear: true
+            });
+
+            // Gợi ý giờ chiếu
+            $('.gio-goi-y').on('click', function(e) {
+                e.preventDefault();
+                $('#gio_bat_dau_ngay').val($(this).text().trim());
+            });
+        });
+    </script>
+
+    <style>
+        /* Select2 style đẹp hơn */
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            border-radius: 0.5rem !important;
+            border: 1px solid #ced4da !important;
+        }
+        .select2-selection__rendered {
+            line-height: 36px !important;
+        }
+        .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        /* Các card section và input */
+        h5 i { vertical-align: middle; }
+        .shadow-sm-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        .card {
+            background: linear-gradient(180deg, #ffffff, #f9fbfd);
+        }
+        .form-label {
+            color: #495057;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #4e73df, #224abe);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #224abe, #1e3a8a);
+        }
+    </style>
+@endpush
