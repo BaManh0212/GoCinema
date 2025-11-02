@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\LichSuDiem;
 use App\Models\Voucher;
 use App\Models\VoucherNguoiDung;
+use App\Models\DonDatVe;
 
 class AccountController extends Controller
 {
@@ -22,10 +23,21 @@ class AccountController extends Controller
         // Lấy lịch sử điểm gần đây (10 giao dịch)
         $lichSuDiem = LichSuDiem::where('nguoi_dung_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->take(10)
             ->get();
 
-        return view('account.index', compact('user', 'lichSuDiem'));
+        // Lấy lịch sử đặt vé với relationships
+        $bookings = DonDatVe::with(['suatChieu.phim', 'chiTietVes.ghe'])
+            ->where('nguoi_dung_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        // Lấy voucher của người dùng
+        $myVouchers = VoucherNguoiDung::with('voucher')
+            ->where('nguoi_dung_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('account.profile', compact('user', 'lichSuDiem', 'bookings', 'myVouchers'));
     }
 
     /**

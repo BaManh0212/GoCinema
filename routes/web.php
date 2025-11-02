@@ -39,7 +39,7 @@ use App\Http\Controllers\Staff\ComboController as StaffComboController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
 /*
 |--------------------------------------------------------------------------
