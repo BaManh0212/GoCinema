@@ -3,12 +3,12 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-
-
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\PolicyController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
 use App\Http\Controllers\Admin\GheController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/policies', [PolicyController::class, 'index'])->name('policies');
 
 
 /*
@@ -64,6 +66,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::post('/redeem-voucher/{voucherId}', [AccountController::class, 'redeemVoucher'])->name('redeem-voucher');
     });
+    // Liên hệ
+    Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
+    Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+    Route::get('/contact/history', [ContactController::class, 'history'])->name('contact.history');
 });
 
 /*
@@ -233,6 +239,17 @@ Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
 //Quản lý banner
     Route::resource('banners', BannerController::class)->names('banners');
     Route::post('banners/{id}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
+
+//Quản lý liên hệ
+    // Quản lý liên hệ
+    Route::prefix('contacts')->name('contacts.')->group(function () {
+        Route::get('/', [AdminContactController::class, 'index'])->name('index');
+        Route::get('/{contact}', [AdminContactController::class, 'show'])->name('show');
+        Route::post('/{contact}/reply', [AdminContactController::class, 'reply'])->name('reply');
+        Route::post('/{contact}/mark-read', [AdminContactController::class, 'markRead'])->name('markRead');
+        Route::delete('/{contact}', [AdminContactController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-delete', [AdminContactController::class, 'bulkDelete'])->name('bulk-delete');
+    });
 
 // Resource CRUD
 Route::resource('ma_giam_gia', MaGiamGiaController::class)

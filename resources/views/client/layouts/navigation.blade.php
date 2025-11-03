@@ -1,7 +1,5 @@
 {{-- ================= HEADER CLIENT ================= --}}
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm"
-     id="mainNavbar"
-     style="background: rgba(0, 0, 0, 0.85); transition: background 0.3s ease, box-shadow 0.3s ease;">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm" id="mainNavbar">
     <div class="container">
         {{-- 🔹 Logo --}}
         <a class="navbar-brand d-flex align-items-center fw-bold text-danger" href="{{ route('home') }}">
@@ -26,12 +24,25 @@
                 </li> 
                 <span class="divider">|</span>
                 <li class="nav-item">
-                    <a class="nav-link px-3" href="#quy-dinh">Quy định</a>
+                    <a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a>
                 </li> 
                 <span class="divider">|</span>
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="#lien-he">Liên hệ</a>
-                </li> 
+                <li class="nav-item dropdown">
+                    <a class="nav-link px-3 dropdown-toggle" href="#" id="contactMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Liên hệ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="contactMenu">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('contact.create') }}">📩 Gửi liên hệ</a>
+                        </li>
+
+                        @auth
+                        <li>
+                            <a class="dropdown-item" href="{{ route('contact.history') }}">🗂️ Lịch sử liên hệ</a>
+                        </li>
+                        @endauth
+                    </ul>
+                </li>
             </ul>
 
             {{-- 🔹 Nút đăng nhập/đăng ký --}}
@@ -65,10 +76,10 @@
 document.addEventListener("scroll", function() {
     const navbar = document.getElementById("mainNavbar");
     if (window.scrollY > 50) {
-        navbar.style.background = "rgba(0, 0, 0, 0.95)";
-        navbar.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+        navbar.style.background = "#16213e";
+        navbar.style.boxShadow = "0 2px 8px #16213e";
     } else {
-        navbar.style.background = "rgba(0, 0, 0, 0.85)";
+        navbar.style.background = "#16213e";
         navbar.style.boxShadow = "none";
     }
 });
@@ -76,6 +87,11 @@ document.addEventListener("scroll", function() {
 
 {{-- ================= CSS ================= --}}
 <style>
+#mainNavbar {
+    background-color: #16213e !important;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
 .nav-link {
     color: #fff !important;
     position: relative;

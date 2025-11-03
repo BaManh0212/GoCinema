@@ -7,49 +7,36 @@
 
     <title>@yield('title', config('app.name', 'GoCinema'))</title>
 
+    {{-- Fonts --}}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     {{-- Bootstrap & FontAwesome --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    {{-- Client CSS --}}
+    <link rel="stylesheet" href="{{ asset('assets/css/client.css') }}">
 
     {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /* ✅ Reset lỗi margin/padding */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        /* ✅ Navbar */
-        .navbar {
-            background: #111;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.4rem;
-            color: #fff !important;
-        }
-        .navbar .nav-link {
-            color: #fff !important;
-            font-weight: 500;
-        }
-        .navbar .nav-link:hover {
-            color: #ffcc00 !important;
-        }
-
-        /* ✅ Body fix khoảng trống do navbar fixed-top */
         body {
-            background: #f8f9fa;
-            padding-top: 70px;
+            padding-top: var(--body-top-padding, 0px);
+            background-color: #16213e;
+        } 
+        main {
+            min-height: calc(100vh - 220px);
+        }
+        body:not(.has-banner) {
+            --body-top-padding: 76px;
         }
 
-        /* ✅ Slider full width */
+        @media (max-width: 767px) {
+            body:not(.has-banner) {
+                --body-top-padding: 100px;
+            }
+        }
         .carousel,
         .carousel-item,
         .carousel-item img {
@@ -57,11 +44,10 @@
             height: 100%;
             display: block;
         }
-
-        /* ✅ Card & text fix cho theme sáng */
         .card {
             background: #fff !important;
             color: #000 !important;
+            margin-bottom: 1.5rem;
         }
     </style>
 

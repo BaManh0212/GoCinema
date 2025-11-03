@@ -3,6 +3,11 @@
 @section('title', 'Trang chủ - GoCinema')
 
 @section('content')
+    @push('scripts')
+    <script>
+        document.body.classList.add('has-banner');
+    </script>
+    @endpush
 
     {{-- ✅ BANNER SLIDER FULL WIDTH --}}
     @if($banners->count())
@@ -52,29 +57,43 @@
     <div class="container py-5">
 
         <div class="text-center mb-5">
-            <h2 class="fw-bold">🎬 Phim nổi bật</h2>
-            <p class="text-muted">Xem lịch chiếu và đặt vé ngay hôm nay</p>
+            <h2 class="section-title text-white">🎬 Phim nổi bật</h2>
+            <p class="text-white" style="color: rgba(255,255,255,0.7) !important;">Xem lịch chiếu và đặt vé ngay hôm nay</p>
         </div>
 
-        <div class="row gx-3 gy-4">
+        <div class="row gx-4 gy-4">
             @forelse($featured as $phim)
-            <div class="col-6 col-md-3">
-                <div class="card h-100 shadow-sm movie-card">
+            <div class="col-6 col-lg-3">
+                <div class="movie-card">
                     <div class="poster-wrapper">
                         <img src="{{ asset('storage/' . $phim->anh_poster) }}" 
-                             class="card-img-top" 
                              alt="{{ $phim->tieu_de }}" 
                              loading="lazy">
+                        <div class="movie-overlay">
+                            <a href="#" class="btn btn-primary btn-sm">Chi tiết</a>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <h6 class="card-title mb-1 text-truncate">{{ $phim->tieu_de }}</h6>
-                        <p class="small text-muted mb-0">{{ $phim->ngayCongChieuFormatted ?? '' }}</p>
+                        <h6 class="card-title mb-2">{{ $phim->tieu_de }}</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="small text-muted mb-0">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                {{ $phim->ngayCongChieuFormatted ?? 'Sắp chiếu' }}
+                            </p>
+                            <span class="badge bg-primary">
+                                <i class="fas fa-star me-1"></i>
+                                {{ number_format($phim->rating ?? 0, 1) }}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
             @empty
             <div class="col-12">
-                <div class="alert alert-info">Chưa có phim nổi bật.</div>
+                <div class="text-center py-5">
+                    <i class="fas fa-film fa-3x mb-3 text-muted"></i>
+                    <p class="text-muted">Chưa có phim nổi bật.</p>
+                </div>
             </div>
             @endforelse
         </div>
