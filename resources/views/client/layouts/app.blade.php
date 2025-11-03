@@ -7,17 +7,28 @@
 
     <title>@yield('title', config('app.name', 'GoCinema'))</title>
 
-    <!-- Bootstrap 5 CSS -->
+    {{-- Bootstrap & FontAwesome --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /* 🎨 HEADER */
+        /* ✅ Reset lỗi margin/padding */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* ✅ Navbar */
         .navbar {
-            background: linear-gradient(90deg, #ff1f3d, #d4145a);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            background: #111;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
         .navbar-brand {
             font-weight: bold;
@@ -27,116 +38,52 @@
         .navbar .nav-link {
             color: #fff !important;
             font-weight: 500;
-            transition: color 0.2s ease;
         }
         .navbar .nav-link:hover {
-            color: #ffe082 !important;
+            color: #ffcc00 !important;
         }
 
-        /* 🧭 BODY */
+        /* ✅ Body fix khoảng trống do navbar fixed-top */
         body {
-            padding-top: 75px; /* navbar fixed-top */
-            background-color: #f9fafc;
+            background: #f8f9fa;
+            padding-top: 70px;
         }
 
-        /* 🎬 MOVIE POSTER / PLACEHOLDER */
-        .movie-placeholder {
-            background: #eaeaea;
-            height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #777;
-        }
-        .card-img-cover {
+        /* ✅ Slider full width */
+        .carousel,
+        .carousel-item,
+        .carousel-item img {
             width: 100%;
-            height: 220px;
-            object-fit: cover;
+            height: 100%;
             display: block;
         }
 
-        /* 📋 CARD STYLE TRANG TÀI KHOẢN */
+        /* ✅ Card & text fix cho theme sáng */
         .card {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
-
-        .card label,
-        .card .col-form-label {
-            color: #222 !important;
-            font-weight: 500;
-        }
-
-        .card input.form-control {
+            background: #fff !important;
             color: #000 !important;
-            background-color: #fff !important;
-            border-color: #ccc !important;
-        }
-
-        .card-header.bg-primary,
-        .card-header.bg-warning,
-        .card-header.bg-success {
-            color: #fff !important;
-        }
-
-        .list-group-item {
-            color: #333 !important;
-            background-color: #fff !important;
-        }
-
-        .list-group-item.active {
-            background-color: #0d6efd !important;
-            color: #fff !important;
-            border-color: #0d6efd !important;
-        }
-
-        .text-muted {
-            color: #555 !important;
-        }
-
-        /* 💡 FIX MẤT CHỮ KHI NỀN TỐI */
-        .bg-dark,
-        .bg-primary,
-        .bg-gradient,
-        .bg-danger,
-        .bg-purple {
-            color: #fff !important;
-        }
-
-        .bg-dark a,
-        .bg-primary a,
-        .bg-gradient a {
-            color: #fff !important;
-            text-decoration: underline;
-        }
-
-        .bg-dark .form-label,
-        .bg-primary .form-label,
-        .bg-gradient .form-label {
-            color: #fff !important;
-        }
-
-        .text-light {
-            color: #fff !important;
         }
     </style>
 
     @stack('styles')
 </head>
 <body>
-    {{-- 🔺 HEADER --}}
+
+    {{-- ✅ Navbar --}}
     @include('client.layouts.navigation')
 
-    {{-- 🔹 CONTENT --}}
-    <main class="py-4">
+    {{-- ✅ Content --}}
+    <main class="w-100 p-0 m-0">
         @yield('content')
     </main>
 
-    {{-- 🔻 FOOTER --}}
+    {{-- ✅ Footer --}}
     @include('client.layouts.footer')
 
-    <!-- Bootstrap JS -->
+    {{-- Bootstrap --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     @stack('scripts')
+
 </body>
 </html>

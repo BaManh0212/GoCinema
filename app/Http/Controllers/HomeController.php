@@ -4,21 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Phim;
+use App\Models\Banner;
 
 class HomeController extends Controller
 {
     /**
-     * Display the client home with featured movies.
+     * Display the client home with featured movies and banners.
      */
     public function index(Request $request)
     {
-        // Featured: currently showing, ordered by views
-        $featured = Phim::dangChieu()->orderByDesc('luot_xem')->limit(8)->get();
+        // Lấy phim nổi bật: đang chiếu, sắp xếp theo lượt xem
+        $featured = Phim::dangChieu()
+            ->orderByDesc('luot_xem')
+            ->limit(8)
+            ->get();
 
-        // Choose banner: first featured with a banner image
-        $bannerFilm = Phim::dangChieu()->whereNotNull('banner')->orderByDesc('luot_xem')->first();
-        $banner = $bannerFilm?->banner ? asset('uploads/' . $bannerFilm->banner) : null;
+        // Lấy banner động từ bảng banners (ảnh hoặc video)
+        $banners = Banner::where('is_active', 1)
+            ->where(function($q){
+                $q->whereNull('start_at')->orWhere('start_at', '<=', now());
+            })
+            ->where(function($q){
+                $q->whereNull('end_at')->orWhere('end_at', '>=', now());
+            })
+            ->orderBy('display_order', 'asc')
+            ->get();
 
-        return view('client.home', compact('featured', 'banner'));
+        return view('client.home', compact('featured', 'banners'));
     }
 }

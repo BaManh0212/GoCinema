@@ -205,6 +205,14 @@
             </div>
         </div>
     </li>
+    <!-- Banner -->
+    <div class="sidebar-heading">🎨 Quản lý banner</div>
+    <li class="nav-item {{ request()->is('admin/banners*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.banners.index') }}">
+            <i class="fas fa-image"></i>
+            <span>Banner</span>
+        </a>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">

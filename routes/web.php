@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\PhongChieuController as AdminPhongChieuController
 use App\Http\Controllers\Admin\SuatChieuController as AdminSuatChieuController;
 use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
 use App\Http\Controllers\Admin\GheController;
+use App\Http\Controllers\Admin\BannerController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -229,6 +230,9 @@ Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
     // Bật/tắt kích hoạt
     Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
 });
+//Quản lý banner
+    Route::resource('banners', BannerController::class)->names('banners');
+    Route::post('banners/{id}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
 
 // Resource CRUD
 Route::resource('ma_giam_gia', MaGiamGiaController::class)
