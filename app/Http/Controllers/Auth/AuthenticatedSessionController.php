@@ -17,7 +17,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('client.auth.login');
     }
 
     /**
@@ -43,7 +43,7 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended(route('staff.dashboard', absolute: false));
 
             default:
-                return redirect()->intended(route('dashboard', absolute: false));
+                return redirect()->intended(route('home', absolute: false));
         }
     }
 
