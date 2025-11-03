@@ -88,14 +88,14 @@
     <div class="sidebar-heading">📦 Đơn đặt vé</div>
 
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{{ route('staff.donve.index') }}">
             <i class="fas fa-fw fa-ticket-alt"></i>
             <span>Đơn đặt vé</span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{{ route('staff.donve.checkin') }}">
             <i class="fas fa-fw fa-check-circle"></i>
             <span>Check-in vé</span>
         </a>

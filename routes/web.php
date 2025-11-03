@@ -31,6 +31,7 @@ use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
 use App\Http\Controllers\Staff\PhimController as StaffPhimController;
 use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
 use App\Http\Controllers\Staff\ComboController as StaffComboController;
+use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -260,9 +261,22 @@ Route::prefix('staff')
         Route::resource('combo', StaffComboController::class)->names('combo');
         // Check-in vé (nhân viên)
         Route::prefix('donve')->name('donve.')->group(function () {
-            Route::get('checkin/form', [AdminDonDatVeController::class, 'showCheckinForm'])->name('checkin');
-            Route::post('checkin/code', [AdminDonDatVeController::class, 'checkInByCode'])->name('checkinByCode');
-        });
+        // Các route CRUD cơ bản
+        Route::get('/', [StaffDonDatVeController::class, 'index'])->name('index');
+        Route::get('{id}', [StaffDonDatVeController::class, 'show'])->name('show');
+        
+        // Trang check-in (form)
+        Route::get('checkin/form', [StaffDonDatVeController::class, 'showCheckinForm'])->name('checkin');
+        
+        // Xử lý check-in bằng mã đơn
+        Route::post('checkin/code', [StaffDonDatVeController::class, 'checkInByCode'])->name('checkinByCode');
+        
+        // Thay đổi trạng thái đơn
+        Route::post('{id}/change-status', [StaffDonDatVeController::class, 'changeStatus'])->name('changeStatus');
+        
+        // In vé (PDF)
+        Route::get('{id}/print', [StaffDonDatVeController::class, 'print'])->name('print');
+    });
     });
     
 /*
