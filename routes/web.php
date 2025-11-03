@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\HomeController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -37,18 +38,8 @@ use App\Http\Controllers\Staff\ComboController as StaffComboController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard người dùng
-|--------------------------------------------------------------------------
-*/
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -56,23 +47,10 @@ Route::get('/dashboard', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/account', [accountController::class, 'edit'])->name('account.edit');
+    Route::patch('/account', [accountController::class, 'update'])->name('account.update');
+    Route::delete('/account', [accountController::class, 'destroy'])->name('account.destroy');
 
-
-    // Route test thông tin người dùng
-    Route::get('/me', function () {
-        $user = Auth::user();
-        return response()->json([
-            'id' => $user->id,
-            'email' => $user->email,
-            'ho_ten' => $user->ho_ten ?? null,
-            'loai_tai_khoan' => $user->loai_tai_khoan ?? null,
-            'vai_tro_id' => $user->vai_tro_id ?? null,
-            'vai_tro_name' => optional($user->vaiTro)->ten,
-        ]);
-    })->name('me');
 
     // Quản lý tài khoản, điểm thưởng
     Route::prefix('account')->name('account.')->group(function () {

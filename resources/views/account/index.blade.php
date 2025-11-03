@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('client.layouts.app')
 
 @section('title', 'Tài khoản của tôi')
 
@@ -18,17 +18,51 @@
                         <i class="fas fa-star"></i> {{ number_format($user->diem) }} điểm
                     </div>
                 </div>
+                <style>
+                .list-group-item {
+                    background-color: #fff !important;
+                    color: #000 !important;
+                    border: 1px solid #dee2e6 !important;
+                    font-weight: 500 !important;
+                    opacity: 1 !important;
+                    filter: none !important;
+                    text-shadow: none !important;
+                }
+
+                .list-group-item:hover {
+                    background-color: #f1f1f1 !important;
+                    color: #000 !important;
+                }
+
+                .list-group-item.active {
+                    background-color: #0d6efd !important;
+                    color: #fff !important;
+                    border-color: #0d6efd !important;
+                }
+
+                .list-group-item i {
+                    color: inherit !important;
+                }
+                </style>
+
                 <div class="list-group list-group-flush">
-                    <a href="{{ route('account.index') }}" class="list-group-item list-group-item-action active">
+                    <a href="{{ route('account.index') }}"
+                    class="list-group-item list-group-item-action active">
                         <i class="fas fa-user me-2"></i> Thông tin tài khoản
                     </a>
-                    <a href="{{ route('account.rewards') }}" class="list-group-item list-group-item-action">
+
+                    <a href="{{ route('account.rewards') }}"
+                    class="list-group-item list-group-item-action">
                         <i class="fas fa-gift me-2"></i> Đổi điểm thưởng
                     </a>
-                    <a href="{{ route('account.my-vouchers') }}" class="list-group-item list-group-item-action">
+
+                    <a href="{{ route('account.my-vouchers') }}"
+                    class="list-group-item list-group-item-action">
                         <i class="fas fa-ticket-alt me-2"></i> Voucher của tôi
                     </a>
-                    <a href="{{ route('account.point-history') }}" class="list-group-item list-group-item-action">
+
+                    <a href="{{ route('account.point-history') }}"
+                    class="list-group-item list-group-item-action">
                         <i class="fas fa-history me-2"></i> Lịch sử điểm
                     </a>
                 </div>
