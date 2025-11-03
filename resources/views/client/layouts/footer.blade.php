@@ -1,5 +1,5 @@
 {{-- ================= FOOTER CLIENT ================= --}}
-<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #0b0b0b;">
+<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #16213e;">
     <div class="container" style="max-width: 1200px;">
         <div class="row gy-4">
             {{-- 🔹 Cột 1: Logo & giới thiệu --}}
@@ -23,7 +23,7 @@
                     <li><a href="#" class="footer-link">Phim</a></li>
                     <li><a href="#" class="footer-link">Lịch chiếu</a></li>
                     <li><a href="#" class="footer-link">Khuyến mãi</a></li>
-                    <li><a href="#" class="footer-link">Liên hệ</a></li>
+                    <li><a href="{{ route('contact.create') }}" class="footer-link">Liên hệ</a></li>
                 </ul>
             </div>
 
@@ -33,7 +33,7 @@
                 <ul class="list-unstyled small">
                     <li><i class="bi bi-geo-alt-fill text-danger me-2"></i>13 Trịnh Văn Bô, Hà Nội</li>
                     <li><i class="bi bi-telephone-fill text-danger me-2"></i>0359445669</li>
-                    <li><i class="bi bi-envelope-fill text-danger me-2"></i>support@gocinema.vn</li>
+                    <li><i class="bi bi-envelope-fill text-danger me-2"></i>gocinema@gmail.com</li>
                 </ul>
             </div>
 

@@ -116,18 +116,16 @@
 </div>
 
 
-{{-- 🎨 CSS tùy chỉnh --}}
+{{-- 🎨 CSS đồng bộ --}}
 <style>
 .text-gradient {
     background: linear-gradient(90deg, #007bff, #00c3ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-
 .table-header {
     background: linear-gradient(90deg, #007bff, #00c3ff);
 }
-
 .table-row {
     background-color: #fff;
     transition: all 0.25s ease-in-out;
@@ -139,7 +137,6 @@
     background-color: #e9f5ff;
     transform: scale(1.01);
 }
-
 .table th {
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -149,20 +146,11 @@
     padding: 1rem 1.2rem;
     vertical-align: middle;
 }
-
-.btn-light {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
-    transition: all 0.2s ease;
-}
-.btn-light:hover {
-    background-color: #e9ecef;
-    transform: scale(1.05);
-}
-
 .card {
     border-radius: 1rem;
 }
+
+/*nút lọc và đặt lại nằm bên phải */
 .ms-auto {
     margin-left: auto !important;
 }

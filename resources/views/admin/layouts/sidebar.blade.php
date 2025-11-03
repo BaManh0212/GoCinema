@@ -213,6 +213,13 @@
             <span>Banner</span>
         </a>
     </li>
+    <div class="sidebar-heading">Quản lý liên hệ</div>
+    <li class="nav-item {{ request()->is('admin/contacts*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.contacts.index') }}">
+            <i class="fas fa-envelope"></i>
+            <span>Liên hệ</span>
+        </a>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
