@@ -9,6 +9,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\PhimController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -70,6 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
     Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
     Route::get('/contact/history', [ContactController::class, 'history'])->name('contact.history');
+    // Danh mục
+    Route::get('/danh-muc/{slug}', [PhimController::class, 'category'])->name('movies.category');
 });
 
 /*

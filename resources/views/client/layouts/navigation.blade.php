@@ -1,4 +1,9 @@
 {{-- ================= HEADER CLIENT ================= --}}
+@php
+    use App\Models\DanhMuc;
+    $danhmucs = DanhMuc::orderBy('ten', 'asc')->get();
+@endphp
+
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm" id="mainNavbar">
     <div class="container">
         {{-- 🔹 Logo --}}
@@ -15,18 +20,42 @@
                     <a class="nav-link px-3" href="{{ route('home') }}">Trang chủ</a>
                 </li> 
                 <span class="divider">|</span>
+
                 <li class="nav-item">
                     <a class="nav-link px-3" href="#lich-chieu">Lịch Chiếu</a>
                 </li>
                 <span class="divider">|</span>
+
+                {{-- 🔹 Danh mục phim (2 cột) --}}
+                <li class="nav-item dropdown position-static">
+                    <a class="nav-link px-3 dropdown-toggle" href="#" id="movieCategoryMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Danh Mục Phim
+                    </a>
+                    <div class="dropdown-menu mega-dropdown p-3 shadow-lg border-0 rounded-3" aria-labelledby="movieCategoryMenu">
+                        <div class="row row-cols-2 g-2">
+                            @foreach($danhmucs as $dm)
+                                <div class="col">
+                                                <a class="dropdown-item text-light py-2 px-3 rounded-2 d-flex align-items-center" 
+                                                    href="{{ route('movies.category', $dm->slug) }}">
+                                        🎬 {{ $dm->ten }}
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </li>
+                <span class="divider">|</span>
+
                 <li class="nav-item">
                     <a class="nav-link px-3" href="#tin-tuc">Tin Tức</a>
                 </li> 
                 <span class="divider">|</span>
+
                 <li class="nav-item">
                     <a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a>
                 </li> 
                 <span class="divider">|</span>
+
                 <li class="nav-item dropdown">
                     <a class="nav-link px-3 dropdown-toggle" href="#" id="contactMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Liên hệ
@@ -117,5 +146,21 @@ document.addEventListener("scroll", function() {
     color: rgba(255, 255, 255, 0.4);
     margin: 0 4px;
     font-weight: 300;
+}
+
+/* ========== DROPDOWN DANH MỤC PHIM ========== */
+.mega-dropdown {
+    min-width: 400px;
+    background: rgba(22, 33, 62, 0.97);
+}
+.mega-dropdown .dropdown-item {
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.mega-dropdown .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+    color: #fff;
 }
 </style>
