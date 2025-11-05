@@ -1,5 +1,4 @@
-{{-- ================= FOOTER CLIENT ================= --}}
-<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #16213e;">
+<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #171515ff;">
     <div class="container" style="max-width: 1200px;">
         <div class="row gy-4">
             {{-- 🔹 Cột 1: Logo & giới thiệu --}}
@@ -16,7 +15,7 @@
             </div>
 
             {{-- 🔹 Cột 2: Liên kết nhanh --}}
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <h6 class="fw-bold text-uppercase mb-3">Liên kết nhanh</h6>
                 <ul class="list-unstyled">
                     <li><a href="{{ route('home') }}" class="footer-link">Trang chủ</a></li>
@@ -28,7 +27,7 @@
             </div>
 
             {{-- 🔹 Cột 3: Liên hệ --}}
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <h6 class="fw-bold text-uppercase mb-3">Liên hệ</h6>
                 <ul class="list-unstyled small">
                     <li><i class="bi bi-geo-alt-fill text-danger me-2"></i>13 Trịnh Văn Bô, Hà Nội</li>
@@ -36,49 +35,13 @@
                     <li><i class="bi bi-envelope-fill text-danger me-2"></i>gocinema@gmail.com</li>
                 </ul>
             </div>
-
-            {{-- 🔹 Cột 4: Mạng xã hội --}}
-            <div class="col-md-2">
-                <h6 class="fw-bold text-uppercase mb-3">Kết nối</h6>
-                <div class="d-flex gap-3">
-                    <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="social-icon"><i class="bi bi-youtube"></i></a>
-                </div>
-            </div>
         </div>
 
         <hr class="mt-4 mb-3 text-secondary">
 
         {{-- 🔹 Bản quyền --}}
-        <div class="text-center small text-muted">
-            © {{ date('Y') }} GoCinema. Tất cả các quyền được bảo lưu.
+        <div class="text-center small text-white-50">
+            © {{ date('Y') }} GoCinema.
         </div>
     </div>
 </footer>
-
-{{-- ================= CSS CHO FOOTER ================= --}}
-<style>
-    .footer-link {
-        color: #ccc;
-        text-decoration: none;
-        transition: color 0.2s ease;
-    }
-    .footer-link:hover {
-        color: #fff;
-    }
-
-    .social-icon {
-        color: #ccc;
-        font-size: 1.25rem;
-        transition: color 0.2s ease, transform 0.2s ease;
-    }
-    .social-icon:hover {
-        color: #ff4444;
-        transform: scale(1.1);
-    }
-
-    footer hr {
-        opacity: 0.2;
-    }
-</style>

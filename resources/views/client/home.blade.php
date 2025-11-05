@@ -3,51 +3,51 @@
 @section('title', 'Trang chủ - GoCinema')
 
 @section('content')
-    @push('scripts')
-    <script>
-        document.body.classList.add('has-banner');
-    </script>
-    @endpush
+@push('scripts')
+<script>
+    document.body.classList.add('has-banner');
+</script>
+@endpush
 
-    {{-- ================= BANNER SLIDER ================= --}}
-    @if($banners->count())
-        <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                @foreach($banners as $i => $banner)
-                <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
-                    @if($banner->type === 'image')
-                        @if($banner->link)
-                            <a href="{{ $banner->link }}">
-                                <img src="{{ asset('storage/'.$banner->image) }}" class="d-block w-100 banner-media" alt="{{ $banner->title }}">
-                            </a>
-                        @else
-                            <img src="{{ asset('storage/'.$banner->image) }}" class="d-block w-100 banner-media" alt="{{ $banner->title }}">
-                        @endif
-                    @endif
-                    @if($banner->type === 'video')
-                        <video class="w-100 banner-media" autoplay muted loop playsinline>
-                            <source src="{{ asset('storage/'.$banner->video_url) }}" type="video/mp4">
-                        </video>
-                    @endif
-                    @if($banner->title)
-                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
-                            <h5 class="m-0">{{ $banner->title }}</h5>
-                        </div>
-                    @endif
+{{-- ================= BANNER SLIDER ================= --}}
+@if($banners->count())
+<div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        @foreach($banners as $i => $banner)
+        <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
+            @if($banner->type === 'image')
+                @if($banner->link)
+                    <a href="{{ $banner->link }}">
+                        <img src="{{ asset('storage/'.$banner->image) }}" class="d-block w-100 banner-media" alt="{{ $banner->title }}">
+                    </a>
+                @else
+                    <img src="{{ asset('storage/'.$banner->image) }}" class="d-block w-100 banner-media" alt="{{ $banner->title }}">
+                @endif
+            @endif
+            @if($banner->type === 'video')
+                <video class="w-100 banner-media" autoplay muted loop playsinline>
+                    <source src="{{ asset('storage/'.$banner->video_url) }}" type="video/mp4">
+                </video>
+            @endif
+            @if($banner->title)
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
+                    <h5 class="m-0">{{ $banner->title }}</h5>
                 </div>
-                @endforeach
-            </div>
+            @endif
         </div>
-    @endif
+        @endforeach
+    </div>
+</div>
+@endif
 
-    {{-- ================= PHIM NỔI BẬT ================= --}}
+{{-- ================= PHIM NỔI BẬT ================= --}}
 <div class="container py-5 section-featured">
     <h2 class="fw-bold mb-4 text-danger text-center">🎬 Phim nổi bật</h2>
     <div class="row g-4">
         @forelse ($featured as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none text-dark">
-                    <div class="card h-100 shadow-sm border-0 movie-card">
+                <a href="#" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
@@ -56,12 +56,15 @@
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
                             @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
                             <small class="text-muted">
                                 {{ \Carbon\Carbon::parse($phim->ngay_khoi_chieu)->format('d/m/Y') }} -
                                 {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
                             </small>
+                        </div>
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
                     </div>
                 </a>
@@ -78,8 +81,8 @@
     <div class="row g-4">
         @forelse ($nowShowing as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none text-dark">
-                    <div class="card h-100 shadow-sm border-0 movie-card">
+                <a href="#" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
@@ -88,12 +91,15 @@
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
                             @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
                             <small class="text-muted">
                                 {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
                                 {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
                             </small>
+                        </div>
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
                     </div>
                 </a>
@@ -110,8 +116,8 @@
     <div class="row g-4">
         @forelse ($comingSoon as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none text-dark">
-                    <div class="card h-100 shadow-sm border-0 movie-card">
+                <a href="#" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
@@ -120,12 +126,15 @@
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
                             @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
                             <small class="text-muted">
                                 {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
                                 {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
                             </small>
+                        </div>
+                        <div class="overlay d-flex justify-content-center align-items-center">
+                            <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
                     </div>
                 </a>
@@ -135,138 +144,93 @@
         @endforelse
     </div>
 </div>
-    {{-- ================= Nội dung khác ================= --}}
-    <section class="why-choose py-5">
-        <div class="container">
-            <h2 class="why-title text-center text-white fw-bold mb-3">Tại sao chọn chúng tôi?</h2>
-            <p class="text-center text-white mb-5">Website đặt vé xem phim hàng đầu Việt Nam với trải nghiệm người dùng tuyệt vời.</p>
 
-            <div class="row g-4">
-                <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Giao diện thân thiện</h4>
-                        <p class="feature-desc mb-0">Dễ dàng tìm kiếm phim, rạp và suất chiếu phù hợp.</p>
-                    </div>
+{{-- ================= Tại sao chọn chúng tôi ================= --}}
+<section class="why-choose py-5">
+    <div class="container">
+        <h2 class="why-title text-center text-white fw-bold mb-3">Tại sao chọn chúng tôi?</h2>
+        <p class="text-center text-white mb-5">Website đặt vé xem phim hàng đầu Việt Nam với trải nghiệm người dùng tuyệt vời.</p>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 h-100">
+                    <h4 class="feature-title mb-3">Giao diện thân thiện</h4>
+                    <p class="feature-desc mb-0">Dễ dàng tìm kiếm phim, rạp và suất chiếu phù hợp.</p>
                 </div>
+            </div>
 
-                <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Thanh toán linh hoạt</h4>
-                        <p class="feature-desc mb-0">Hỗ trợ nhiều hình thức thanh toán trực tuyến an toàn.</p>
-                    </div>
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 h-100">
+                    <h4 class="feature-title mb-3">Thanh toán linh hoạt</h4>
+                    <p class="feature-desc mb-0">Hỗ trợ nhiều hình thức thanh toán trực tuyến an toàn.</p>
                 </div>
+            </div>
 
-                <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Ưu đãi hấp dẫn</h4>
-                        <p class="feature-desc mb-0">Nhận ưu đãi, voucher và thông báo phim mới mỗi ngày.</p>
-                    </div>
+            <div class="col-12 col-md-4">
+                <div class="feature-card p-4 h-100">
+                    <h4 class="feature-title mb-3">Ưu đãi hấp dẫn</h4>
+                    <p class="feature-desc mb-0">Nhận ưu đãi, voucher và thông báo phim mới mỗi ngày.</p>
                 </div>
             </div>
         </div>
-    </section>
-    <section class="why-choose py-5">
+    </div>
+</section>
+
+{{-- ================= Đăng ký tài khoản ================= --}}
+<section class="why-choose py-5">
     <div class="container text-center">
         <h2 class="why-title text-white fw-bold mb-3">Sẵn sàng đặt vé xem phim?</h2>
         <p class="text-white mb-4">Đăng ký tài khoản ngay để nhận nhiều ưu đãi và trải nghiệm dịch vụ tốt nhất!</p>
 
         @guest
-            {{-- Nếu chưa đăng nhập, hiển thị nút đăng ký --}}
             <a href="{{ route('register') }}" class="btn btn-danger btn-lg">Đăng ký tài khoản</a>
         @else
-            {{-- Nếu đã đăng nhập, thông báo khi click --}}
             <button type="button" class="btn btn-secondary btn-lg" onclick="alert('Bạn đã đăng nhập tài khoản rồi!')">Đăng ký tài khoản</button>
         @endguest
     </div>
 </section>
 
-    {{-- ================= CSS ================= --}}
-    <style>
-        /* Banner */
-        .banner-media {
-            max-height: 500px;
-            object-fit: cover;
-        }
-        /* Poster ảnh đẹp, không bị méo */
-        .poster-img {
-            height: 280px;
-            object-fit: cover;
-            border-radius: 6px 6px 0 0;
-            transition: transform 0.2s ease-in-out;
-        }
+{{-- ================= CSS ================= --}}
+<style>
+.banner-media { max-height: 500px; object-fit: cover; }
+.poster-img { height: 280px; object-fit: cover; border-radius: 6px 6px 0 0; transition: transform 0.2s ease-in-out; }
+.movie-card:hover .poster-img { transform: scale(1.05); }
+.movie-card { border-radius: 6px; transition: transform 0.2s ease-in-out; cursor: pointer; position: relative; }
+.movie-card:hover { transform: scale(1.03); }
+.movie-card .overlay {
+    position: absolute;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    opacity:0;
+    transition: opacity 0.2s ease-in-out;
+    display: flex; justify-content: center; align-items: center;
+}
+.movie-card:hover .overlay { opacity:1; }
+.overlay span { font-size: 1.2rem; }
 
-        /* Khi hover nhẹ nhàng */
-        .movie-card:hover .poster-img {
-            transform: scale(1.05);
-        }
-
-        /* Card */
-        .movie-card {
-            border-radius: 6px;
-        }
-
-        @media (max-width: 576px) {
-            .poster-img {
-                height: 220px;
-            }
-        }
-
-        /* Why choose section (feature cards) */
-        .why-choose {
-            background: transparent;
-        }
-        .why-title {
-            font-size: 2.1rem;
-        }
-        .feature-card {
-            background: linear-gradient(180deg, rgba(8,18,30,0.95), rgba(11,23,36,0.95));
-            border: 1px solid rgba(255,255,255,0.03);
-            border-radius: 14px;
-            box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-            color: #dbeaf7;
-            min-height: 160px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: center;
-        }
-        .feature-card:hover {
-            border: 1px solid red;
-            box-shadow: 0 6px 18px rgba(255,0,0,0.5); /* optional: đổ bóng đỏ khi hover */
-            transform: translateY(-3px); /* optional: nâng nhẹ card */
-        }
-        .feature-title {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-        .feature-desc {
-            color: #9fb6cc;
-            line-height: 1.6;
-            font-size: 0.98rem;
-        }
-
-        @media (max-width: 768px) {
-            .why-title { font-size: 1.6rem; }
-            .feature-card { padding: 28px; }
-        }
-        /* Section background colors */
-        .section-featured { background-color: rgba(255,0,0,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
-        .section-nowshowing { background-color: rgba(0,123,255,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
-        .section-comingsoon { background-color: rgba(40,167,69,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
-
-        /* Section title */
-        .section-featured h2,
-        .section-nowshowing h2,
-        .section-comingsoon h2 {
-            font-size: 2.5rem;
-            letter-spacing: 1px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) { .section-featured h2, .section-nowshowing h2, .section-comingsoon h2 { font-size:2rem; } }
-        @media (max-width: 576px) { .section-featured h2, .section-nowshowing h2, .section-comingsoon h2 { font-size:1.8rem; } }
-
-    </style>
+.why-choose { background: transparent; }
+.why-title { font-size: 2.1rem; }
+.feature-card {
+    background: linear-gradient(180deg, rgba(8,18,30,0.95), rgba(11,23,36,0.95));
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    color: #dbeaf7;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+.feature-card:hover { border:1px solid red; box-shadow:0 6px 18px rgba(255,0,0,0.5); transform: translateY(-3px);}
+.feature-title { color:#fff; font-weight:700; font-size:1.25rem; }
+.feature-desc { color:#9fb6cc; line-height:1.6; font-size:0.98rem; }
+.section-featured { background-color: rgba(255,0,0,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+.section-nowshowing { background-color: rgba(0,123,255,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+.section-comingsoon { background-color: rgba(40,167,69,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+.section-featured h2, .section-nowshowing h2, .section-comingsoon h2 { font-size: 2.5rem; letter-spacing:1px; }
+@media (max-width:768px){ .section-featured h2, .section-nowshowing h2, .section-comingsoon h2{ font-size:2rem; } }
+@media (max-width:576px){ .section-featured h2, .section-nowshowing h2, .section-comingsoon h2{ font-size:1.8rem; } }
+</style>
 
 @endsection
