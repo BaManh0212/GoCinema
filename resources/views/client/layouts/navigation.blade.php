@@ -5,162 +5,157 @@
 @endphp
 
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm" id="mainNavbar">
-    <div class="container">
+    <div class="container d-flex align-items-center">
+
         {{-- 🔹 Logo --}}
         <a class="navbar-brand d-flex align-items-center fw-bold text-danger" href="{{ route('home') }}">
-            <img src="{{ asset('uploads/rap/logo-datn.png') }}" alt="GoCinema" 
-                 style="height: 36px; margin-right: 8px;">
+            <img src="{{ asset('uploads/rap/logo-datn.png') }}" alt="GoCinema" style="height: 36px; margin-right: 8px;">
             GoCinema
         </a>
 
         {{-- 🔹 Menu --}}
-        <div class="flex-grow-1 d-flex justify-content-end align-items-center"> 
-            <ul class="navbar-nav mb-2 mb-lg-0 d-flex align-items-center"> 
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="{{ route('home') }}">Trang chủ</a>
-                </li> 
-                <span class="divider">|</span>
+        <ul class="navbar-nav ms-auto d-flex align-items-center">
 
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="#lich-chieu">Lịch Chiếu</a>
-                </li>
-                <span class="divider">|</span>
+            <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}">Trang chủ</a></li>
+            <span class="divider">|</span>
 
-                {{-- 🔹 Danh mục phim (2 cột) --}}
-                <li class="nav-item dropdown position-static">
-                    <a class="nav-link px-3 dropdown-toggle" href="#" id="movieCategoryMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Danh Mục Phim
-                    </a>
-                    <div class="dropdown-menu mega-dropdown p-3 shadow-lg border-0 rounded-3" aria-labelledby="movieCategoryMenu">
-                        <div class="row row-cols-2 g-2">
+            <li class="nav-item"><a class="nav-link px-3" href="#lich-chieu">Lịch Chiếu</a></li>
+            <span class="divider">|</span>
+
+            {{-- 🔹 Danh mục phim (mega menu) --}}
+            <li class="nav-item dropdown mega-parent">
+                <a class="nav-link px-3" href="#">Danh Mục Phim</a>
+
+                <div class="mega-box">
+                    <div class="mega-container">
+                        <div class="row row-cols-4 g-2">
                             @foreach($danhmucs as $dm)
                                 <div class="col">
-                                                <a class="dropdown-item text-light py-2 px-3 rounded-2 d-flex align-items-center" 
-                                                    href="{{ route('movies.category', $dm->slug) }}">
-                                        🎬 {{ $dm->ten }}
+                                    <a class="dropdown-item" href="{{ route('movies.category', $dm->slug) }}">
+                                        {{ $dm->ten }}
                                     </a>
                                 </div>
                             @endforeach
                         </div>
                     </div>
-                </li>
-                <span class="divider">|</span>
+                </div>
+            </li>
+            <span class="divider">|</span>
 
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="#tin-tuc">Tin Tức</a>
-                </li> 
-                <span class="divider">|</span>
+            <li class="nav-item"><a class="nav-link px-3" href="#tin-tuc">Tin Tức</a></li>
+            <span class="divider">|</span>
 
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a>
-                </li> 
-                <span class="divider">|</span>
+            <li class="nav-item"><a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a></li>
+            <span class="divider">|</span>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link px-3 dropdown-toggle" href="#" id="contactMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Liên hệ
+            {{-- 🔹 Liên hệ --}}
+            <li class="nav-item dropdown">
+                <a class="nav-link px-3 dropdown-toggle" href="#" data-bs-toggle="dropdown">Liên hệ</a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ route('contact.create') }}">📩 Gửi liên hệ</a></li>
+                    @auth
+                        <li><a class="dropdown-item" href="{{ route('contact.history') }}">🗂️ Lịch sử liên hệ</a></li>
+                    @endauth
+                </ul>
+            </li>
+
+        </ul>
+
+        {{-- 🔹 Auth buttons --}}
+        <div class="d-flex align-items-center ms-3">
+            @guest
+                <a class="btn btn-outline-light btn-sm me-2" href="{{ route('login') }}">Đăng Nhập</a>
+                <a class="btn btn-outline-light btn-sm" href="{{ route('register') }}">Đăng ký</a>
+            @else
+                <div class="dropdown">
+                    <a class="btn btn-outline-light btn-sm dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        {{ Auth::user()->name }}
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="contactMenu">
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ route('account.index') }}">Hồ sơ</a></li>
                         <li>
-                            <a class="dropdown-item" href="{{ route('contact.create') }}">📩 Gửi liên hệ</a>
+                            <form method="POST" action="{{ route('logout') }}">@csrf
+                                <button class="dropdown-item" type="submit">Đăng xuất</button>
+                            </form>
                         </li>
-
-                        @auth
-                        <li>
-                            <a class="dropdown-item" href="{{ route('contact.history') }}">🗂️ Lịch sử liên hệ</a>
-                        </li>
-                        @endauth
                     </ul>
-                </li>
-            </ul>
-
-            {{-- 🔹 Nút đăng nhập/đăng ký --}}
-            <div class="d-flex align-items-center ms-3"> 
-                @guest 
-                <a class="btn btn-outline-light btn-sm me-2" href="{{ route('login') }}" style="border-radius:6px;padding:8px 14px">Đăng Nhập</a> 
-                <a class="btn btn-outline-light btn-sm" href="{{ route('register') }}" style="background:rgba(255,255,255,0.06);border-radius:6px;padding:8px 14px">Đăng ký</a>
-                @else 
-                <div class="dropdown"> 
-                    <a class="btn btn-outline-light btn-sm dropdown-toggle" href="#" role="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">{{ Auth::user()->name }}</a> 
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu"> 
-                        <li>
-                            <a class="dropdown-item" href="{{ route('account.index') }}">Hồ sơ</a>
-                        </li> 
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf 
-                                <button class="dropdown-item" type="submit">Đăng xuất</button> 
-                            </form> 
-                        </li> 
-                    </ul> 
-                </div> 
-                @endguest
-            </div>
+                </div>
+            @endguest
         </div>
+
     </div>
 </nav>
 
-{{-- ================= HIỆU ỨNG CUỘN ================= --}}
-<script>
-document.addEventListener("scroll", function() {
-    const navbar = document.getElementById("mainNavbar");
-    if (window.scrollY > 50) {
-        navbar.style.background = "#16213e";
-        navbar.style.boxShadow = "0 2px 8px #16213e";
-    } else {
-        navbar.style.background = "#16213e";
-        navbar.style.boxShadow = "none";
-    }
-});
-</script>
-
-{{-- ================= CSS ================= --}}
 <style>
 #mainNavbar {
-    background-color: #16213e !important;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    background: #16213e !important;
+    transition: 0.25s ease;
+}
+.nav-link { color: #fff !important; font-weight: 500; }
+.nav-link:hover { text-decoration: underline; }
+
+/* Divider */
+.divider {
+    color: rgba(255,255,255,0.4);
+    margin: 0 8px;
 }
 
-.nav-link {
-    color: #fff !important;
-    position: relative;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+/* ========== MEGA MENU ========== */
+.mega-parent { position: relative; }
+
+/* Menu box */
+.mega-box {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    max-width: 1180px;
+    background: rgba(15, 20, 35, 0.96);
+    backdrop-filter: blur(8px);
+    padding: 10px 0;
+    border-radius: 0 0 12px 12px;
+    opacity: 0;
+    visibility: hidden;
+    transition: .22s ease;
+    z-index: 999;
 }
-.nav-link:hover,
-.nav-link.active {
+
+/* Hover hiển thị menu */
+.mega-parent:hover .mega-box {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Nội dung container */
+.mega-container {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 16px 30px;
+}
+
+/* Scrollbar */
+.mega-container::-webkit-scrollbar { width: 6px; }
+.mega-container::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18);
+    border-radius: 20px;
+}
+
+/* Items */
+.mega-box .dropdown-item {
+    padding: 6px 4px !important;
+    background: none !important;
     color: #fff !important;
+    font-size: 0.94rem;
+    font-weight: 500;
+    transition: .2s ease;
+}
+.mega-box .dropdown-item:hover {
+    color: #ffb13a !important;
     text-decoration: underline;
 }
-.navbar-brand {
-    font-size: 1.35rem;
-    color: #fff !important;
-}
-.navbar-toggler i {
-    font-size: 1.3rem;
-}
 
-/* Dấu gạch dọc giữa các menu */
-.divider {
-    color: rgba(255, 255, 255, 0.4);
-    margin: 0 4px;
-    font-weight: 300;
-}
-
-/* ========== DROPDOWN DANH MỤC PHIM ========== */
-.mega-dropdown {
-    min-width: 400px;
-    background: rgba(22, 33, 62, 0.97);
-}
-.mega-dropdown .dropdown-item {
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-.mega-dropdown .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-    color: #fff;
-}
+/* Ẩn caret (mũi tên) bootstrap */
+.mega-parent > a::after { display: none; }
 </style>
