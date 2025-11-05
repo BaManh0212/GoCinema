@@ -11,22 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banners', function (Blueprint $table) {
-            $table->id();
-            $table->string('title')->nullable();
-            $table->string('type')->default('image'); // image, video
-            $table->string('image')->nullable();
-            $table->string('video_url')->nullable();
-            $table->string('link')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->integer('display_order')->default(0);
-            $table->timestamp('start_at')->nullable();
-            $table->timestamp('end_at')->nullable();
-            $table->timestamps();
-            
-            $table->index(['is_active', 'display_order']);
-        });
+        // Make migration idempotent: only create if table does not already exist
+        if (! Schema::hasTable('banners')) {
+            Schema::create('banners', function (Blueprint $table) {
+                $table->id();
+                $table->string('title')->nullable();
+                $table->string('type')->default('image'); // image, video
+                $table->string('image')->nullable();
+                $table->string('video_url')->nullable();
+                $table->string('link')->nullable();
+                $table->text('description')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->integer('display_order')->default(0);
+                $table->timestamp('start_at')->nullable();
+                $table->timestamp('end_at')->nullable();
+                $table->timestamps();
+                
+                $table->index(['is_active', 'display_order']);
+            });
+        }
     }
 
     /**
