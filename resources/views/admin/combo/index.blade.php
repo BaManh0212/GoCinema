@@ -137,6 +137,8 @@
                     @endforelse
                 </tbody>
             </table>
+            <div class="mt-3 d-flex justify-content-end">
+                {{ $combos->links('pagination::bootstrap-5') }}
         </div>
     </div>
 

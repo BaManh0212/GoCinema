@@ -9,14 +9,12 @@
     </script>
     @endpush
 
-    {{-- ✅ BANNER SLIDER FULL WIDTH --}}
+    {{-- ================= BANNER SLIDER ================= --}}
     @if($banners->count())
         <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
                 @foreach($banners as $i => $banner)
                 <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
-
-                    {{-- IMAGE --}}
                     @if($banner->type === 'image')
                         @if($banner->link)
                             <a href="{{ $banner->link }}">
@@ -26,78 +24,249 @@
                             <img src="{{ asset('storage/'.$banner->image) }}" class="d-block w-100 banner-media" alt="{{ $banner->title }}">
                         @endif
                     @endif
-
-                    {{-- VIDEO --}}
                     @if($banner->type === 'video')
                         <video class="w-100 banner-media" autoplay muted loop playsinline>
                             <source src="{{ asset('storage/'.$banner->video_url) }}" type="video/mp4">
                         </video>
                     @endif
-
                     @if($banner->title)
-                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
-                        <h5 class="m-0">{{ $banner->title }}</h5>
-                    </div>
+                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
+                            <h5 class="m-0">{{ $banner->title }}</h5>
+                        </div>
                     @endif
                 </div>
                 @endforeach
             </div>
-
-            <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </button>
         </div>
     @endif
 
-
-    {{-- ✅ MAIN CONTENT --}}
-    <div class="container py-5">
-
-        <div class="text-center mb-5">
-            <h2 class="section-title text-white">🎬 Phim nổi bật</h2>
-            <p class="text-white" style="color: rgba(255,255,255,0.7) !important;">Xem lịch chiếu và đặt vé ngay hôm nay</p>
-        </div>
-
-        <div class="row gx-4 gy-4">
-            @forelse($featured as $phim)
-            <div class="col-6 col-lg-3">
-                <div class="movie-card">
-                    <div class="poster-wrapper">
-                        <img src="{{ asset('storage/' . $phim->anh_poster) }}" 
-                             alt="{{ $phim->tieu_de }}" 
-                             loading="lazy">
-                        <div class="movie-overlay">
-                            <a href="#" class="btn btn-primary btn-sm">Chi tiết</a>
+    {{-- ================= PHIM NỔI BẬT ================= --}}
+<div class="container py-5 section-featured">
+    <h2 class="fw-bold mb-4 text-danger text-center">🎬 Phim nổi bật</h2>
+    <div class="row g-4">
+        @forelse ($featured as $phim)
+            <div class="col-6 col-md-3">
+                <a href="#" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0 movie-card">
+                        @if($phim->anh_poster)
+                            <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                        @else
+                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                        @endif
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                            <small class="text-muted">
+                                {{ \Carbon\Carbon::parse($phim->ngay_khoi_chieu)->format('d/m/Y') }} -
+                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            </small>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <h6 class="card-title mb-2">{{ $phim->tieu_de }}</h6>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <p class="small text-muted mb-0">
-                                <i class="fas fa-calendar-alt me-1"></i>
-                                {{ $phim->ngayCongChieuFormatted ?? 'Sắp chiếu' }}
-                            </p>
-                            <span class="badge bg-primary">
-                                <i class="fas fa-star me-1"></i>
-                                {{ number_format($phim->rating ?? 0, 1) }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                </a>
             </div>
-            @empty
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-film fa-3x mb-3 text-muted"></i>
-                    <p class="text-muted">Chưa có phim nổi bật.</p>
-                </div>
-            </div>
-            @endforelse
-        </div>
-
+        @empty
+            <p class="text-muted text-center">Chưa có phim nổi bật.</p>
+        @endforelse
     </div>
+</div>
+
+{{-- ================= PHIM ĐANG CHIẾU ================= --}}
+<div class="container py-5 section-nowshowing">
+    <h2 class="fw-bold mb-4 text-primary text-center">🎟️ Phim đang chiếu</h2>
+    <div class="row g-4">
+        @forelse ($nowShowing as $phim)
+            <div class="col-6 col-md-3">
+                <a href="#" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0 movie-card">
+                        @if($phim->anh_poster)
+                            <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                        @else
+                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                        @endif
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                            <small class="text-muted">
+                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
+                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        @empty
+            <p class="text-muted text-center">Chưa có phim đang chiếu.</p>
+        @endforelse
+    </div>
+</div>
+
+{{-- ================= PHIM SẮP CHIẾU ================= --}}
+<div class="container py-5 section-comingsoon">
+    <h2 class="fw-bold mb-4 text-success text-center">⏳ Phim sắp chiếu</h2>
+    <div class="row g-4">
+        @forelse ($comingSoon as $phim)
+            <div class="col-6 col-md-3">
+                <a href="#" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0 movie-card">
+                        @if($phim->anh_poster)
+                            <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                        @else
+                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                        @endif
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="text-danger d-block mb-1">Độ tuổi giới hạn: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                            <small class="text-muted">
+                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
+                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        @empty
+            <p class="text-white text-center">Chưa có phim sắp chiếu.</p>
+        @endforelse
+    </div>
+</div>
+    {{-- ================= Nội dung khác ================= --}}
+    <section class="why-choose py-5">
+        <div class="container">
+            <h2 class="why-title text-center text-white fw-bold mb-3">Tại sao chọn chúng tôi?</h2>
+            <p class="text-center text-white mb-5">Website đặt vé xem phim hàng đầu Việt Nam với trải nghiệm người dùng tuyệt vời.</p>
+
+            <div class="row g-4">
+                <div class="col-12 col-md-4">
+                    <div class="feature-card p-4 h-100">
+                        <h4 class="feature-title mb-3">Giao diện thân thiện</h4>
+                        <p class="feature-desc mb-0">Dễ dàng tìm kiếm phim, rạp và suất chiếu phù hợp.</p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="feature-card p-4 h-100">
+                        <h4 class="feature-title mb-3">Thanh toán linh hoạt</h4>
+                        <p class="feature-desc mb-0">Hỗ trợ nhiều hình thức thanh toán trực tuyến an toàn.</p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="feature-card p-4 h-100">
+                        <h4 class="feature-title mb-3">Ưu đãi hấp dẫn</h4>
+                        <p class="feature-desc mb-0">Nhận ưu đãi, voucher và thông báo phim mới mỗi ngày.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="why-choose py-5">
+    <div class="container text-center">
+        <h2 class="why-title text-white fw-bold mb-3">Sẵn sàng đặt vé xem phim?</h2>
+        <p class="text-white mb-4">Đăng ký tài khoản ngay để nhận nhiều ưu đãi và trải nghiệm dịch vụ tốt nhất!</p>
+
+        @guest
+            {{-- Nếu chưa đăng nhập, hiển thị nút đăng ký --}}
+            <a href="{{ route('register') }}" class="btn btn-danger btn-lg">Đăng ký tài khoản</a>
+        @else
+            {{-- Nếu đã đăng nhập, thông báo khi click --}}
+            <button type="button" class="btn btn-secondary btn-lg" onclick="alert('Bạn đã đăng nhập tài khoản rồi!')">Đăng ký tài khoản</button>
+        @endguest
+    </div>
+</section>
+
+    {{-- ================= CSS ================= --}}
+    <style>
+        /* Banner */
+        .banner-media {
+            max-height: 500px;
+            object-fit: cover;
+        }
+        /* Poster ảnh đẹp, không bị méo */
+        .poster-img {
+            height: 280px;
+            object-fit: cover;
+            border-radius: 6px 6px 0 0;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        /* Khi hover nhẹ nhàng */
+        .movie-card:hover .poster-img {
+            transform: scale(1.05);
+        }
+
+        /* Card */
+        .movie-card {
+            border-radius: 6px;
+        }
+
+        @media (max-width: 576px) {
+            .poster-img {
+                height: 220px;
+            }
+        }
+
+        /* Why choose section (feature cards) */
+        .why-choose {
+            background: transparent;
+        }
+        .why-title {
+            font-size: 2.1rem;
+        }
+        .feature-card {
+            background: linear-gradient(180deg, rgba(8,18,30,0.95), rgba(11,23,36,0.95));
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+            color: #dbeaf7;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        .feature-card:hover {
+            border: 1px solid red;
+            box-shadow: 0 6px 18px rgba(255,0,0,0.5); /* optional: đổ bóng đỏ khi hover */
+            transform: translateY(-3px); /* optional: nâng nhẹ card */
+        }
+        .feature-title {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        .feature-desc {
+            color: #9fb6cc;
+            line-height: 1.6;
+            font-size: 0.98rem;
+        }
+
+        @media (max-width: 768px) {
+            .why-title { font-size: 1.6rem; }
+            .feature-card { padding: 28px; }
+        }
+        /* Section background colors */
+        .section-featured { background-color: rgba(255,0,0,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+        .section-nowshowing { background-color: rgba(0,123,255,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+        .section-comingsoon { background-color: rgba(40,167,69,0.05); border-radius:12px; padding:40px 20px; margin-bottom:30px; }
+
+        /* Section title */
+        .section-featured h2,
+        .section-nowshowing h2,
+        .section-comingsoon h2 {
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) { .section-featured h2, .section-nowshowing h2, .section-comingsoon h2 { font-size:2rem; } }
+        @media (max-width: 576px) { .section-featured h2, .section-nowshowing h2, .section-comingsoon h2 { font-size:1.8rem; } }
+
+    </style>
 
 @endsection

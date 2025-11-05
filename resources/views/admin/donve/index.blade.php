@@ -131,7 +131,7 @@
 
     {{-- 📄 Phân trang --}}
     <div class="mt-3">
-        {{ $donDatVes->links() }}
+        {{ $donDatVes->links('pagination::bootstrap-5') }}
     </div>
 </div>
 
