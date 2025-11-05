@@ -165,7 +165,7 @@
 
     {{-- 📄 Phân trang --}}
     <div class="mt-3">
-        {{ $maGiamGia->links() }}
+        {{ $maGiamGia->links('pagination::bootstrap-5') }}
     </div>
 </div>
 

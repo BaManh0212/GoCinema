@@ -9,6 +9,7 @@
     <div class="row g-4">
         @forelse ($movies as $movie)
             <div class="col-6 col-md-3">
+                <a href="#" class="text-decoration-none text-dark">
                 <div class="card h-100 shadow-sm border-0 movie-card">
                     @if($movie->anh_poster)
                         <img src="{{ asset('storage/' . $movie->anh_poster) }}" class="card-img-top" alt="{{ $movie->tieu_de }}">
@@ -19,6 +20,7 @@
                         <h6 class="card-title text-truncate">{{ $movie->tieu_de }}</h6>
                     </div>
                 </div>
+                </a>
             </div>
         @empty
             <p class="text-muted">Không có phim nào trong danh mục này.</p>

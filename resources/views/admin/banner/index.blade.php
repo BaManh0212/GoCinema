@@ -78,7 +78,7 @@
     </div>
 
     <div class="mt-3">
-        {{ $banners->links() }}
+        {{ $banners->links('pagination::bootstrap-5') }}
     </div>
 
 </div>

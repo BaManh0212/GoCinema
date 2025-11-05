@@ -45,7 +45,7 @@ class PhimController extends Controller
     $query->orderByDesc('ngay_cong_chieu');
 
     // 📄 Phân trang
-    $phims = $query->paginate(10)->appends($request->query());
+    $phims = $query->paginate(5)->appends($request->query());
 
     // ⚙️ Xác định trạng thái chiếu theo ngày
     foreach ($phims as $phim) {
