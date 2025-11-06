@@ -61,7 +61,14 @@
             </div>
         </div>
     </li>
-
+    <!-- Banner -->
+    <div class="sidebar-heading">🎨 Quản lý banner</div>
+    <li class="nav-item {{ request()->is('admin/banners*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.banners.index') }}">
+            <i class="fas fa-image"></i>
+            <span>Banner</span>
+        </a>
+    </li>
     <!-- Divider -->
     <hr class="sidebar-divider">
 
@@ -204,15 +211,16 @@
                 <a class="collapse-item" href="{{ route('admin.donve.checkin') }}"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
             </div>
         </div>
-    </li>
-    <!-- Banner -->
-    <div class="sidebar-heading">🎨 Quản lý banner</div>
-    <li class="nav-item {{ request()->is('admin/banners*') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('admin.banners.index') }}">
-            <i class="fas fa-image"></i>
-            <span>Banner</span>
+    </li>    
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading">Quản lý bài viết</div>
+    <li class="nav-item {{ request()->is('admin/baiviet*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.baiviet.index') }}">
+            <i class="fas fa-newspaper"></i>
+            <span>Bài viết</span>
         </a>
     </li>
+    <hr class="sidebar-divider">
     <div class="sidebar-heading">Quản lý liên hệ</div>
     <li class="nav-item {{ request()->is('admin/contacts*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.contacts.index') }}">

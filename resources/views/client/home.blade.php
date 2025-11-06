@@ -55,12 +55,14 @@
                         @endif
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            <small class="text-muted">Thời lượng:
+                                {{ $phim->thoi_luong }} phút
+                            </small>
                             @if($phim->do_tuoi_gioi_han)
                                 <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
-                            <small class="text-muted">
-                                {{ \Carbon\Carbon::parse($phim->ngay_khoi_chieu)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            <small class="text-muted">Ngày công chiếu:
+                                {{ \Carbon\Carbon::parse($phim->ngay_khoi_chieu)->format('d/m/Y') }}
                             </small>
                         </div>
                         <div class="overlay d-flex justify-content-center align-items-center">
@@ -90,12 +92,14 @@
                         @endif
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            <small class="text-muted">Thời lượng:
+                                {{ $phim->thoi_luong }} phút
+                            </small>
                             @if($phim->do_tuoi_gioi_han)
                                 <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
-                            <small class="text-muted">
-                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            <small class="text-muted">Ngày công chiếu:
+                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}
                             </small>
                         </div>
                         <div class="overlay d-flex justify-content-center align-items-center">
@@ -125,12 +129,14 @@
                         @endif
                         <div class="card-body text-center">
                             <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
+                            <small class="text-muted">Thời lượng:
+                                {{ $phim->thoi_luong }} phút
+                            </small>
                             @if($phim->do_tuoi_gioi_han)
                                 <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
                             @endif
-                            <small class="text-muted">
-                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}
+                            <small class="text-muted">Ngày công chiếu:
+                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}
                             </small>
                         </div>
                         <div class="overlay d-flex justify-content-center align-items-center">
@@ -185,10 +191,27 @@
         @guest
             <a href="{{ route('register') }}" class="btn btn-danger btn-lg">Đăng ký tài khoản</a>
         @else
-            <button type="button" class="btn btn-secondary btn-lg" onclick="alert('Bạn đã đăng nhập tài khoản rồi!')">Đăng ký tài khoản</button>
+            <button type="button" class="btn btn-secondary btn-lg" id="alreadyLoggedInBtn">
+                Đăng ký tài khoản
+            </button>
         @endguest
     </div>
 </section>
+
+{{-- ================= TOAST THÔNG BÁO ================= --}}
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="loginToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive"
+         aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">
+                ✅ Bạn đã đăng nhập tài khoản rồi!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 
 {{-- ================= CSS ================= --}}
 <style>
@@ -232,5 +255,18 @@
 @media (max-width:768px){ .section-featured h2, .section-nowshowing h2, .section-comingsoon h2{ font-size:2rem; } }
 @media (max-width:576px){ .section-featured h2, .section-nowshowing h2, .section-comingsoon h2{ font-size:1.8rem; } }
 </style>
-
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('alreadyLoggedInBtn');
+    if (btn) {
+        btn.addEventListener('click', function () {
+            const toastEl = document.getElementById('loginToast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    }
+});
+</script>
+@endpush
 @endsection

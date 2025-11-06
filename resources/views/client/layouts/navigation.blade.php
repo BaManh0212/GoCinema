@@ -22,10 +22,9 @@
             <li class="nav-item"><a class="nav-link px-3" href="#lich-chieu">Lịch Chiếu</a></li>
             <span class="divider">|</span>
 
-            {{-- 🔹 Danh mục phim (mega menu) --}}
+            {{-- 🔹 Danh mục phim --}}
             <li class="nav-item dropdown mega-parent">
                 <a class="nav-link px-3" href="#">Danh Mục Phim</a>
-
                 <div class="mega-box">
                     <div class="mega-container">
                         <div class="row row-cols-4 g-2">
@@ -42,16 +41,18 @@
             </li>
             <span class="divider">|</span>
 
-            <li class="nav-item"><a class="nav-link px-3" href="#tin-tuc">Tin Tức</a></li>
+            <li class="nav-item"><a class="nav-link px-3" href="{{route('baiviet.index')}}">Tin Tức</a></li>
             <span class="divider">|</span>
 
             <li class="nav-item"><a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a></li>
             <span class="divider">|</span>
 
-            {{-- 🔹 Liên hệ --}}
+            {{-- 🔹 Liên hệ (dropdown click mở giống auth) --}}
             <li class="nav-item dropdown">
-                <a class="nav-link px-3 dropdown-toggle" href="#" data-bs-toggle="dropdown">Liên hệ</a>
-                <ul class="dropdown-menu dropdown-menu-end">
+                <a class="nav-link px-3 dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    Liên hệ
+                </a>
+                <ul class="dropdown-menu shadow border-0 mt-2">
                     <li><a class="dropdown-item" href="{{ route('contact.create') }}">📩 Gửi liên hệ</a></li>
                     @auth
                         <li><a class="dropdown-item" href="{{ route('contact.history') }}">🗂️ Lịch sử liên hệ</a></li>
@@ -68,21 +69,37 @@
                 <a class="btn btn-outline-light btn-sm" href="{{ route('register') }}">Đăng ký</a>
             @else
                 <div class="dropdown">
-                    <a class="btn btn-outline-light btn-sm dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        {{ Auth::user()->name }}
+                    <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <img src="{{ Auth::user()->avatar_url ?? asset('uploads/default-avatar.png') }}" 
+                            alt="Avatar" 
+                            class="rounded-circle me-2"
+                            style="width: 36px; height: 36px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);">
+                        <span class="fw-semibold">{{ Auth::user()->ho_ten ?? Auth::user()->name }}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('account.index') }}">Hồ sơ</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                         <li>
-                            <form method="POST" action="{{ route('logout') }}">@csrf
-                                <button class="dropdown-item" type="submit">Đăng xuất</button>
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.index') }}">
+                                <i class="fas fa-user-circle me-2 text-primary"></i> Hồ sơ cá nhân
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.rewards') }}">
+                                <i class="fas fa-gift me-2 text-warning"></i> Đổi điểm thưởng
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button class="dropdown-item d-flex align-items-center text-danger" type="submit">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                </button>
                             </form>
                         </li>
                     </ul>
                 </div>
             @endguest
         </div>
-
     </div>
 </nav>
 
@@ -94,16 +111,14 @@
 .nav-link { color: #fff !important; font-weight: 500; }
 .nav-link:hover { text-decoration: underline; }
 
-/* Divider */
 .divider {
     color: rgba(255,255,255,0.4);
     margin: 0 8px;
 }
 
-/* ========== MEGA MENU ========== */
+/* ========== MEGA MENU DANH MỤC ========== */
 .mega-parent { position: relative; }
 
-/* Menu box */
 .mega-box {
     position: absolute;
     top: 100%;
@@ -120,29 +135,21 @@
     transition: .22s ease;
     z-index: 999;
 }
-
-/* Hover hiển thị menu */
 .mega-parent:hover .mega-box {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
-
-/* Nội dung container */
 .mega-container {
     max-height: 240px;
     overflow-y: auto;
     padding: 16px 30px;
 }
-
-/* Scrollbar */
 .mega-container::-webkit-scrollbar { width: 6px; }
 .mega-container::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.18);
     border-radius: 20px;
 }
-
-/* Items */
 .mega-box .dropdown-item {
     padding: 6px 4px !important;
     background: none !important;
@@ -157,5 +164,28 @@
 }
 
 /* Ẩn caret (mũi tên) bootstrap */
-.mega-parent > a::after { display: none; }
+.dropdown-toggle::after,
+.mega-parent > a::after {
+    display: none !important;
+}
+
+/* ========== DROPDOWN STYLE (Liên hệ + Auth) ========== */
+.dropdown-menu {
+    border-radius: 10px;
+    background-color: #111827;
+    color: #e5e7eb;
+    animation: fadeIn .2s ease;
+}
+.dropdown-item {
+    color: #e5e7eb;
+    font-weight: 500;
+}
+.dropdown-item:hover {
+    background-color: #1f2937;
+    color: #fff;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
