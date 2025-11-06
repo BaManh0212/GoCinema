@@ -41,7 +41,7 @@
             </li>
             <span class="divider">|</span>
 
-            <li class="nav-item"><a class="nav-link px-3" href="#tin-tuc">Tin Tức</a></li>
+            <li class="nav-item"><a class="nav-link px-3" href="{{route('baiviet.index')}}">Tin Tức</a></li>
             <span class="divider">|</span>
 
             <li class="nav-item"><a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a></li>
