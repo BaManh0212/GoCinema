@@ -6,12 +6,12 @@
 <style>
   /* ===== GLOBAL ===== */
   :root{
-    --bg: #0b1220;        /* main background */
-    --card: #111827;      /* card background */
-    --muted: #9ca3af;     /* muted text */
-    --text: #e6eef8;      /* primary text */
-    --primary: #6366f1;   /* primary action */
-    --accent: #f59e0b;    /* accent (small use) */
+    --bg: #0b1220;
+    --card: #111827;
+    --muted: #9ca3af;
+    --text: #e6eef8;
+    --primary: #6366f1;
+    --accent: #f59e0b;
     --border: rgba(255,255,255,0.04);
     --radius: 12px;
   }
@@ -40,13 +40,43 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .account-sidebar .profile-top .avatar{
-    width:88px; height:88px; border-radius:50%;
-    display:inline-flex; align-items:center; justify-content:center;
-    background: linear-gradient(180deg,#0f1724,#111827);
-    border: 2px solid rgba(255,255,255,0.03);
+  /* ===== AVATAR UPLOAD ===== */
+  .avatar-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .avatar-wrapper img {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.06);
     box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-    font-size:42px; color:var(--primary);
+    transition: 0.3s;
+  }
+  .avatar-wrapper:hover img {
+    opacity: 0.4;
+  }
+  .avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    font-size: 18px;
+    transition: 0.3s;
+  }
+  .avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+  }
+  .avatar-overlay label {
+    cursor: pointer;
+  }
+  #avatarInput {
+    display: none;
   }
 
   .account-sidebar .profile-top h5{ margin-top:12px; margin-bottom:4px; font-weight:600; color:var(--text)}
@@ -98,7 +128,6 @@
   @media(max-width:991px){
     .account-sidebar{ margin-bottom:18px }
   }
-
 </style>
 
 <div class="container container-account">
@@ -108,7 +137,17 @@
     <div class="col-lg-3 col-md-4">
       <aside class="account-sidebar">
         <div class="profile-top">
-          <div class="avatar"><i class="fas fa-user"></i></div>
+          <form action="{{ route('account.update-avatar') }}" method="POST" enctype="multipart/form-data" id="avatarForm">
+            @csrf
+            <div class="avatar-wrapper">
+              <img id="previewAvatar" src="{{ $user->avatar_url }}" alt="Avatar">
+              <div class="avatar-overlay">
+                <label for="avatarInput"><i class="fas fa-camera"></i></label>
+              </div>
+              <input type="file" name="avatar" id="avatarInput" accept="image/*">
+            </div>
+          </form>
+
           <h5>{{ $user->ho_ten }}</h5>
           <p class="small">{{ $user->email }}</p>
           <div class="points"><i class="fas fa-star"></i>&nbsp; {{ number_format($user->diem) }} điểm</div>
@@ -133,7 +172,6 @@
 
     {{-- MAIN --}}
     <div class="col-lg-9 col-md-8">
-
       {{-- THÔNG TIN CÁ NHÂN --}}
       <div class="card-account mb-4">
         <div class="card-header"><i class="fas fa-user"></i> Thông tin cá nhân</div>
@@ -145,23 +183,19 @@
                 <label class="form-label">Họ và tên</label>
                 <input type="text" name="ho_ten" class="form-control" value="{{ $user->ho_ten }}" required>
               </div>
-
               <div class="col-md-6">
                 <label class="form-label">Email</label>
                 <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
               </div>
-
               <div class="col-md-6">
                 <label class="form-label">Số điện thoại</label>
                 <input type="text" name="so_dien_thoai" class="form-control" value="{{ $user->so_dien_thoai }}">
               </div>
-
               <div class="col-md-6">
                 <label class="form-label">Vai trò</label>
                 <input type="text" class="form-control" value="{{ $user->vaiTro->ten ?? 'Khách hàng' }}" disabled>
               </div>
             </div>
-
             <div class="d-flex justify-content-end mt-4">
               <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i> Cập nhật</button>
             </div>
@@ -169,7 +203,7 @@
         </div>
       </div>
 
-      {{-- ĐỔI MẬT KHẨU (giữ chung trang) --}}
+      {{-- ĐỔI MẬT KHẨU --}}
       <div class="card-account mb-4">
         <div class="card-header"><i class="fas fa-key"></i> Đổi mật khẩu</div>
         <div class="card-body">
@@ -180,18 +214,15 @@
                 <label class="form-label">Mật khẩu hiện tại</label>
                 <input type="password" name="current_password" class="form-control" required>
               </div>
-
               <div class="col-md-4">
                 <label class="form-label">Mật khẩu mới</label>
                 <input type="password" name="new_password" class="form-control" required>
               </div>
-
               <div class="col-md-4">
                 <label class="form-label">Xác nhận mật khẩu</label>
                 <input type="password" name="new_password_confirmation" class="form-control" required>
               </div>
             </div>
-
             <div class="d-flex justify-content-end mt-4">
               <button type="submit" class="btn btn-accent"><i class="fas fa-lock me-2"></i> Đổi mật khẩu</button>
             </div>
@@ -199,7 +230,7 @@
         </div>
       </div>
 
-      {{-- LỊCH SỬ ĐIỂM (chỉ 5 bản ghi gần nhất) --}}
+      {{-- LỊCH SỬ ĐIỂM --}}
       <div class="card-account">
         <div class="card-header"><i class="fas fa-history"></i> Lịch sử điểm gần đây</div>
         <div class="card-body">
@@ -244,9 +275,65 @@
           @endif
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const avatarInput = document.getElementById('avatarInput');
+  const previewAvatar = document.getElementById('previewAvatar');
+  const avatarForm = document.getElementById('avatarForm');
+
+  if (avatarInput) {
+    avatarInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => previewAvatar.src = e.target.result;
+        reader.readAsDataURL(this.files[0]);
+        avatarForm.submit();
+      }
+    });
+  }
+
+  // 🔥 Toast thông báo
+  @if(session('success'))
+    Swal.fire({
+      toast: true,
+      icon: 'success',
+      title: "{{ session('success') }}",
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      background: '#111827',
+      color: '#e6eef8',
+      customClass: {
+        popup: 'shadow-lg rounded-4'
+      }
+    });
+  @endif
+
+  @if(session('error'))
+    Swal.fire({
+      toast: true,
+      icon: 'error',
+      title: "{{ session('error') }}",
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      background: '#111827',
+      color: '#fca5a5',
+      customClass: {
+        popup: 'shadow-lg rounded-4'
+      }
+    });
+  @endif
+</script>
+@endpush
+
 @endsection
+
+
