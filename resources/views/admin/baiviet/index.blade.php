@@ -17,9 +17,6 @@
             <a href="{{ route('admin.baiviet.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
                 <i class="bi bi-plus-circle"></i> Thêm bài viết
             </a>
-            <a href="{{ route('admin.baiviet.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
-                <i class="bi bi-trash"></i> Thùng rác
-            </a>
         </div>
     </div>
 
@@ -36,6 +33,15 @@
                         <option value="">-- Loại bài viết --</option>
                         <option value="tin-tuc" {{ request('loai')=='tin-tuc' ? 'selected' : '' }}>Tin tức</option>
                         <option value="khuyen-mai" {{ request('loai')=='khuyen-mai' ? 'selected' : '' }}>Khuyến mãi</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="trang_thai" class="form-select rounded-pill">
+                        <option value="">-- Trạng thái --</option>
+                        <option value="dang_hien_thi" {{ request('trang_thai')=='dang_hien_thi'?'selected':'' }}>Đang hiển thị</option>
+                        <option value="chua_phat_hanh" {{ request('trang_thai')=='chua_phat_hanh'?'selected':'' }}>Chưa phát hành</option>
+                        <option value="da_ket_thuc" {{ request('trang_thai')=='da_ket_thuc'?'selected':'' }}>Đã kết thúc</option>
+                        <option value="an" {{ request('trang_thai')=='an'?'selected':'' }}>Ẩn</option>
                     </select>
                 </div>
                 <div class="col-auto ms-auto text-end">
@@ -57,7 +63,8 @@
                         <th class="text-start">Tiêu đề</th>
                         <th>Loại</th>
                         <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
+                        <th>Ngày phát hành</th>
+                        <th>Ngày kết thúc</th>
                         <th style="width: 220px;">Hành động</th>
                     </tr>
                 </thead>
@@ -79,27 +86,58 @@
                                 </span>
                             </td>
                             <td>
-                                <form action="{{ route('admin.baiviet.toggle', $bv->id) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-sm {{ $bv->is_active?'btn-success':'btn-secondary' }}">
-                                        <i class="bi bi-{{ $bv->is_active?'check-circle':'x-circle' }}"></i>
-                                        {{ $bv->is_active?'Hiển thị':'Ẩn' }}
-                                    </button>
-                                </form>
+    @php
+        if (!$bv->is_active) {
+            $statusClass = 'btn-secondary';
+            $statusText = 'Ẩn';
+            $statusIcon = 'x-circle';
+        } elseif ($bv->ngay_phat_hanh && now()->lt(\Carbon\Carbon::parse($bv->ngay_phat_hanh))) {
+            $statusClass = 'btn-warning';
+            $statusText = 'Chưa phát hành';
+            $statusIcon = 'clock';
+        } elseif ($bv->ngay_ket_thuc && now()->gt(\Carbon\Carbon::parse($bv->ngay_ket_thuc))) {
+            $statusClass = 'btn-danger';
+            $statusText = 'Đã kết thúc';
+            $statusIcon = 'calendar-x';
+        } else {
+            $statusClass = 'btn-success';
+            $statusText = 'Đang hiển thị';
+            $statusIcon = 'check-circle';
+        }
+    @endphp
+
+    <form action="{{ route('admin.baiviet.toggle', $bv->id) }}" method="POST">
+        @csrf
+        @method('PATCH')
+        <button type="submit" class="btn btn-sm {{ $statusClass }}">
+            <i class="bi bi-{{ $statusIcon }}"></i> {{ $statusText }}
+        </button>
+    </form>
+</td>
+
+                            <td>
+                                @if($bv->ngay_phat_hanh)
+                                    {{ \Carbon\Carbon::parse($bv->ngay_phat_hanh)->format('d/m/Y') }}
+                                @else
+                                    <small class="text-muted">Chưa đặt</small>
+                                @endif
                             </td>
-                            <td>{{ $bv->created_at->format('d/m/Y') }}</td>
+                            <td>
+                                @if($bv->ngay_ket_thuc)
+                                    {{ \Carbon\Carbon::parse($bv->ngay_ket_thuc)->format('d/m/Y') }}
+                                @else
+                                    <small class="text-muted">Chưa đặt</small>
+                                @endif
+                            </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    {{-- ✏️ Nút sửa --}}
                                     <a href="{{ route('admin.baiviet.edit', $bv->id) }}" 
-                                       class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                    class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-pencil-square"></i> Sửa
                                     </a>
 
-                                    {{-- 🗑️ Nút xóa --}}
                                     <form action="{{ route('admin.baiviet.destroy', $bv->id) }}" 
-                                          method="POST" onsubmit="return confirm('Xóa bài viết này?')" class="d-inline">
+                                        method="POST" onsubmit="return confirm('Xóa bài viết này?')" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -112,7 +150,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="9" class="text-center py-4 text-muted">
                                 <i class="bi bi-inbox"></i> Không có bài viết nào phù hợp.
                             </td>
                         </tr>
