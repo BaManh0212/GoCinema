@@ -30,7 +30,8 @@
                         <div class="row row-cols-4 g-2">
                             @foreach($danhmucs as $dm)
                                 <div class="col">
-                                    <a class="dropdown-item" href="{{ route('movies.category', $dm->slug) }}">
+                                    {{-- data-no-preserve: used by small JS below to ensure left-click navigates to the clean URL (no leftover query string) --}}
+                                    <a class="dropdown-item" href="{{ route('movies.category', $dm->slug) }}" data-no-preserve="1">
                                         {{ $dm->ten }}
                                     </a>
                                 </div>
@@ -189,3 +190,27 @@
     to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+{{-- Small inline script: when user left-clicks a category link, navigate to the plain href (strip any existing querystring).
+     Allows middle-click / ctrl/cmd-click to open in new tab normally. This is a lightweight guard against
+     accidentally preserving current query string when navigating from pages that have filter params. --}}
+<script>
+    (function () {
+        document.addEventListener('click', function (ev) {
+            // Only handle anchors with data-no-preserve
+            var a = ev.target.closest && ev.target.closest('a[data-no-preserve="1"]');
+            if (!a) return;
+
+            // Allow middle-click or cmd/ctrl/meta to open in new tab/window
+            if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+
+            // Prevent default and navigate to the href without any query string
+            ev.preventDefault();
+            var href = a.getAttribute('href') || '';
+            // Remove query string and hash from current href, but preserve hash on target if present
+            var parts = href.split('?');
+            var clean = parts[0];
+            window.location.href = clean;
+        }, false);
+    })();
+</script>

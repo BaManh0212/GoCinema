@@ -61,6 +61,14 @@ class Phim extends Model
     {
         return $this->belongsToMany(DanhMuc::class, 'phim_danh_muc', 'phim_id', 'danh_muc_id');
     }
+    
+    /**
+     * Quan hệ: các suất chiếu thuộc về phim này
+     */
+    public function suatChieus()
+    {
+        return $this->hasMany(\App\Models\SuatChieu::class, 'phim_id');
+    }
     // 📅 Getter tùy chỉnh
     public function getNgayCongChieuFormattedAttribute()
     {
