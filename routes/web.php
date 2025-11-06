@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [accountController::class, 'edit'])->name('account.edit');
     Route::patch('/account', [accountController::class, 'update'])->name('account.update');
     Route::delete('/account', [accountController::class, 'destroy'])->name('account.destroy');
+    Route::post('/account/update-avatar', [AccountController::class, 'updateAvatar'])->name('account.update-avatar');
 
 
     // Quản lý tài khoản, điểm thưởng

@@ -203,4 +203,30 @@ class AccountController extends Controller
 
         return back()->with('success', 'Đổi mật khẩu thành công!');
     }
+    public function updateAvatar(Request $request)
+{
+    $request->validate([
+        'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
+
+    $user = auth()->user();
+
+    // Xóa ảnh cũ
+    if ($user->avatar && file_exists(public_path('uploads/avatars/' . $user->avatar))) {
+        unlink(public_path('uploads/avatars/' . $user->avatar));
+    }
+
+    // Upload ảnh mới
+    $file = $request->file('avatar');
+    $filename = time() . '_' . $file->getClientOriginalName();
+    $file->move(public_path('uploads/avatars'), $filename);
+
+    // Lưu tên file vào DB
+    $user->avatar = $filename;
+    $user->save();
+
+    return back()->with('success', 'Cập nhật ảnh đại diện thành công!');
+}
+
+
 }
