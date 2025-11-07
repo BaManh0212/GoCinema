@@ -1,62 +1,90 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DanhMuc;
 use App\Models\Phim;
 use App\Models\TheLoai;
 use App\Models\Rap;
+use Carbon\Carbon;
 
 class PhimController extends Controller
 {
     /**
-     * Hiển thị danh sách phim theo danh mục và hỗ trợ filter (the_loai, rap, date)
+     * ✅ Hiển thị tất cả phim (có lọc & phân trang)
+     */
+    public function index(Request $request)
+    {
+        $today = Carbon::now()->startOfDay();
+        $query = Phim::with('danhMucs'); // Quan hệ nhiều-nhiều
+
+        // 🔍 Lọc theo từ khóa
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where('tieu_de', 'like', "%{$search}%");
+        }
+
+        // 🏷️ Lọc theo danh mục (many-to-many)
+        if ($request->filled('danh_muc')) {
+            $query->whereHas('danhMucs', function ($q) use ($request) {
+                $q->where('danh_muc.id', $request->danh_muc);
+            });
+        }
+
+        // 🎬 Lọc theo trạng thái
+        if ($request->filled('trang_thai')) {
+            if ($request->trang_thai === 'dang_chieu') {
+                $query->whereDate('ngay_cong_chieu', '<=', $today)
+                      ->where(function ($q) use ($today) {
+                          $q->whereNull('ngay_ket_thuc')
+                            ->orWhereDate('ngay_ket_thuc', '>=', $today);
+                      });
+            } elseif ($request->trang_thai === 'sap_chieu') {
+                $query->whereDate('ngay_cong_chieu', '>', $today);
+            }
+        }
+
+        // 📅 Sắp xếp & phân trang
+        $movies = $query->orderByDesc('created_at')
+                        ->paginate(12)
+                        ->withQueryString();
+
+        // 📂 Lấy danh mục để hiển thị bộ lọc
+        $danhMucs = DanhMuc::orderBy('ten')->get();
+
+        return view('client.movies.index', compact('movies', 'danhMucs'));
+    }
+
+    /**
+     * 🎞️ Hiển thị phim theo danh mục + các bộ lọc mở rộng
      */
     public function category(Request $request, $slug)
     {
         $danhMuc = DanhMuc::where('slug', $slug)->firstOrFail();
 
-        // Normalize / sanitize query params to avoid accidental empty-string filters
-        $theLoaiRaw = trim((string) $request->query('the_loai', ''));
-        $rapRaw = trim((string) $request->query('rap', ''));
-        $dateRaw = trim((string) $request->query('date', ''));
+        $theLoaiId = $request->integer('the_loai');
+        $rapId = $request->integer('rap');
+        $date = $request->filled('date') ? $request->date('date') : null;
 
-        $theLoaiId = $theLoaiRaw === '' ? null : (is_numeric($theLoaiRaw) ? (int) $theLoaiRaw : null);
-        $rapId = $rapRaw === '' ? null : (is_numeric($rapRaw) ? (int) $rapRaw : null);
+        // ✅ Sử dụng quan hệ many-to-many: danhMuc -> phims()
+        $query = $danhMuc->phims()->with(['theLoais', 'danhMucs']);
 
-        // Validate date (expecting Y-m-d). If invalid, ignore it.
-        $date = null;
-        if ($dateRaw !== '') {
-            try {
-                $dt = \Carbon\Carbon::createFromFormat('Y-m-d', $dateRaw);
-                $date = $dt->format('Y-m-d');
-            } catch (\Exception $e) {
-                $date = null;
-            }
-        }
-
-        $query = $danhMuc->phims()->with(['theLoais', 'danhMuc']);
-
-        // Lọc theo thể loại (the_loai id)
+        // 🎭 Lọc theo thể loại
         if ($theLoaiId) {
-            $query->whereHas('theLoais', function($q) use ($theLoaiId) {
+            $query->whereHas('theLoais', function ($q) use ($theLoaiId) {
                 $q->where('id', $theLoaiId);
             });
         }
 
-        // Lọc theo rạp (rap id) và/hoặc ngày chiếu.
-        // Nếu có chọn rạp: muốn phim có suất chiếu tại rạp đó (và theo ngày nếu cung cấp).
-        // Đồng thời nếu chỉ chọn ngày (không chọn rạp), người dùng thường muốn thấy phim
-        // có `ngay_cong_chieu` trùng ngày đó.
+        // 🎥 Lọc theo rạp và ngày chiếu
         if ($rapId || $date) {
-            $query->where(function($q) use ($rapId, $date) {
+            $query->where(function ($q) use ($rapId, $date) {
                 if ($rapId) {
-                    $q->whereHas('suatChieus', function($sq) use ($rapId, $date) {
-                        $sq->whereHas('phong', function($pq) use ($rapId) {
+                    $q->whereHas('suatChieus', function ($sq) use ($rapId, $date) {
+                        $sq->whereHas('phong', function ($pq) use ($rapId) {
                             $pq->where('rap_id', $rapId);
                         });
-
                         if ($date) {
                             $sq->whereDate('gio_bat_dau', $date);
                         }
@@ -64,38 +92,32 @@ class PhimController extends Controller
                 }
 
                 if ($date) {
-                    // OR: phim có ngay_cong_chieu bằng ngày tìm kiếm
+                    // Hoặc có ngày công chiếu trùng
                     $q->orWhereDate('ngay_cong_chieu', $date);
                 }
             });
         }
 
-        $movies = $query->orderByDesc('created_at')->paginate(12)->withQueryString();
+        // 🔢 Phân trang
+        $movies = $query->orderByDesc('created_at')
+                        ->paginate(12)
+                        ->withQueryString();
 
-        // Danh sách thể loại và rạp để hiển thị bộ lọc
+        // 🧩 Dữ liệu cho bộ lọc
         $theLoais = TheLoai::orderBy('ten')->get();
         $raps = Rap::orderBy('ten')->get();
-
-        // DEBUG helper: nếu URL có ?debug=1 thì in ra dữ liệu và SQL để kiểm tra
-        if ($request->filled('debug')) {
-            // dd the results and the generated SQL for the movies query
-            return dd([
-                'theLoais' => $theLoais->toArray(),
-                'raps' => $raps->toArray(),
-                'movies_sql' => $query->toSql(),
-                'movies_bindings' => $query->getBindings(),
-            ]);
-        }
 
         return view('client.movies.category', compact('danhMuc', 'movies', 'theLoais', 'raps'));
     }
 
     /**
-     * Hiển thị chi tiết phim theo slug
+     * 📘 Chi tiết phim
      */
     public function show($slug)
     {
-        $phim = Phim::where('slug', $slug)->with(['theLoais', 'danhMuc'])->firstOrFail();
+        $phim = Phim::where('slug', $slug)
+            ->with(['theLoais', 'danhMucs'])
+            ->firstOrFail();
 
         return view('client.movies.show', compact('phim'));
     }
