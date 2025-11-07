@@ -24,7 +24,7 @@
 
             {{-- 🔹 Danh mục phim --}}
             <li class="nav-item dropdown mega-parent">
-                <a class="nav-link px-3" href="#">Danh Mục Phim</a>
+                <a class="nav-link px-3" href="{{ route('movies.index') }}">Danh Mục Phim</a>
                 <div class="mega-box">
                     <div class="mega-container">
                         <div class="row row-cols-4 g-2">

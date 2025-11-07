@@ -46,25 +46,51 @@
     <div class="row g-4">
         @forelse ($featured as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
+                <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                    <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                        {{-- Ảnh poster --}}
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
-                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                            <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;"></div>
                         @endif
-                        <div class="card-body text-center">
-                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
-                            <small class="text-muted">Thời lượng:
-                                {{ $phim->thoi_luong }} phút
-                            </small>
-                            @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                            @endif
-                            <small class="text-muted">Ngày công chiếu:
-                                {{ \Carbon\Carbon::parse($phim->ngay_khoi_chieu)->format('d/m/Y') }}
-                            </small>
+
+                        {{-- Nhãn trạng thái góc trên --}}
+                        @php
+                            $today = \Carbon\Carbon::now()->startOfDay();
+                            $ngayBatDau = $phim->ngay_cong_chieu ?? $phim->ngay_khoi_chieu ?? null;
+                            $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                            if ($ngayBatDau && \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))) {
+                                $status = 'dang_chieu';
+                            } else {
+                                $status = 'sap_chieu';
+                            }
+                        @endphp
+                        <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
+                            {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                         </div>
+                        {{-- Thông tin phim --}}
+                        <div class="card-body text-center p-3">
+                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
+                        {{-- Danh mục --}}    
+                            @if($phim->danhMucs->count())
+                                <small class="text-info d-block mb-2">
+                                    <i class="bi bi-tags-fill me-1"></i>
+                                    {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                </small>
+                            @endif
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
+                            </small>
+
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                        </div>
+
+                        {{-- Overlay --}}
                         <div class="overlay d-flex justify-content-center align-items-center">
                             <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
@@ -83,25 +109,52 @@
     <div class="row g-4">
         @forelse ($nowShowing as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
+                <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                    <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                        {{-- Ảnh poster --}}
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
-                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                            <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;"></div>
                         @endif
-                        <div class="card-body text-center">
-                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
-                            <small class="text-muted">Thời lượng:
-                                {{ $phim->thoi_luong }} phút
-                            </small>
-                            @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                            @endif
-                            <small class="text-muted">Ngày công chiếu:
-                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}
-                            </small>
+
+                        {{-- Nhãn trạng thái góc trên --}}
+                        @php
+                            $today = \Carbon\Carbon::now()->startOfDay();
+                            $ngayBatDau = $phim->ngay_cong_chieu ?? $phim->ngay_khoi_chieu ?? null;
+                            $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                            if ($ngayBatDau && \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))) {
+                                $status = 'dang_chieu';
+                            } else {
+                                $status = 'sap_chieu';
+                            }
+                        @endphp
+                        <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
+                            {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                         </div>
+
+                        {{-- Thông tin phim --}}
+                        <div class="card-body text-center p-3">
+                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
+                        {{-- Danh mục --}}    
+                            @if($phim->danhMucs->count())
+                                <small class="text-info d-block mb-2">
+                                    <i class="bi bi-tags-fill me-1"></i>
+                                    {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                </small>
+                            @endif
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
+                            </small>
+
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                        </div>
+
+                        {{-- Overlay --}}
                         <div class="overlay d-flex justify-content-center align-items-center">
                             <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
@@ -120,25 +173,52 @@
     <div class="row g-4">
         @forelse ($comingSoon as $phim)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
+                <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                    <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                        {{-- Ảnh poster --}}
                         @if($phim->anh_poster)
                             <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
                         @else
-                            <div class="card-img-top bg-light" style="height:280px;border-radius:6px;"></div>
+                            <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;"></div>
                         @endif
-                        <div class="card-body text-center">
-                            <h6 class="card-title text-truncate mb-1">{{ $phim->tieu_de }}</h6>
-                            <small class="text-muted">Thời lượng:
-                                {{ $phim->thoi_luong }} phút
-                            </small>
-                            @if($phim->do_tuoi_gioi_han)
-                                <small class="text-danger d-block mb-1">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                            @endif
-                            <small class="text-muted">Ngày công chiếu:
-                                {{ \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') }}
-                            </small>
+
+                        {{-- Nhãn trạng thái góc trên --}}
+                        @php
+                            $today = \Carbon\Carbon::now()->startOfDay();
+                            $ngayBatDau = $phim->ngay_cong_chieu ?? $phim->ngay_khoi_chieu ?? null;
+                            $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                            if ($ngayBatDau && \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))) {
+                                $status = 'dang_chieu';
+                            } else {
+                                $status = 'sap_chieu';
+                            }
+                        @endphp
+                        <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
+                            {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                         </div>
+
+                        {{-- Thông tin phim --}}
+                        <div class="card-body text-center p-3">
+                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
+                        {{-- Danh mục --}}    
+                            @if($phim->danhMucs->count())
+                                <small class="text-info d-block mb-2">
+                                    <i class="bi bi-tags-fill me-1"></i>
+                                    {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                </small>
+                            @endif
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
+                            </small>
+
+                            @if($phim->do_tuoi_gioi_han)
+                                <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                            @endif
+                        </div>
+
+                        {{-- Overlay --}}
                         <div class="overlay d-flex justify-content-center align-items-center">
                             <span class="text-white fw-bold">Xem chi tiết</span>
                         </div>
@@ -229,6 +309,17 @@
     display: flex; justify-content: center; align-items: center;
 }
 .movie-card:hover .overlay { opacity:1; }
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
 .overlay span { font-size: 1.2rem; }
 
 .why-choose { background: transparent; }

@@ -47,9 +47,14 @@ use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/policies', [PolicyController::class, 'index'])->name('policies');
 // Danh sách phim theo danh mục (public)
+Route::get('/phim', [PhimController::class, 'index'])->name('movies.index');
 Route::get('/danh-muc/{slug}', [PhimController::class, 'category'])->name('movies.category');
 // Trang chi tiết phim
 Route::get('/phim/{slug}', [PhimController::class, 'show'])->name('movies.show');
+//Bài viết
+    Route::get('/tin-tuc', [BaiVietController::class, 'index'])->name('baiviet.index');
+    Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet.show');
+
 
 
 /*
@@ -78,11 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
     Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
     Route::get('/contact/history', [ContactController::class, 'history'])->name('contact.history');
-    // Danh mục (trước đây ở đây, đã di chuyển ra ngoài để công khai)
 });
-//Bài viết
-    Route::get('/tin-tuc', [BaiVietController::class, 'index'])->name('baiviet.index');
-    Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet.show');
 
 /*
 |--------------------------------------------------------------------------
