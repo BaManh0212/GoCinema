@@ -39,7 +39,7 @@ class ComboController extends Controller
                 break;
         }
 
-        $combos = $query->get();
+        $combos = $query->paginate(10);;
         $filters = $request->only(['q', 'sort']);
 
         return view('admin.combo.index', compact('combos', 'filters'));

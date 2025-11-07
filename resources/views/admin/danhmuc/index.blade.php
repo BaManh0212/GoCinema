@@ -9,42 +9,47 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0 text-gradient">
-                <i class="bi bi-newspaper"></i> Quản lý bài viết
+                <i class="bi bi-folder2-open"></i> Quản lý Danh mục
             </h2>
-            <small class="text-muted">Xem, lọc và quản lý tất cả bài viết</small>
+            <small class="text-muted">Xem, lọc và quản lý các danh mục phim</small>
         </div>
         <div>
-            <a href="{{ route('admin.baiviet.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm bài viết
+            <a href="{{ route('admin.danhmuc.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
+                <i class="bi bi-plus-circle"></i> Thêm danh mục
             </a>
-            <a href="{{ route('admin.baiviet.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+            <a href="{{ route('admin.danhmuc.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
                 <i class="bi bi-trash"></i> Thùng rác
             </a>
         </div>
     </div>
 
     {{-- 🔍 Bộ lọc --}}
-    <div class="card mb-4">
+<div class="card mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.baiviet.index') }}" class="row g-3 align-items-center">
+            <form method="GET" action="{{ route('admin.danhmuc.index') }}" class="row g-3 align-items-center">
                 <div class="col-auto">
-                    <input type="text" name="search" class="form-control" placeholder="Tìm theo tiêu đề..." 
-                        value="{{ request('search') }}">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm theo tên danh mục" 
+                        value="{{ $filters['q'] ?? '' }}">
                 </div>
                 <div class="col-auto">
-                    <select name="loai" class="form-select rounded-pill">
-                        <option value="">-- Loại bài viết --</option>
-                        <option value="tin-tuc" {{ request('loai')=='tin-tuc' ? 'selected' : '' }}>Tin tức</option>
-                        <option value="khuyen-mai" {{ request('loai')=='khuyen-mai' ? 'selected' : '' }}>Khuyến mãi</option>
+                    <select name="sort" class="form-select rounded-pill">
+                        <option value="">-- Sắp xếp theo --</option>
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A → Z)</option>
+                    <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z → A)</option>
+                    <option value="phim_count_desc" {{ request('sort') == 'phim_count_desc' ? 'selected' : '' }}>Nhiều phim nhất</option>
+                    <option value="phim_count_asc" {{ request('sort') == 'phim_count_asc' ? 'selected' : '' }}>Ít phim nhất</option>
                     </select>
                 </div>
-                <div class="col-auto ms-auto text-end">
+
+                <div class="ms-auto text-end">
                     <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">Tìm kiếm</button>
-                    <a href="{{ route('admin.baiviet.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">Đặt lại</a>
+                    <a href="{{ route('admin.danhmuc.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">Đặt lại</a>
                 </div>
             </form>
+
         </div>
     </div>
+
 
     {{-- 📋 Bảng danh sách --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
@@ -53,53 +58,38 @@
                 <thead class="table-header text-white">
                     <tr class="text-center">
                         <th style="width: 70px;">STT</th>
-                        <th>Hình ảnh</th>
-                        <th class="text-start">Tiêu đề</th>
-                        <th>Loại</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
+                        <th class="text-start">Tên danh mục</th>
+                        <th class="text-start">Slug</th>
+                        <th style="width: 160px;">Số lượng phim</th>
                         <th style="width: 220px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($baiviets as $key => $bv)
-                        <tr class="table-row text-center">
-                            <td class="fw-bold text-muted">{{ $baiviets->firstItem() + $key }}</td>
-                            <td>
-                                @if($bv->hinh_anh)
-                                    <img src="{{ asset('storage/'.$bv->hinh_anh) }}" alt="" width="80" class="rounded">
-                                @else
-                                    <small class="text-muted">Không có</small>
-                                @endif
-                            </td>
-                            <td class="text-start fw-semibold">{{ $bv->tieu_de }}</td>
-                            <td>
-                                <span class="badge bg-{{ $bv->loai=='tin-tuc'?'primary':'warning' }}">
-                                    {{ ucfirst(str_replace('-', ' ', $bv->loai)) }}
+                    @forelse ($danhmucs as $dm)
+                        <tr class="table-row">
+                            <td class="text-center fw-bold text-muted">{{ $dm->id }}</td>
+                            <td class="fw-semibold">{{ $dm->ten }}</td>
+                            <td class="text-muted">{{ $dm->slug }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-info bg-opacity-75 px-3 py-2 shadow-sm">
+                                    {{ $dm->phims_count }}
                                 </span>
                             </td>
                             <td>
-                                <form action="{{ route('admin.baiviet.toggle', $bv->id) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-sm {{ $bv->is_active?'btn-success':'btn-secondary' }}">
-                                        <i class="bi bi-{{ $bv->is_active?'check-circle':'x-circle' }}"></i>
-                                        {{ $bv->is_active?'Hiển thị':'Ẩn' }}
-                                    </button>
-                                </form>
-                            </td>
-                            <td>{{ $bv->created_at->format('d/m/Y') }}</td>
-                            <td>
                                 <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ route('admin.danhmuc.show', $dm->id) }}" 
+                                       class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
                                     {{-- ✏️ Nút sửa --}}
-                                    <a href="{{ route('admin.baiviet.edit', $bv->id) }}" 
+                                    <a href="{{ route('admin.danhmuc.edit', $dm->id) }}" 
                                        class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-pencil-square"></i> Sửa
                                     </a>
 
                                     {{-- 🗑️ Nút xóa --}}
-                                    <form action="{{ route('admin.baiviet.destroy', $bv->id) }}" 
-                                          method="POST" onsubmit="return confirm('Xóa bài viết này?')" class="d-inline">
+                                    <form action="{{ route('admin.danhmuc.destroy', $dm->id) }}" 
+                                          method="POST" onsubmit="return confirm('Xóa danh mục này?')" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -120,7 +110,7 @@
                 </tbody>
             </table>
             <div class="mt-3 d-flex justify-content-end">
-                {{ $baiviets->links('pagination::bootstrap-5') }}
+                {{ $danhmucs->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
