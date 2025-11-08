@@ -9,6 +9,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\PhimController;
+use App\Http\Controllers\BaiVietController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\Admin\DonDatVeController as AdminDonDatVeController;
 use App\Http\Controllers\Admin\GheController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Admin\BaiVietController as AdminBaiVietController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -43,6 +46,15 @@ use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/policies', [PolicyController::class, 'index'])->name('policies');
+// Danh sách phim theo danh mục (public)
+Route::get('/phim', [PhimController::class, 'index'])->name('movies.index');
+Route::get('/danh-muc/{slug}', [PhimController::class, 'category'])->name('movies.category');
+// Trang chi tiết phim
+Route::get('/phim/{slug}', [PhimController::class, 'show'])->name('movies.show');
+//Bài viết
+    Route::get('/tin-tuc', [BaiVietController::class, 'index'])->name('baiviet.index');
+    Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet.show');
+
 
 
 /*
@@ -54,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [accountController::class, 'edit'])->name('account.edit');
     Route::patch('/account', [accountController::class, 'update'])->name('account.update');
     Route::delete('/account', [accountController::class, 'destroy'])->name('account.destroy');
+    Route::post('/account/update-avatar', [AccountController::class, 'updateAvatar'])->name('account.update-avatar');
 
 
     // Quản lý tài khoản, điểm thưởng
@@ -224,7 +237,6 @@ Route::prefix('admin')
     });
 
         // Quản lý mã giảm giá
-        // Quản lý mã giảm giá
 Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
     // Thùng rác
     Route::get('trash', [MaGiamGiaController::class, 'trash'])->name('trash');
@@ -239,8 +251,6 @@ Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
 //Quản lý banner
     Route::resource('banners', BannerController::class)->names('banners');
     Route::post('banners/{id}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
-
-//Quản lý liên hệ
     // Quản lý liên hệ
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::get('/', [AdminContactController::class, 'index'])->name('index');
@@ -250,6 +260,9 @@ Route::prefix('ma_giam_gia')->name('ma_giam_gia.')->group(function () {
         Route::delete('/{contact}', [AdminContactController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-delete', [AdminContactController::class, 'bulkDelete'])->name('bulk-delete');
     });
+    // Quan lý bài viết
+   Route::resource('baiviet', AdminBaiVietController::class);
+   Route::patch('baiviet/{baiviet}/toggle', [AdminBaiVietController::class, 'toggleActive'])->name('baiviet.toggle');
 
 // Resource CRUD
 Route::resource('ma_giam_gia', MaGiamGiaController::class)

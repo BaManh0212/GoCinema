@@ -37,7 +37,7 @@ class AccountController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('account.profile', compact('user', 'lichSuDiem', 'bookings', 'myVouchers'));
+        return view('client.account.profile', compact('user', 'lichSuDiem', 'bookings', 'myVouchers'));
     }
 
     /**
@@ -54,7 +54,7 @@ class AccountController extends Controller
             ->orderBy('diem_can', 'asc')
             ->get();
 
-        return view('account.rewards', compact('user', 'vouchers'));
+        return view('client.account.rewards', compact('user', 'vouchers'));
     }
 
     /**
@@ -130,7 +130,7 @@ class AccountController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('account.my-vouchers', compact('user', 'vouchers'));
+        return view('client.account.my-vouchers', compact('user', 'vouchers'));
     }
 
     /**
@@ -144,7 +144,7 @@ class AccountController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('account.point-history', compact('user', 'lichSuDiem'));
+        return view('client.account.point-history', compact('user', 'lichSuDiem'));
     }
 
     /**
@@ -203,4 +203,30 @@ class AccountController extends Controller
 
         return back()->with('success', 'Đổi mật khẩu thành công!');
     }
+    public function updateAvatar(Request $request)
+{
+    $request->validate([
+        'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
+
+    $user = auth()->user();
+
+    // Xóa ảnh cũ
+    if ($user->avatar && file_exists(public_path('uploads/avatars/' . $user->avatar))) {
+        unlink(public_path('uploads/avatars/' . $user->avatar));
+    }
+
+    // Upload ảnh mới
+    $file = $request->file('avatar');
+    $filename = time() . '_' . $file->getClientOriginalName();
+    $file->move(public_path('uploads/avatars'), $filename);
+
+    // Lưu tên file vào DB
+    $user->avatar = $filename;
+    $user->save();
+
+    return back()->with('success', 'Cập nhật ảnh đại diện thành công!');
+}
+
+
 }

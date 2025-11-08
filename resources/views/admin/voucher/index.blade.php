@@ -13,9 +13,6 @@
             <small class="text-muted">Xem, lọc và quản lý các voucher đổi điểm</small>
         </div>
         <div>
-            <a href="{{ route('admin.voucher.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm Voucher
-            </a>
             <a href="{{ route('admin.voucher.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
                 <i class="bi bi-trash"></i> Thùng rác
             </a>
