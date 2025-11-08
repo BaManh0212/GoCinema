@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DanhMuc;
+use App\Models\DanhGia;
 use App\Models\Phim;
 use App\Models\TheLoai;
 use App\Models\Rap;
+use App\Models\SuatChieu;
 use Carbon\Carbon;
 
 class PhimController extends Controller
@@ -36,10 +38,10 @@ class PhimController extends Controller
         if ($request->filled('trang_thai')) {
             if ($request->trang_thai === 'dang_chieu') {
                 $query->whereDate('ngay_cong_chieu', '<=', $today)
-                      ->where(function ($q) use ($today) {
-                          $q->whereNull('ngay_ket_thuc')
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('ngay_ket_thuc')
                             ->orWhereDate('ngay_ket_thuc', '>=', $today);
-                      });
+                    });
             } elseif ($request->trang_thai === 'sap_chieu') {
                 $query->whereDate('ngay_cong_chieu', '>', $today);
             }
@@ -47,8 +49,8 @@ class PhimController extends Controller
 
         // 📅 Sắp xếp & phân trang
         $movies = $query->orderByDesc('created_at')
-                        ->paginate(12)
-                        ->withQueryString();
+            ->paginate(12)
+            ->withQueryString();
 
         // 📂 Lấy danh mục để hiển thị bộ lọc
         $danhMucs = DanhMuc::orderBy('ten')->get();
@@ -100,8 +102,8 @@ class PhimController extends Controller
 
         // 🔢 Phân trang
         $movies = $query->orderByDesc('created_at')
-                        ->paginate(12)
-                        ->withQueryString();
+            ->paginate(12)
+            ->withQueryString();
 
         // 🧩 Dữ liệu cho bộ lọc
         $theLoais = TheLoai::orderBy('ten')->get();
@@ -119,6 +121,94 @@ class PhimController extends Controller
             ->with(['theLoais', 'danhMucs'])
             ->firstOrFail();
 
-        return view('client.movies.show', compact('phim'));
+        // Lịch chiếu 7 ngày tới, chỉ lấy trạng thái hoạt động
+        $start = now();
+        $end   = now()->addDays(7)->endOfDay();
+
+        $suatChieus = SuatChieu::with(['phong.rap'])
+            ->where('phim_id', $phim->id)
+            ->where('trang_thai', 'hoat_dong')   // đổi nếu DB bạn lưu khác giá trị
+            ->whereBetween('gio_bat_dau', [$start, $end])
+            ->orderBy('gio_bat_dau')
+            ->get();
+
+        // Gom theo ngày (Y-m-d)
+        $lichChieuTheoNgay = $suatChieus->groupBy(fn($s) => \Carbon\Carbon::parse($s->gio_bat_dau)->format('Y-m-d'));
+
+        // Thống kê điểm
+        $soDanhGia = DanhGia::where('phim_id', $phim->id)->count();
+        $diemTB    = DanhGia::where('phim_id', $phim->id)->avg('so_sao') ?? 0;
+
+        // Các ID danh mục của phim hiện tại
+        $catIds = $phim->danhMucs->pluck('id')->all();
+
+        // Lấy phim liên quan theo danh mục
+        $relatedMovies = Phim::with('danhMucs')
+            ->where('id', '!=', $phim->id)
+            ->whereHas('danhMucs', function ($q) use ($catIds) {
+                // Chú ý: bảng danh mục là 'danh_muc' (đúng theo code bạn đang dùng)
+                $q->whereIn('danh_muc.id', $catIds);
+            })
+            ->orderByDesc('created_at')
+            ->distinct()
+            ->take(8)
+            ->get();
+
+        return view('client.movies.show', compact('phim', 'lichChieuTheoNgay', 'soDanhGia', 'diemTB', 'relatedMovies'));
+    }
+
+    // GET /api/phim/{slug}/lich-chieu
+    public function lichChieuJson(string $slug)
+    {
+        $phim = Phim::where('slug', $slug)->firstOrFail();
+        $now = now();
+        $end = now()->addDays(7)->endOfDay();
+
+        $items = SuatChieu::with(['phong.rap'])
+            ->where('phim_id', $phim->id)
+            ->where('trang_thai', 'hoat_dong')
+            ->whereBetween('gio_bat_dau', [$now, $end])
+            ->orderBy('gio_bat_dau')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'gio_bat_dau' => $s->gio_bat_dau,
+                    'gio_ket_thuc' => $s->gio_ket_thuc,
+                    'gia_ve' => $s->gia_ve,
+                    'rap' => $s->phong?->rap?->ten ?? null,
+                    'phong' => $s->phong?->ten ?? null,
+                ];
+            });
+
+        return response()->json([
+            'phim_id' => $phim->id,
+            'lich_chieu' => $items,
+        ]);
+    }
+
+    // POST /phim/{slug}/danh-gia
+    public function luuDanhGia(Request $request, string $slug)
+    {
+        $phim = Phim::where('slug', $slug)->firstOrFail();
+
+        $data = $request->validate([
+            'so_sao'   => 'required|integer|min:1|max:5',
+            'binh_luan' => 'nullable|string|max:2000',
+        ]);
+
+        $userId = auth()->id(); // tuỳ hệ thống, map tới bảng nguoi_dung
+        if (!$userId) {
+            return back()->with('error', 'Vui lòng đăng nhập để đánh giá.');
+        }
+
+        DanhGia::create([
+            'phim_id'        => $phim->id,
+            'nguoi_dung_id'  => $userId,
+            'so_sao'         => $data['so_sao'],
+            'binh_luan'      => $data['binh_luan'] ?? null,
+        ]);
+
+        return back()->with('success', 'Cảm ơn bạn đã đánh giá!');
     }
 }
