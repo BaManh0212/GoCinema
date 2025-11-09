@@ -27,7 +27,7 @@
 @section('content')
     <div class="movie-detail">
 
-        {{-- ====== HERO ====== --}}
+        {{-- ================= HERO ================= --}}
         <section class="movie-hero position-relative">
             <div class="hero-bg">
                 @if ($phim->anh_poster)
@@ -77,7 +77,6 @@
                                     <i class="bi bi-ticket-perforated-fill me-1"></i> Đặt vé ngay
                                 </a>
 
-                                {{-- THÔNG TIN NHANH (đưa lên chung card) --}}
                                 <hr class="border-secondary-subtle">
                                 <h6 class="fw-semibold mb-3">Thông tin</h6>
                                 <ul class="list-unstyled m-0 small">
@@ -90,7 +89,7 @@
                                     <li class="mb-2"><span class="text-body-secondary">Phụ đề:</span> <span
                                             class="text-black">{{ $phim->phu_de ?: '—' }}</span></li>
                                     <li class="mb-2"><span class="text-body-secondary">Định dạng:</span> <span
-                                            class="text-black">{{ $phim->dinh_dang ?: '—' }}</span></li>
+                                            class="text-black">{{ $phim->dinh_dang ?: '2D' }}</span></li>
                                     <li class="mb-2"><span class="text-body-secondary">Lượt xem:</span> <span
                                             class="text-black">{{ number_format($phim->luot_xem ?? 0) }}</span></li>
                                 </ul>
@@ -99,7 +98,7 @@
                     </div>
                 </div>
 
-                {{-- Title + badges --}}
+                {{-- Tiêu đề + badges --}}
                 <div class="mt-4">
                     <h1 class="h3 fw-bold text-light mb-2">{{ $phim->tieu_de }}</h1>
                     <div class="d-flex flex-wrap gap-2">
@@ -126,14 +125,15 @@
                     </div>
 
                     <ul class="list-inline mt-3 text-light">
-                        <li class="list-inline-item me-3"><i class="bi bi-clock me-1"></i>Thời lượng: <strong
-                                class="text-light">{{ $phim->thoi_luong ?? '—' }}</strong> phút</li>
-                        <li class="list-inline-item me-3"><i class="bi bi-calendar2-week me-1"></i>Khởi chiếu: <strong
-                                class="text-light">{{ $phim->ngay_cong_chieu ? \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') : '—' }}</strong>
+                        <li class="list-inline-item me-3"><i class="bi bi-clock me-1"></i>Thời lượng:
+                            <strong>{{ $phim->thoi_luong ?? '—' }}</strong> phút
+                        </li>
+                        <li class="list-inline-item me-3"><i class="bi bi-calendar2-week me-1"></i>Khởi chiếu:
+                            <strong>{{ $phim->ngay_cong_chieu ? \Carbon\Carbon::parse($phim->ngay_cong_chieu)->format('d/m/Y') : '—' }}</strong>
                         </li>
                         @if ($phim->ngay_ket_thuc)
-                            <li class="list-inline-item me-3"><i class="bi bi-calendar2-x me-1"></i>Kết thúc: <strong
-                                    class="text-light">{{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}</strong>
+                            <li class="list-inline-item me-3"><i class="bi bi-calendar2-x me-1"></i>Kết thúc:
+                                <strong>{{ \Carbon\Carbon::parse($phim->ngay_ket_thuc)->format('d/m/Y') }}</strong>
                             </li>
                         @endif
                     </ul>
@@ -141,23 +141,19 @@
             </div>
         </section>
 
-        {{-- ====== BODY ====== --}}
+        {{-- ================= BODY ================= --}}
         <div class="container my-5">
 
-            <div class="row g-4">
-                <div class="col-lg-12">
-                    {{-- Nội dung phim --}}
-                    <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title fw-semibold">Nội dung phim</h5>
-                            <p class="mb-0 text-body-emphasis" style="line-height:1.85">{{ $phim->mo_ta }}</p>
-                        </div>
-                    </div>
+            {{-- Mô tả --}}
+            <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-semibold">Nội dung phim</h5>
+                    <p class="mb-0 text-body-emphasis" style="line-height:1.85">{{ $phim->mo_ta }}</p>
                 </div>
             </div>
 
-            {{-- ====== Lịch chiếu theo ngày (nav-pills) ====== --}}
-            <div id="lichchieu" class="card bg-dark-subtle border-0 rounded-4 shadow-sm mt-4">
+            {{-- Lịch chiếu 7 ngày --}}
+            <div id="lichchieu" class="card bg-dark-subtle border-0 rounded-4 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h5 class="fw-semibold mb-0">Lịch chiếu (7 ngày tới)</h5>
@@ -171,7 +167,7 @@
                         @php $dates = $lichChieuTheoNgay->keys()->values(); @endphp
 
                         <ul class="nav nav-pills gap-2 flex-nowrap overflow-auto pb-2" id="dayTabs" role="tablist"
-                            style="scrollbar-width: thin;">
+                            style="scrollbar-width:thin;">
                             @foreach ($dates as $i => $date)
                                 @php $label = \Carbon\Carbon::parse($date)->isoFormat('ddd • DD/MM'); @endphp
                                 <li class="nav-item" role="presentation">
@@ -226,10 +222,10 @@
                 </div>
             </div>
 
-            {{-- ====== Đánh giá ====== --}}
+            {{-- Đánh giá --}}
             <div class="row g-4 mt-4">
                 <div class="col-lg-6">
-                    <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm">
+                    <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm h-100">
                         <div class="card-body">
                             <h5 class="fw-semibold mb-3">Bình luận & đánh giá</h5>
 
@@ -280,9 +276,7 @@
                     <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm h-100">
                         <div class="card-body">
                             <h5 class="fw-semibold mb-3">Đánh giá gần đây</h5>
-
                             @php $danhgias = $phim->danhGias()->with('nguoiDung')->latest()->take(20)->get(); @endphp
-
                             @forelse($danhgias as $dg)
                                 @php
                                     $name = $dg->nguoiDung->name ?? 'Người dùng';
@@ -310,90 +304,82 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    {{-- ====== Phim liên quan (danh mục) — Slider ====== --}}
+    {{-- ================= Phim liên quan (danh mục) — Slider ================= --}}
     @if (!empty($relatedMovies) && $relatedMovies->count())
-        <div class="container my-5 related-section">
-
+        <div class="container my-5 related-modern">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h1 class="fw-bold text-light mb-0">Phim liên quan</h1>
-                <div class="d-flex gap-2">
-                    <button id="relPrev" class="btn btn-outline-light btn-sm rounded-pill" type="button">
+                <h4 class="fw-bold text-light mb-0">Phim liên quan</h4>
+                <div class="d-none d-lg-flex gap-2">
+                    <button class="relx-nav btn btn-outline-light btn-sm rounded-pill" id="relxPrevTop" type="button"
+                        aria-label="Trước">
                         <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button id="relNext" class="btn btn-outline-light btn-sm rounded-pill" type="button">
+                    <button class="relx-nav btn btn-outline-light btn-sm rounded-pill" id="relxNextTop" type="button"
+                        aria-label="Sau">
                         <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="relSlider" class="rel-slider" data-autoplay="5000">
-                <div class="rel-viewport">
-                    <div class="rel-track">
+            <div id="relx" class="relx" data-autoplay="5000">
+                <div class="relx-viewport">
+                    {{-- arrows nổi hai bên --}}
+                    <button class="relx-arrow relx-prev" id="relxPrev" type="button" aria-label="Trước"><i
+                            class="bi bi-chevron-left"></i></button>
+                    <button class="relx-arrow relx-next" id="relxNext" type="button" aria-label="Sau"><i
+                            class="bi bi-chevron-right"></i></button>
+
+                    <div class="relx-track">
                         @foreach ($relatedMovies as $rel)
-                            <div class="rel-slide">
-                                <a href="{{ route('movies.show', $rel->slug) }}" class="text-decoration-none">
-                                    <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
-                                        {{-- Poster --}}
+                            <div class="relx-slide">
+                                <a href="{{ route('movies.show', $rel->slug) }}" class="relx-card">
+                                    {{-- KHÔNG dùng ratio-3x4 nữa --}}
+                                    <div class="relx-media">
                                         @if ($rel->anh_poster)
                                             <img src="{{ asset('storage/' . $rel->anh_poster) }}"
-                                                class="card-img-top poster-img" alt="{{ $rel->tieu_de }}">
+                                                class="w-100 h-100 object-fit-cover" alt="{{ $rel->tieu_de }}">
                                         @else
-                                            <div class="card-img-top bg-secondary"
-                                                style="height:280px;border-radius:10px 10px 0 0;"></div>
+                                            <img src="{{ asset('images/no-poster.jpg') }}"
+                                                class="w-100 h-100 object-fit-cover" alt="{{ $rel->tieu_de }}">
                                         @endif
-
-                                        {{-- Trạng thái --}}
                                         @php
                                             $today = \Carbon\Carbon::now()->startOfDay();
-                                            $ngayBatDau = $rel->ngay_cong_chieu ?? ($rel->ngay_khoi_chieu ?? null);
-                                            $ngayKetThuc = $rel->ngay_ket_thuc ?? null;
-                                            $status =
-                                                $ngayBatDau &&
-                                                \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
-                                                (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
-                                                    ? 'dang_chieu'
-                                                    : 'sap_chieu';
+                                            $start = $rel->ngay_cong_chieu ?? ($rel->ngay_khoi_chieu ?? null);
+                                            $end = $rel->ngay_ket_thuc ?? null;
+                                            $dang =
+                                                $start &&
+                                                \Carbon\Carbon::parse($start)->lte($today) &&
+                                                (!$end || \Carbon\Carbon::parse($end)->gte($today));
                                         @endphp
-                                        <div
-                                            class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                            {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
-                                        </div>
-
-                                        {{-- Info --}}
-                                        <div class="card-body text-center p-3">
-                                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $rel->tieu_de }}</h6>
-                                            @if ($rel->danhMucs->count())
-                                                <small class="text-info d-block mb-2">
-                                                    <i
-                                                        class="bi bi-tags-fill me-1"></i>{{ $rel->danhMucs->pluck('ten')->join(', ') }}
-                                                </small>
-                                            @endif
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-clock me-1"></i>{{ $rel->thoi_luong }} phút
-                                            </small>
-                                        </div>
-
-                                        <div class="overlay d-flex justify-content-center align-items-center">
-                                            <span class="text-white fw-bold">Xem chi tiết</span>
-                                        </div>
+                                        <span class="relx-badge">{{ $dang ? 'Đang chiếu' : 'Sắp chiếu' }}</span>
+                                        <div class="relx-overlay"><span>Xem chi tiết</span></div>
+                                    </div>
+                                    <div class="relx-info">
+                                        <h6 class="relx-title" title="{{ $rel->tieu_de }}">{{ $rel->tieu_de }}</h6>
+                                        @if ($rel->danhMucs->count())
+                                            <div class="relx-meta"><i class="bi bi-tags-fill me-1"></i>
+                                                <span
+                                                    class="line-clamp-1">{{ $rel->danhMucs->pluck('ten')->join(', ') }}</span>
+                                            </div>
+                                        @endif
+                                        <div class="relx-foot"><i class="bi bi-clock me-1"></i>{{ $rel->thoi_luong }}
+                                            phút</div>
                                     </div>
                                 </a>
                             </div>
                         @endforeach
                     </div>
                 </div>
+                <div id="relxDots" class="relx-dots mt-3"></div>
             </div>
-
-            <div id="relDots" class="rel-dots mt-3"></div>
         </div>
     @endif
 
 
-    {{-- ====== Scoped styles ====== --}}
+    {{-- ================= Styles ================= --}}
     <style>
         .object-fit-cover {
             object-fit: cover
@@ -407,20 +393,37 @@
         .movie-hero .hero-bg {
             position: absolute;
             inset: 0;
-            filter: blur(24px) brightness(0.6);
-            transform: scale(1.08);
+            filter: blur(1px) brightness(0.9) contrast(1.05) saturate(1.04);
+            transform: scale(1.04);
             overflow: hidden
         }
 
         .movie-hero .hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(3, 7, 18, 0.35), rgba(3, 7, 18, 0.9))
+            background: transparent;
+            opacity: 0;
+            display: none;
+            pointer-events: none;
         }
 
         .movie-hero .container {
             position: relative;
             z-index: 2
+        }
+
+        @media (min-width: 768px) {
+            .movie-hero .hero-overlay::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                /* tối nhẹ quanh mép để trailer/poster nổi hơn */
+                background: radial-gradient(80% 70% at 50% 35%,
+                        rgba(0, 0, 0, 0) 0%,
+                        rgba(0, 0, 0, 0) 55%,
+                        rgba(0, 0, 0, 0.25) 100%);
+            }
         }
 
         .glass {
@@ -452,221 +455,345 @@
             border-color: #e53935
         }
 
-        /* Cards chung */
-        .poster-img {
-            height: 280px;
-            object-fit: cover;
-            border-radius: 10px 10px 0 0
-        }
-
-        .movie-card {
-            border-radius: 10px;
-            background: #0f1625;
-            transition: all .25s ease;
+        /* ===== Related slider (relx*) ===== */
+        .relx {
+            --per: 4;
             position: relative
         }
 
-        .movie-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, .5)
-        }
-
-        .status-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: .8rem;
-            font-weight: 600;
-            z-index: 2
-        }
-
-        .movie-card .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, .55);
-            opacity: 0;
-            transition: opacity .25s
-        }
-
-        .movie-card:hover .overlay {
-            opacity: 1
-        }
-
-        /* === Related slider (tự cuộn) === */
-        .rel-slider {
-            --perView: 4;
-            position: relative
-        }
-
-        .rel-viewport {
-            overflow: hidden;
-            width: 100%
-        }
-
-        .rel-track {
-            display: flex;
-            transition: transform .55s ease;
-            will-change: transform
-        }
-
-        .rel-slide {
-            flex: 0 0 calc(100% / var(--perView));
-            padding: .5rem
-        }
-
-        /* breakpoints:  ≥992px:4 ; ≥768px:3 ; <768px:2 */
-        @media (max-width: 991.98px) {
-            .rel-slider {
-                --perView: 3
+        @media (max-width:991.98px) {
+            .relx {
+                --per: 3
             }
         }
 
-        @media (max-width: 767.98px) {
-            .rel-slider {
-                --perView: 2
+        @media (max-width:767.98px) {
+            .relx {
+                --per: 2
+            }
+        }
+
+        .relx-viewport {
+            position: relative;
+            overflow: hidden
+        }
+
+        .relx-track {
+            display: flex;
+            will-change: transform;
+            transition: transform .55s cubic-bezier(.22, .61, .36, 1)
+        }
+
+        .relx-slide {
+            flex: 0 0 calc(100% / var(--per));
+            padding: 12px
+        }
+
+        /* KHUNG 3:4 bằng CSS chuẩn, không phụ thuộc Bootstrap ratio */
+        .relx-media {
+            position: relative;
+            aspect-ratio: 3/4;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .relx-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: contrast(1.02) saturate(1.02)
+        }
+
+        .relx-card {
+            display: block;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0f1625;
+            border: 1px solid rgba(255, 255, 255, .06);
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, .25);
+            transition: transform .25s, box-shadow .25s, border-color .25s;
+        }
+
+        .relx-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, .35);
+            border-color: rgba(229, 57, 53, .45)
+        }
+
+        .relx-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #fff;
+            padding: 6px 10px;
+            font-weight: 700;
+            font-size: .72rem;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, .4);
+        }
+
+        .relx-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .55) 60%);
+            opacity: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 14px;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: .3px;
+            transition: opacity .25s;
+        }
+
+        .relx-card:hover .relx-overlay {
+            opacity: 1
+        }
+
+        .relx-info {
+            padding: 12px 14px 14px
+        }
+
+        .relx-title {
+            margin: 0 0 6px;
+            font-weight: 800;
+            color: #e6eef8;
+            font-size: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        .relx-meta {
+            font-size: .86rem;
+            color: #6fd3ff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px
+        }
+
+        .relx-foot {
+            font-size: .86rem;
+            color: #b0b8c4
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        /* Arrows */
+        .relx-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: rgba(15, 22, 37, .55);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+            z-index: 3;
+            cursor: pointer;
+            transition: background .2s, transform .2s, border-color .2s;
+            opacity: .0;
+        }
+
+        .relx-viewport:hover .relx-arrow {
+            opacity: 1
+        }
+
+        .relx-arrow:hover {
+            background: #e53935;
+            border-color: #e53935;
+            transform: translateY(-50%) scale(1.06)
+        }
+
+        .relx-arrow:active {
+            transform: translateY(-50%) scale(.96)
+        }
+
+        .relx-prev {
+            left: 18px
+        }
+
+        .relx-next {
+            right: 18px
+        }
+
+        @media (max-width:767.98px) {
+            .relx-arrow {
+                opacity: 1
             }
         }
 
         /* Dots */
-        .rel-dots {
+        .relx-dots {
             display: flex;
-            gap: .5rem;
-            justify-content: center
+            justify-content: center;
+            gap: .5rem
         }
 
-        .rel-dots .dot {
+        .relx-dots .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #6c757d;
-            border: 0;
-            opacity: .6
+            background: #64748b;
+            opacity: .55;
+            border: 0
         }
 
-        .rel-dots .dot.active {
+        .relx-dots .dot.active {
             background: #e53935;
             opacity: 1
         }
-
-        /* Đảm bảo không chồng nhau nếu có CSS khác override */
-        .related-section .rel-slide {
-            display: block
-        }
     </style>
 
-    {{-- Client-side form validation --}}
+    {{-- ================= Scripts ================= --}}
     <script>
         (function() {
-            'use strict';
+            // Bootstrap client-side validation
             const forms = document.querySelectorAll('.needs-validation');
-            forms.forEach(form => {
-                form.addEventListener('submit', e => {
-                    if (!form.checkValidity()) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
+            forms.forEach(f => f.addEventListener('submit', e => {
+                if (!f.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                f.classList.add('was-validated');
+            }, false));
         })();
     </script>
 
     <script>
         (function() {
-            const root = document.getElementById('relSlider');
+            const root = document.getElementById('relx');
             if (!root) return;
 
-            const viewport = root.querySelector('.rel-viewport');
-            const track = root.querySelector('.rel-track');
-            const slides = Array.from(track.children);
-            const dotsWrap = document.getElementById('relDots');
-            const prevBtn = document.getElementById('relPrev');
-            const nextBtn = document.getElementById('relNext');
+            const vp = root.querySelector('.relx-viewport');
+            const trk = root.querySelector('.relx-track');
+            const slides = Array.from(trk.children);
+
+            const dotsWrap = document.getElementById('relxDots');
+            const prev = document.getElementById('relxPrev');
+            const next = document.getElementById('relxNext');
+            const prevTop = document.getElementById('relxPrevTop');
+            const nextTop = document.getElementById('relxNextTop');
 
             const autoplay = parseInt(root.dataset.autoplay || '5000', 10);
             let timer = null,
-                current = 0,
+                page = 0,
                 pages = 1;
 
-            function perView() {
+            const perView = () => {
                 const w = window.innerWidth;
                 if (w < 768) return 2;
                 if (w < 992) return 3;
                 return 4;
-            }
+            };
 
             function calcPages() {
                 pages = Math.max(1, Math.ceil(slides.length / perView()));
             }
 
-            function buildDots() {
+            function makeDots() {
                 dotsWrap.innerHTML = '';
                 for (let i = 0; i < pages; i++) {
                     const b = document.createElement('button');
                     b.type = 'button';
-                    b.className = 'dot' + (i === current ? ' active' : '');
+                    b.className = 'dot' + (i === page ? ' active' : '');
                     b.addEventListener('click', () => {
                         stop();
-                        goTo(i);
+                        go(i);
                         start();
                     });
                     dotsWrap.appendChild(b);
                 }
             }
 
-            function goTo(index) {
+            function go(i) {
                 calcPages();
-                if (index >= pages) index = 0;
-                if (index < 0) index = pages - 1;
-                current = index;
-
-                const offset = viewport.clientWidth * current;
-                track.style.transform = `translateX(-${offset}px)`;
-
-                [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === current));
+                if (i >= pages) i = 0;
+                if (i < 0) i = pages - 1;
+                page = i;
+                const offset = vp.clientWidth * page;
+                trk.style.transform = `translateX(-${offset}px)`;
+                [...dotsWrap.children].forEach((d, idx) => d.classList.toggle('active', idx === page));
             }
 
             function start() {
-                if (timer) clearInterval(timer);
-                timer = setInterval(() => goTo(current + 1), autoplay);
+                stop();
+                timer = setInterval(() => go(page + 1), autoplay);
             }
 
             function stop() {
-                if (timer) clearInterval(timer);
-                timer = null;
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
             }
 
-            // Resize → giữ vị trí trang hiện tại
-            window.addEventListener('resize', () => {
-                calcPages();
-                buildDots();
-                goTo(current);
-            });
-
-            // Controls
-            if (prevBtn) prevBtn.addEventListener('click', () => {
+            const bind = (el, dir) => el && el.addEventListener('click', () => {
                 stop();
-                goTo(current - 1);
+                go(page + dir);
                 start();
             });
-            if (nextBtn) nextBtn.addEventListener('click', () => {
-                stop();
-                goTo(current + 1);
-                start();
-            });
+            bind(prev, -1);
+            bind(next, 1);
+            bind(prevTop, -1);
+            bind(nextTop, 1);
 
-            // Pause on hover
             root.addEventListener('mouseenter', stop);
             root.addEventListener('mouseleave', start);
 
-            // Init
+            // touch swipe
+            let sx = 0,
+                dx = 0;
+            vp.addEventListener('touchstart', e => {
+                sx = e.touches[0].clientX;
+                dx = 0;
+                stop();
+            }, {
+                passive: true
+            });
+            vp.addEventListener('touchmove', e => {
+                dx = e.touches[0].clientX - sx;
+            }, {
+                passive: true
+            });
+            vp.addEventListener('touchend', () => {
+                if (Math.abs(dx) > 40) go(page + (dx < 0 ? 1 : -1));
+                start();
+            });
+
+            // resize debounce
+            let rs;
+            window.addEventListener('resize', () => {
+                clearTimeout(rs);
+                rs = setTimeout(() => {
+                    calcPages();
+                    makeDots();
+                    go(page);
+                }, 150);
+            });
+
+            // init
             calcPages();
-            buildDots();
-            goTo(0);
+            makeDots();
+            go(0);
             start();
         })();
     </script>
-
 @endsection
