@@ -43,7 +43,7 @@ class NguoiDungController extends Controller
         $sortDirection = $request->get('sort_direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
-        $nguoiDung = $query->paginate(20);
+        $nguoiDung = $query->paginate(10);
         $vaiTros = VaiTro::all();
 
         return view('admin.nguoi-dung.index', compact('nguoiDung', 'vaiTros'));
