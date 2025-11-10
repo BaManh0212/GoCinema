@@ -198,6 +198,40 @@
                                 <div class="invalid-feedback">Vui lòng chọn số sao.</div>
                             </div>
 
+                            @auth
+                                @if (!empty($eligible) && $eligible)
+                                    <form action="{{ route('phim.danh_gia.luu', $phim->slug) }}" method="POST"
+                                        class="needs-validation" novalidate>
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label">Số sao</label>
+                                            <select name="so_sao" class="form-select" required>
+                                                @for ($i = 5; $i >= 1; $i--)
+                                                    <option value="{{ $i }}">{{ $i }} sao</option>
+                                                @endfor
+                                            </select>
+                                            <div class="invalid-feedback">Vui lòng chọn số sao.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Bình luận</label>
+                                            <textarea name="binh_luan" rows="3" class="form-control" placeholder="Cảm nhận của bạn..."></textarea>
+                                        </div>
+                                        <button class="btn btn-danger"><i class="bi bi-send me-1"></i>Gửi đánh giá</button>
+                                    </form>
+                                @else
+                                    <div class="alert alert-secondary mb-0">
+                                        Bạn chỉ có thể gửi đánh giá sau khi đã <strong>mua vé và check-in thành công</strong>
+                                        cho phim này.
+                                    </div>
+                                @endif
+                            @else
+                                <div class="alert alert-secondary mb-0">
+                                    Vui lòng <a class="link-info" href="{{ url('/dang-nhap') }}">đăng nhập</a> để gửi đánh
+                                    giá.
+                                </div>
+                            @endauth
+
+                        </div>
                             <div class="mb-3">
                                 <label class="form-label">Bình luận</label>
                                 <textarea name="binh_luan" rows="3" class="form-control" placeholder="Cảm nhận của bạn..."></textarea>
