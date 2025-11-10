@@ -91,7 +91,7 @@
                         <i class="fas fa-phone"></i>
                         <strong>Hotline:</strong>
                         <a href="tel:0359445669">0359445669</a>
-                        <span class="text-muted">(Hoạt động 7:00 - 22:00 hàng ngày)</span>
+                        <span class="text-danger">(Hoạt động 7:00 - 22:00 hàng ngày)</span>
                     </p>
                 </div>
 

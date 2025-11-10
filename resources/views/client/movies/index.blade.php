@@ -144,45 +144,59 @@
 
 /* --- Movie Card --- */
 .movie-card {
-    border-radius: 10px;
-    background: #0f1625;
-    transition: all 0.25s ease;
+    border-radius: 14px; /* bo tròn lớn */
+    overflow: hidden;
+    cursor: pointer;
     position: relative;
+    background-color: #1a1f2b; /* nền tối nhẹ, phù hợp theme */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* bóng nhẹ */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .movie-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); /* hover shadow nổi bật */
 }
 .poster-img {
     height: 280px;
     object-fit: cover;
-    border-radius: 10px 10px 0 0;
-    transition: transform 0.25s ease;
+    transition: transform 0.3s ease;
+    border-radius: 14px 14px 0 0; /* bo góc trên */
 }
 .movie-card:hover .poster-img { transform: scale(1.05); }
 
 /* Nhãn trạng thái */
 .status-badge {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    top: 12px;
+    right: 12px;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
     font-weight: 600;
     z-index: 2;
-    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 /* Overlay */
 .movie-card .overlay {
     position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
     opacity: 0;
-    transition: opacity 0.25s ease-in-out;
+    transition: opacity 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 14px; /* overlay trùng card */
 }
 .movie-card:hover .overlay { opacity: 1; }
+.movie-card .overlay span {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
 
 /* Bộ lọc */
 form.bg-dark {
