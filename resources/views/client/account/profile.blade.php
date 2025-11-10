@@ -119,8 +119,53 @@
   .btn-accent{ background:var(--accent); border:none; color:#fff; padding:10px 18px; border-radius:8px; font-weight:700 }
 
   /* table */
-  .table thead th{ color:var(--muted); border-bottom:1px solid var(--border); font-weight:700 }
-  .table tbody td{ color:var(--text); vertical-align:middle }
+ /* ===== TABLE FIX ===== */
+.table {
+  --bs-table-bg: transparent !important; /* loại bỏ nền trắng bootstrap */
+  --bs-table-striped-bg: transparent !important;
+  --bs-table-hover-bg: rgba(255,255,255,0.03);
+  background: transparent !important;
+  color: var(--text);
+  border-collapse: separate;
+  border-spacing: 0;
+  border: none;
+}
+
+.table thead th {
+  background: #0d1424; /* cùng tone với card */
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  padding: 12px 16px;
+}
+
+.table tbody tr {
+  background: var(--card);
+  transition: background 0.2s;
+}
+
+.table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.table tbody td {
+  color: var(--text);
+  border: none;
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+.table-borderless td, 
+.table-borderless th {
+  border: none !important;
+}
+
+.table-responsive {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
   .badge-success{ background:#064e3b; color:#86efac; padding:6px 10px; border-radius:999px; font-weight:700 }
   .badge-danger{ background:#4c0519; color:#fca5a5; padding:6px 10px; border-radius:999px; font-weight:700 }
 
@@ -261,7 +306,7 @@
                       <td class="fw-bold">
                         {{ $ls->hanh_dong == 'tich_luy' ? '+' : '-' }}{{ number_format($ls->diem) }}
                       </td>
-                      <td class="text-muted">{{ $ls->mo_ta ?? 'Không có mô tả' }}</td>
+                      <td class="text-whit">{{ $ls->mo_ta ?? 'Không có mô tả' }}</td>
                     </tr>
                   @endforeach
                 </tbody>

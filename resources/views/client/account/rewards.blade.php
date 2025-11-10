@@ -16,34 +16,80 @@
   }
 
   body { background:linear-gradient(180deg,var(--bg) 0%,#07101a 100%); color:var(--text); font-family:'Inter','Poppins',sans-serif; }
-  .container-account{ padding:40px 20px; }
+  .container-account{
+    padding: 40px 20px;
+  }
 
-  /* SIDEBAR */
-  .account-sidebar {
-    background:var(--card); border-radius:var(--radius); border:1px solid var(--border);
+  /* ===== SIDEBAR ===== */
+  .account-sidebar{
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
   }
-  .account-sidebar .profile-top {
-    padding:28px 20px; text-align:center; border-bottom:1px solid var(--border);
+
+  .account-sidebar .profile-top{
+    padding: 28px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
   }
-  .account-sidebar .avatar {
-    width:88px; height:88px; border-radius:50%; background:linear-gradient(180deg,#0f1724,#111827);
-    border:2px solid rgba(255,255,255,0.03); box-shadow:0 6px 18px rgba(2,6,23,0.6);
-    display:inline-flex; align-items:center; justify-content:center; font-size:42px; color:var(--primary);
+
+  /* ===== AVATAR UPLOAD ===== */
+  .avatar-wrapper {
+    position: relative;
+    display: inline-block;
   }
-  .account-sidebar h5 { margin-top:12px; margin-bottom:4px; font-weight:600; color:var(--text); }
-  .account-sidebar p { margin:0; color:var(--muted); font-size:0.9rem; }
-  .account-sidebar .points {
+  .avatar-wrapper img {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.06);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    transition: 0.3s;
+  }
+  .avatar-wrapper:hover img {
+    opacity: 0.4;
+  }
+  .avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    font-size: 18px;
+    transition: 0.3s;
+  }
+  .avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+  }
+  .avatar-overlay label {
+    cursor: pointer;
+  }
+  #avatarInput {
+    display: none;
+  }
+
+  .account-sidebar .profile-top h5{ margin-top:12px; margin-bottom:4px; font-weight:600; color:var(--text)}
+  .account-sidebar .profile-top p{ margin:0; color:var(--muted); font-size:0.9rem }
+
+  .account-sidebar .points{
     display:inline-block; margin-top:12px; padding:6px 12px; border-radius:999px;
-    background:rgba(99,102,241,0.12); color:var(--primary); font-weight:600; border:1px solid rgba(99,102,241,0.08);
+    background: rgba(99,102,241,0.12); color:var(--primary); font-weight:600; font-size:0.95rem;
+    border:1px solid rgba(99,102,241,0.08);
   }
-  .account-sidebar .list-group { padding:12px 8px; }
-  .account-sidebar .list-group a {
-    display:flex; align-items:center; gap:12px; padding:12px 18px; margin:6px 8px;
-    border-radius:10px; color:var(--muted); font-weight:600; text-decoration:none; border:1px solid transparent;
+
+  .account-sidebar .list-group{ padding:12px 8px; }
+  .account-sidebar .list-group a{
+    display:flex; align-items:center; gap:12px; padding:12px 18px; margin:6px 8px; border-radius:10px;
+    color:var(--muted); text-decoration:none; font-weight:600; border:1px solid transparent;
   }
-  .account-sidebar .list-group a i { width:28px; text-align:center; }
-  .account-sidebar .list-group a:hover { background:#0f1a2b; color:var(--text); }
-  .account-sidebar .list-group a.active { background:var(--primary); color:#fff; box-shadow:0 6px 20px rgba(99,102,241,0.12); }
+  .account-sidebar .list-group a i{ width:28px; text-align:center }
+  .account-sidebar .list-group a:hover{ background:#0f1a2b; color:var(--text); }
+  .account-sidebar .list-group a.active{ background:var(--primary); color:#fff; box-shadow:0 6px 20px rgba(99,102,241,0.12); }
 
   /* MAIN CONTENT */
   .card-account { background:var(--card); border-radius:var(--radius); border:1px solid var(--border); color:var(--text); }
@@ -87,21 +133,39 @@
 <div class="container container-account">
   <div class="row g-4">
 
-    {{-- SIDEBAR --}}
+        {{-- SIDEBAR --}}
     <div class="col-lg-3 col-md-4">
       <aside class="account-sidebar">
         <div class="profile-top">
-          <div class="avatar"><i class="fas fa-user"></i></div>
+          <form action="{{ route('account.update-avatar') }}" method="POST" enctype="multipart/form-data" id="avatarForm">
+            @csrf
+            <div class="avatar-wrapper">
+              <img id="previewAvatar" src="{{ $user->avatar_url }}" alt="Avatar">
+              <div class="avatar-overlay">
+                <label for="avatarInput"><i class="fas fa-camera"></i></label>
+              </div>
+              <input type="file" name="avatar" id="avatarInput" accept="image/*">
+            </div>
+          </form>
+
           <h5>{{ $user->ho_ten }}</h5>
-          <p>{{ $user->email }}</p>
-          <div class="points"><i class="fas fa-star"></i> {{ number_format($user->diem) }} điểm</div>
+          <p class="small">{{ $user->email }}</p>
+          <div class="points"><i class="fas fa-star"></i>&nbsp; {{ number_format($user->diem) }} điểm</div>
         </div>
 
         <div class="list-group">
-          <a href="{{ route('account.index') }}"><i class="fas fa-user"></i> Thông tin tài khoản</a>
-          <a href="{{ route('account.rewards') }}" class="active"><i class="fas fa-gift"></i> Đổi điểm thưởng</a>
-          <a href="{{ route('account.my-vouchers') }}"><i class="fas fa-ticket-alt"></i> Voucher của tôi</a>
-          <a href="{{ route('account.point-history') }}"><i class="fas fa-history"></i> Lịch sử điểm</a>
+          <a href="{{ route('account.index') }}" class="{{ request()->routeIs('account.index') ? 'active' : '' }}">
+            <i class="fas fa-user"></i> <span>Thông tin tài khoản</span>
+          </a>
+          <a href="{{ route('account.rewards') }}" class="{{ request()->routeIs('account.rewards') ? 'active' : '' }}">
+            <i class="fas fa-gift"></i> <span>Đổi điểm thưởng</span>
+          </a>
+          <a href="{{ route('account.my-vouchers') }}" class="{{ request()->routeIs('account.my-vouchers') ? 'active' : '' }}">
+            <i class="fas fa-ticket-alt"></i> <span>Voucher của tôi</span>
+          </a>
+          <a href="{{ route('account.point-history') }}" class="{{ request()->routeIs('account.point-history') ? 'active' : '' }}">
+            <i class="fas fa-history"></i> <span>Lịch sử điểm</span>
+          </a>
         </div>
       </aside>
     </div>
