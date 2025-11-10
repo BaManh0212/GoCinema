@@ -324,23 +324,24 @@
         .poster-img {
             height: 280px;
             object-fit: cover;
-            border-radius: 6px 6px 0 0;
-            transition: transform 0.2s ease-in-out;
+            border-radius: 16px 16px 0 0; /* bo tròn góc trên */
+            transition: transform 0.3s ease;
         }
-
         .movie-card:hover .poster-img {
-            transform: scale(1.05);
+            transform: scale(1.08); /* poster zoom nổi bật hơn */
         }
-
         .movie-card {
-            border-radius: 6px;
-            transition: transform 0.2s ease-in-out;
+            border-radius: 16px; /* viền bo lớn */
+            overflow: hidden;
             cursor: pointer;
             position: relative;
+            background-color: #ffffff; /* nền sáng để nổi bật trên background section */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* shadow rõ */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
         .movie-card:hover {
-            transform: scale(1.03);
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45); /* hover shadow sâu hơn */
         }
 
         .movie-card .overlay {
@@ -365,14 +366,27 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
             z-index: 2;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
         }
-
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 14px; /* bo tròn overlay trùng card */
+        }
         .overlay span {
             font-size: 1.2rem;
         }
