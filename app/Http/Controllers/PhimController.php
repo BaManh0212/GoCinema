@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\DanhMuc;
 use App\Models\DanhGia;
@@ -13,6 +14,18 @@ use Carbon\Carbon;
 
 class PhimController extends Controller
 {
+
+    /**  Kiểm tra User đã check-in thành công cho phim này chưa? */
+    private function userHasCheckedInForMovie(int $userId, int $phimId): bool
+    {
+        return DB::table('don_dat_ve as ddv')
+            ->join('suat_chieu as sc', 'sc.id', '=', 'ddv.suat_chieu_id')
+            ->where('ddv.nguoi_dung_id', $userId)
+            ->where('sc.phim_id', $phimId)
+            ->where('ddv.trang_thai', 'da_checkin')
+            ->exists();
+    }
+
     /**
      * ✅ Hiển thị tất cả phim (có lọc & phân trang)
      */
@@ -154,6 +167,21 @@ class PhimController extends Controller
             ->take(8)
             ->get();
 
+        // ✅ Quyền đánh giá
+        $eligible = false;
+        if (auth()->check()) {
+            $eligible = $this->userHasCheckedInForMovie(auth()->id(), $phim->id);
+        }
+
+        return view('client.movies.show', compact(
+            'phim',
+            'lichChieuTheoNgay',
+            'soDanhGia',
+            'diemTB',
+            'relatedMovies',
+            'eligible' // 👈 truyền xuống view
+        ));
+
         return view('client.movies.show', compact('phim', 'lichChieuTheoNgay', 'soDanhGia', 'diemTB', 'relatedMovies'));
     }
 
@@ -193,20 +221,25 @@ class PhimController extends Controller
         $phim = Phim::where('slug', $slug)->firstOrFail();
 
         $data = $request->validate([
-            'so_sao'   => 'required|integer|min:1|max:5',
+            'so_sao'    => 'required|integer|min:1|max:5',
             'binh_luan' => 'nullable|string|max:2000',
         ]);
 
-        $userId = auth()->id(); // tuỳ hệ thống, map tới bảng nguoi_dung
+        $userId = auth()->id();
         if (!$userId) {
             return back()->with('error', 'Vui lòng đăng nhập để đánh giá.');
         }
 
+        // ✅ Chặn server-side: chỉ cho đánh giá nếu đã check-in thành công
+        if (!$this->userHasCheckedInForMovie($userId, $phim->id)) {
+            return back()->with('error', 'Bạn chỉ có thể đánh giá sau khi đã mua vé và check-in thành công cho phim này.');
+        }
+
         DanhGia::create([
-            'phim_id'        => $phim->id,
-            'nguoi_dung_id'  => $userId,
-            'so_sao'         => $data['so_sao'],
-            'binh_luan'      => $data['binh_luan'] ?? null,
+            'phim_id'       => $phim->id,
+            'nguoi_dung_id' => $userId,
+            'so_sao'        => $data['so_sao'],
+            'binh_luan'     => $data['binh_luan'] ?? null,
         ]);
 
         return back()->with('success', 'Cảm ơn bạn đã đánh giá!');
