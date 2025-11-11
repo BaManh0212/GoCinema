@@ -49,14 +49,14 @@
     <div class="sidebar-heading">🎟️ Suất chiếu & Phòng</div>
 
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{{ route('staff.suatchieu.index') }}">
             <i class="fas fa-fw fa-clock"></i>
             <span>Suất chiếu</span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{{ route('staff.phongchieu.index') }}">
             <i class="fas fa-fw fa-tv"></i>
             <span>Phòng chiếu</span>
         </a>

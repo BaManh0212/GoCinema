@@ -37,6 +37,9 @@ use App\Http\Controllers\Staff\PhimController as StaffPhimController;
 use App\Http\Controllers\Staff\DanhMucController as StaffDanhMucController;
 use App\Http\Controllers\Staff\ComboController as StaffComboController;
 use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
+use App\Http\Controllers\Staff\SuatChieuController as StaffSuatChieuController;
+use App\Http\Controllers\Staff\PhongChieuController as StaffPhongChieuController;
+use App\Http\Controllers\Staff\GheController as StaffGheController;
 
 /*
 |--------------------------------------------------------------------------
@@ -320,6 +323,36 @@ Route::prefix('staff')
             // In vé (PDF)
             Route::get('{id}/print', [StaffDonDatVeController::class, 'print'])->name('print');
         });
+        // Quản lý phòng chiếu
+        Route::resource('phongchieu', StaffPhongChieuController::class)->names('phongchieu');
+        // Quản lý ghế theo từng phòng
+        // Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
+        // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
+        // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+
+        Route::get('phongchieu/{id}/ghe', [StaffGheController::class, 'index'])->name('phongchieu.ghe');
+        Route::post('phongchieu/{id}/ghe', [StaffGheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [StaffGheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+        Route::post('admin/phongchieu/{id}/ghe/update-map', [StaffGheController::class, 'updateMap'])
+            ->name('admin.phongchieu.ghe.updateMap');
+        // Quản lý suất chiếu
+        Route::resource('suatchieu', StaffSuatChieuController::class)->names('suatchieu');
+
+        // Tạo nhanh tự động
+        Route::post('suatchieu/auto-store', [StaffSuatChieuController::class, 'autoStore'])
+            ->name('suatchieu.autoStore');
+
+        // Danh sách ghế trong suất chiếu
+        Route::get('suatchieu/{id}/ghe', [StaffSuatChieuController::class, 'gheIndex'])
+            ->name('suatchieu.ghe');
+
+        // Cập nhật trạng thái từng suất
+        Route::patch('suatchieu/{id}/trang-thai', [StaffSuatChieuController::class, 'updateTrangThai'])
+            ->name('suatchieu.updateTrangThai');
+
+        // Cập nhật trạng thái hàng loạt
+        Route::post('suatchieu/bulk-update', [StaffSuatChieuController::class, 'bulkUpdate'])
+            ->name('suatchieu.bulkUpdate');
     });
 
 /*

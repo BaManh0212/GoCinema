@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('content')
 @php
@@ -17,7 +17,7 @@
             <small class="text-muted">Xem, lọc và quản lý các suất chiếu</small>
         </div>
         <div>
-            <a href="{{ route('admin.suatchieu.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
+            <a href="{{ route('staff.suatchieu.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
                 <i class="bi bi-plus-circle"></i> Thêm suất chiếu
             </a>
         </div>
@@ -26,7 +26,7 @@
     {{-- 🔍 Bộ lọc --}}
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.suatchieu.index') }}" class="row g-3 align-items-center">
+            <form method="GET" action="{{ route('staff.suatchieu.index') }}" class="row g-3 align-items-center">
                 <div class="col-md-3">
                     <input type="text" name="q" class="form-control" placeholder="Tìm theo tên phim..." value="{{ request('q') }}">
                 </div>
@@ -64,7 +64,7 @@
                     <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">
                         <i class="fas fa-search"></i> Tìm kiếm
                     </button>
-                    <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">
+                    <a href="{{ route('staff.suatchieu.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">
                         Đặt lại
                     </a>
                 </div>
@@ -74,7 +74,7 @@
     {{-- ⚙️ Cập nhật trạng thái hàng loạt --}} 
     <div class="card mb-4 border-0 shadow-sm"> 
         <div class="card-body py-3"> 
-            <form action="{{ route('admin.suatchieu.bulkUpdate') }}" method="POST" class="row g-3 align-items-end"> 
+            <form action="{{ route('staff.suatchieu.bulkUpdate') }}" method="POST" class="row g-3 align-items-end"> 
                 @csrf 
                 <div class="col-md-3"> 
                     <label class="form-label mb-0 fw-semibold">Ngày chiếu</label> 
@@ -140,10 +140,10 @@
                                 @if($now->gt($gioKetThuc))
                                     <span class="badge bg-secondary text-white">Kết thúc</span>
                                 @else
-                                    <form action="{{ route('admin.suatchieu.updateTrangThai', $s->id) }}" method="POST">
+                                    <form action="{{ route('staff.suatchieu.updateTrangThai', $s->id) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
-                                        <select name="trang_thai" class="form-select rounded-pill form-select rounded-pill-sm w-auto"
+                                        <select name="trang_thai" class="form-select form-select-sm w-auto"
                                                 onchange="this.form.submit()"
                                                 {{ !$canEdit ? 'disabled title=Không thể thay đổi trạng thái suất đã bắt đầu' : '' }}>
                                             @foreach(['hoat_dong'=>'🟢 Hoạt động','tam_dung'=>'⏸️ Tạm dừng','huy'=>'❌ Hủy'] as $value=>$label)
@@ -156,13 +156,13 @@
 
                            {{-- Hành động --}}
                     <td>
-                        <a href="{{ route('admin.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-info rounded-pill">
+                        <a href="{{ route('staff.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-info rounded-pill">
                             Ghế
                         </a>
 
                         @if($canEdit)
-                            <a href="{{ route('admin.suatchieu.edit', $s->id) }}" class="btn btn-sm btn-outline-primary me-1">Sửa</a>
-                            <form action="{{ route('admin.suatchieu.destroy', $s->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('staff.suatchieu.edit', $s->id) }}" class="btn btn-sm btn-outline-primary me-1">Sửa</a>
+                            <form action="{{ route('staff.suatchieu.destroy', $s->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
@@ -194,7 +194,7 @@
     -webkit-text-fill-color: transparent;
 }
 .table-row:hover { background-color: #e9f5ff; transform: scale(1.01); }
-select.form-select rounded-pill-sm { min-width: 130px; }
+select.form-select-sm { min-width: 130px; }
 .disabled {
     pointer-events: none;
     opacity: 0.6;
