@@ -3,7 +3,7 @@
 @section('title', 'Phim - ' . $danhMuc->ten)
 
 @section('content')
-<div class="container py-5 mt-5 text-light">
+<div class="container py-5 text-light">
 
     {{-- ================== TIÊU ĐỀ ================== --}}
     <div class="text-center mb-5">
@@ -78,7 +78,7 @@
 
                         {{-- Thông tin phim --}}
                         <div class="card-body text-center p-3">
-                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
+                            <h6 class="card-title text-white mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
                             @if($phim->danhMucs->count())
                                 <small class="text-info d-block mb-2">
                                     <i class="bi bi-tags-fill me-1"></i>
@@ -112,60 +112,18 @@
     </div>
 </div>
 
-{{-- ================== CSS ================== --}}
+
+@endsection
+
+@push('styles')
 <style>
-.section-title {
-    font-size: 2.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(255,77,77,0.6);
-}
-.filter-box {
-    border: 1px solid rgba(255,255,255,0.1);
-    background: linear-gradient(145deg, #141a2a, #101624);
-}
-.movie-card {
-    border-radius: 10px;
-    background: #0f1625;
-    transition: all 0.25s ease;
-    position: relative;
-}
-.movie-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
-.poster-img {
-    height: 280px;
-    object-fit: cover;
-    border-radius: 10px 10px 0 0;
-    transition: transform 0.25s ease;
-}
-.movie-card:hover .poster-img { transform: scale(1.05); }
-.status-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    z-index: 2;
-    box-shadow: 0 0 8px rgba(0,0,0,0.3);
-}
-.movie-card .overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    opacity: 0;
-    transition: opacity 0.25s ease-in-out;
-}
-.movie-card:hover .overlay { opacity: 1; }
+/* Bộ lọc */
 form.bg-dark {
     background-color: #141a2a !important;
     border-radius: 16px;
 }
-.form-control, .form-select {
+.form-control, .form-select,
+.select2-container--bootstrap-5 .select2-selection--single {
     background-color: #1b2333 !important;
     border: 1px solid #495057 !important;
     color: #f8f9fa !important;
@@ -180,5 +138,22 @@ form.bg-dark {
     border-color: #dc3545 !important;
     box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25) !important;
 }
+
+/* Select2 */
+.select2-container--bootstrap-5 .select2-selection__rendered {
+    color: #f8f9fa !important;
+}
+.select2-container--bootstrap-5 .select2-results__option {
+    background-color: #1b2333;
+    color: #f8f9fa;
+}
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+.select2-dropdown {
+    background-color: #1b2333 !important;
+    border: 1px solid #495057 !important;
+}
 </style>
-@endsection
+@endpush

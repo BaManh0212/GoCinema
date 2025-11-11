@@ -32,251 +32,279 @@
                             </video>
                         @endif
                         @if ($banner->title)
-                            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded px-3 py-2">
-                                <h5 class="m-0">{{ $banner->title }}</h5>
+                            <div class="carousel-caption d-none d-md-block" style="background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 15px;">
+                                <h5 class="m-0" style="color: var(--text-light); font-weight: 600;">{{ $banner->title }}</h5>
                             </div>
                         @endif
                     </div>
                 @endforeach
             </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
     @endif
 
     {{-- ================= PHIM NỔI BẬT ================= --}}
-    <div class="container py-5 section-featured">
-        <h2 class="fw-bold mb-4 text-danger text-center">🎬 Phim nổi bật</h2>
-        <div class="row g-4">
-            @forelse ($featured as $phim)
-                <div class="col-6 col-md-3">
-                    <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
-                        <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
-                            {{-- Ảnh poster --}}
-                            @if ($phim->anh_poster)
-                                <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img"
-                                    alt="{{ $phim->tieu_de }}">
-                            @else
-                                <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;">
+    <section class="py-5" style="background: var(--secondary-bg);">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">🎬 Phim nổi bật</h2>
+                <p class="text-secondary mb-0" style="color: var(--text-muted);">Khám phá những bộ phim hot nhất đang chiếu tại GoCinema</p>
+            </div>
+
+            <div class="row g-4">
+                @forelse ($featured as $phim)
+                    <div class="col-6 col-md-3">
+                        <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                                {{-- Ảnh poster --}}
+                                @if ($phim->anh_poster)
+                                    <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                                @else
+                                    <div class="card-img-top bg-secondary" style="height:280px;border-radius: var(--border-radius) var(--border-radius) 0 0;"></div>
+                                @endif
+
+                                {{-- Nhãn trạng thái góc trên --}}
+                                @php
+                                    $today = \Carbon\Carbon::now()->startOfDay();
+                                    $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
+                                    $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                                    if (
+                                        $ngayBatDau &&
+                                        \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                        (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
+                                    ) {
+                                        $status = 'dang_chieu';
+                                    } else {
+                                        $status = 'sap_chieu';
+                                    }
+                                @endphp
+                                <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}" style="border-radius: 20px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                                    {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                                 </div>
-                            @endif
 
-                            {{-- Nhãn trạng thái góc trên --}}
-                            @php
-                                $today = \Carbon\Carbon::now()->startOfDay();
-                                $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
-                                $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
-
-                                if (
-                                    $ngayBatDau &&
-                                    \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
-                                    (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
-                                ) {
-                                    $status = 'dang_chieu';
-                                } else {
-                                    $status = 'sap_chieu';
-                                }
-                            @endphp
-                            <div
-                                class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
-                            </div>
-                            {{-- Thông tin phim --}}
-                            <div class="card-body text-center p-3">
-                                <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
-                                {{-- Danh mục --}}
-                                @if ($phim->danhMucs->count())
-                                    <small class="text-info d-block mb-2">
-                                        <i class="bi bi-tags-fill me-1"></i>
-                                        {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                {{-- Thông tin phim --}}
+                                <div class="card-body text-center p-3">
+                                    <h6 class="card-title text-truncate mb-1 fw-semibold" style="color: var(--text-light);">{{ $phim->tieu_de }}</h6>
+                                    {{-- Danh mục --}}
+                                    @if ($phim->danhMucs->count())
+                                        <small class="text-info d-block mb-2" style="color: #74b9ff;">
+                                            <i class="bi bi-tags-fill me-1"></i>
+                                            {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                        </small>
+                                    @endif
+                                    <small class="text-muted d-block mb-1" style="color: var(--text-muted);">
+                                        <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
                                     </small>
-                                @endif
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
-                                </small>
 
-                                @if ($phim->do_tuoi_gioi_han)
-                                    <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                                @endif
-                            </div>
+                                    @if ($phim->do_tuoi_gioi_han)
+                                        <small class="badge" style="background: var(--accent); color: var(--text-light);">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                                    @endif
+                                </div>
 
-                            {{-- Overlay --}}
-                            <div class="overlay d-flex justify-content-center align-items-center">
-                                <span class="text-white fw-bold">Xem chi tiết</span>
+                                {{-- Overlay --}}
+                                <div class="overlay d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.6);">
+                                    <span class="text-white fw-bold" style="font-size: 1.1rem;">Xem chi tiết</span>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            @empty
-                <p class="text-muted text-center">Chưa có phim nổi bật.</p>
-            @endforelse
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-12 text-center text-muted fs-5 py-4" style="color: var(--text-muted);">Chưa có phim nổi bật.</div>
+                @endforelse
+            </div>
         </div>
-    </div>
+    </section>
 
     {{-- ================= PHIM ĐANG CHIẾU ================= --}}
-    <div class="container py-5 section-nowshowing">
-        <h2 class="fw-bold mb-4 text-primary text-center">🎟️ Phim đang chiếu</h2>
-        <div class="row g-4">
-            @forelse ($nowShowing as $phim)
-                <div class="col-6 col-md-3">
-                    <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
-                        <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
-                            {{-- Ảnh poster --}}
-                            @if ($phim->anh_poster)
-                                <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img"
-                                    alt="{{ $phim->tieu_de }}">
-                            @else
-                                <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;">
+    <section class="py-5" style="background: var(--primary-bg);">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">🎟️ Phim đang chiếu</h2>
+                <p class="text-secondary mb-0" style="color: var(--text-muted);">Xem ngay những bộ phim đang hot tại các rạp</p>
+            </div>
+
+            <div class="row g-4">
+                @forelse ($nowShowing as $phim)
+                    <div class="col-6 col-md-3">
+                        <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                                {{-- Ảnh poster --}}
+                                @if ($phim->anh_poster)
+                                    <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                                @else
+                                    <div class="card-img-top bg-secondary" style="height:280px;border-radius: var(--border-radius) var(--border-radius) 0 0;"></div>
+                                @endif
+
+                                {{-- Nhãn trạng thái góc trên --}}
+                                @php
+                                    $today = \Carbon\Carbon::now()->startOfDay();
+                                    $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
+                                    $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                                    if (
+                                        $ngayBatDau &&
+                                        \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                        (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
+                                    ) {
+                                        $status = 'dang_chieu';
+                                    } else {
+                                        $status = 'sap_chieu';
+                                    }
+                                @endphp
+                                <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}" style="border-radius: 20px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                                    {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                                 </div>
-                            @endif
 
-                            {{-- Nhãn trạng thái góc trên --}}
-                            @php
-                                $today = \Carbon\Carbon::now()->startOfDay();
-                                $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
-                                $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
-
-                                if (
-                                    $ngayBatDau &&
-                                    \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
-                                    (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
-                                ) {
-                                    $status = 'dang_chieu';
-                                } else {
-                                    $status = 'sap_chieu';
-                                }
-                            @endphp
-                            <div
-                                class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
-                            </div>
-
-                            {{-- Thông tin phim --}}
-                            <div class="card-body text-center p-3">
-                                <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
-                                {{-- Danh mục --}}
-                                @if ($phim->danhMucs->count())
-                                    <small class="text-info d-block mb-2">
-                                        <i class="bi bi-tags-fill me-1"></i>
-                                        {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                {{-- Thông tin phim --}}
+                                <div class="card-body text-center p-3">
+                                    <h6 class="card-title text-truncate mb-1 fw-semibold" style="color: var(--text-light);">{{ $phim->tieu_de }}</h6>
+                                    {{-- Danh mục --}}
+                                    @if ($phim->danhMucs->count())
+                                        <small class="text-info d-block mb-2" style="color: #74b9ff;">
+                                            <i class="bi bi-tags-fill me-1"></i>
+                                            {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                        </small>
+                                    @endif
+                                    <small class="text-muted d-block mb-1" style="color: var(--text-muted);">
+                                        <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
                                     </small>
-                                @endif
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
-                                </small>
 
-                                @if ($phim->do_tuoi_gioi_han)
-                                    <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                                @endif
-                            </div>
+                                    @if ($phim->do_tuoi_gioi_han)
+                                        <small class="badge" style="background: var(--accent); color: var(--text-light);">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                                    @endif
+                                </div>
 
-                            {{-- Overlay --}}
-                            <div class="overlay d-flex justify-content-center align-items-center">
-                                <span class="text-white fw-bold">Xem chi tiết</span>
+                                {{-- Overlay --}}
+                                <div class="overlay d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.6);">
+                                    <span class="text-white fw-bold" style="font-size: 1.1rem;">Xem chi tiết</span>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            @empty
-                <p class="text-muted text-center">Chưa có phim đang chiếu.</p>
-            @endforelse
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-12 text-center text-muted fs-5 py-4" style="color: var(--text-muted);">Chưa có phim đang chiếu.</div>
+                @endforelse
+            </div>
         </div>
-    </div>
+    </section>
 
     {{-- ================= PHIM SẮP CHIẾU ================= --}}
-    <div class="container py-5 section-comingsoon">
-        <h2 class="fw-bold mb-4 text-success text-center">⏳ Phim sắp chiếu</h2>
-        <div class="row g-4">
-            @forelse ($comingSoon as $phim)
-                <div class="col-6 col-md-3">
-                    <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
-                        <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
-                            {{-- Ảnh poster --}}
-                            @if ($phim->anh_poster)
-                                <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img"
-                                    alt="{{ $phim->tieu_de }}">
-                            @else
-                                <div class="card-img-top bg-secondary" style="height:280px;border-radius:8px 8px 0 0;">
+    <section class="py-5" style="background: var(--secondary-bg);">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">⏳ Phim sắp chiếu</h2>
+                <p class="text-secondary mb-0" style="color: var(--text-muted);">Đừng bỏ lỡ những bộ phim bom tấn sắp ra mắt</p>
+            </div>
+
+            <div class="row g-4">
+                @forelse ($comingSoon as $phim)
+                    <div class="col-6 col-md-3">
+                        <a href="{{ route('movies.show', $phim->slug) }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 movie-card overflow-hidden position-relative">
+                                {{-- Ảnh poster --}}
+                                @if ($phim->anh_poster)
+                                    <img src="{{ asset('storage/' . $phim->anh_poster) }}" class="card-img-top poster-img" alt="{{ $phim->tieu_de }}">
+                                @else
+                                    <div class="card-img-top bg-secondary" style="height:280px;border-radius: var(--border-radius) var(--border-radius) 0 0;"></div>
+                                @endif
+
+                                {{-- Nhãn trạng thái góc trên --}}
+                                @php
+                                    $today = \Carbon\Carbon::now()->startOfDay();
+                                    $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
+                                    $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
+
+                                    if (
+                                        $ngayBatDau &&
+                                        \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
+                                        (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
+                                    ) {
+                                        $status = 'dang_chieu';
+                                    } else {
+                                        $status = 'sap_chieu';
+                                    }
+                                @endphp
+                                <div class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}" style="border-radius: 20px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                                    {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
                                 </div>
-                            @endif
 
-                            {{-- Nhãn trạng thái góc trên --}}
-                            @php
-                                $today = \Carbon\Carbon::now()->startOfDay();
-                                $ngayBatDau = $phim->ngay_cong_chieu ?? ($phim->ngay_khoi_chieu ?? null);
-                                $ngayKetThuc = $phim->ngay_ket_thuc ?? null;
-
-                                if (
-                                    $ngayBatDau &&
-                                    \Carbon\Carbon::parse($ngayBatDau)->lte($today) &&
-                                    (!$ngayKetThuc || \Carbon\Carbon::parse($ngayKetThuc)->gte($today))
-                                ) {
-                                    $status = 'dang_chieu';
-                                } else {
-                                    $status = 'sap_chieu';
-                                }
-                            @endphp
-                            <div
-                                class="status-badge {{ $status === 'dang_chieu' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                {{ $status === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu' }}
-                            </div>
-
-                            {{-- Thông tin phim --}}
-                            <div class="card-body text-center p-3">
-                                <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
-                                {{-- Danh mục --}}
-                                @if ($phim->danhMucs->count())
-                                    <small class="text-info d-block mb-2">
-                                        <i class="bi bi-tags-fill me-1"></i>
-                                        {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                {{-- Thông tin phim --}}
+                                <div class="card-body text-center p-3">
+                                    <h6 class="card-title text-truncate mb-1 fw-semibold" style="color: var(--text-light);">{{ $phim->tieu_de }}</h6>
+                                    {{-- Danh mục --}}
+                                    @if ($phim->danhMucs->count())
+                                        <small class="text-info d-block mb-2" style="color: #74b9ff;">
+                                            <i class="bi bi-tags-fill me-1"></i>
+                                            {{ $phim->danhMucs->pluck('ten')->join(', ') }}
+                                        </small>
+                                    @endif
+                                    <small class="text-muted d-block mb-1" style="color: var(--text-muted);">
+                                        <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
                                     </small>
-                                @endif
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-clock me-1"></i>Thời lượng: {{ $phim->thoi_luong }} phút
-                                </small>
 
-                                @if ($phim->do_tuoi_gioi_han)
-                                    <small class="badge bg-danger">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
-                                @endif
-                            </div>
+                                    @if ($phim->do_tuoi_gioi_han)
+                                        <small class="badge" style="background: var(--accent); color: var(--text-light);">Độ tuổi: {{ $phim->do_tuoi_gioi_han }}</small>
+                                    @endif
+                                </div>
 
-                            {{-- Overlay --}}
-                            <div class="overlay d-flex justify-content-center align-items-center">
-                                <span class="text-white fw-bold">Xem chi tiết</span>
+                                {{-- Overlay --}}
+                                <div class="overlay d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.6);">
+                                    <span class="text-white fw-bold" style="font-size: 1.1rem;">Xem chi tiết</span>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            @empty
-                <p class="text-white text-center">Chưa có phim sắp chiếu.</p>
-            @endforelse
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-12 text-center text-muted fs-5 py-4" style="color: var(--text-muted);">Chưa có phim sắp chiếu.</div>
+                @endforelse
+            </div>
         </div>
-    </div>
+    </section>
 
     {{-- ================= Tại sao chọn chúng tôi ================= --}}
-    <section class="why-choose py-5">
+    <section class="py-5" style="background: var(--primary-bg);">
         <div class="container">
-            <h2 class="why-title text-center text-white fw-bold mb-3">Tại sao chọn chúng tôi?</h2>
-            <p class="text-center text-white mb-5">Website đặt vé xem phim hàng đầu Việt Nam với trải nghiệm người dùng
-                tuyệt vời.</p>
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--accent); font-size: 2.5rem;">Tại sao chọn chúng tôi?</h2>
+                <p class="text-secondary mb-5" style="color: var(--text-muted); font-size: 1.1rem;">Website đặt vé xem phim hàng đầu Việt Nam với trải nghiệm người dùng tuyệt vời.</p>
+            </div>
 
             <div class="row g-4">
                 <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Giao diện thân thiện</h4>
-                        <p class="feature-desc mb-0">Dễ dàng tìm kiếm phim, rạp và suất chiếu phù hợp.</p>
+                    <div class="feature-card p-4 h-100 text-center">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: var(--accent);">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h4 class="feature-title mb-3" style="color: var(--text-light); font-weight: 700;">Giao diện thân thiện</h4>
+                        <p class="feature-desc mb-0" style="color: var(--text-muted);">Dễ dàng tìm kiếm phim, rạp và suất chiếu phù hợp.</p>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Thanh toán linh hoạt</h4>
-                        <p class="feature-desc mb-0">Hỗ trợ nhiều hình thức thanh toán trực tuyến an toàn.</p>
+                    <div class="feature-card p-4 h-100 text-center">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: var(--accent);">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <h4 class="feature-title mb-3" style="color: var(--text-light); font-weight: 700;">Thanh toán linh hoạt</h4>
+                        <p class="feature-desc mb-0" style="color: var(--text-muted);">Hỗ trợ nhiều hình thức thanh toán trực tuyến an toàn.</p>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <div class="feature-card p-4 h-100">
-                        <h4 class="feature-title mb-3">Ưu đãi hấp dẫn</h4>
-                        <p class="feature-desc mb-0">Nhận ưu đãi, voucher và thông báo phim mới mỗi ngày.</p>
+                    <div class="feature-card p-4 h-100 text-center">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: var(--accent);">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h4 class="feature-title mb-3" style="color: var(--text-light); font-weight: 700;">Ưu đãi hấp dẫn</h4>
+                        <p class="feature-desc mb-0" style="color: var(--text-muted);">Nhận ưu đãi, voucher và thông báo phim mới mỗi ngày.</p>
                     </div>
                 </div>
             </div>
@@ -284,15 +312,15 @@
     </section>
 
     {{-- ================= Đăng ký tài khoản ================= --}}
-    <section class="why-choose py-5">
+    <section class="py-5" style="background: var(--secondary-bg);">
         <div class="container text-center">
-            <h2 class="why-title text-white fw-bold mb-3">Sẵn sàng đặt vé xem phim?</h2>
-            <p class="text-white mb-4">Đăng ký tài khoản ngay để nhận nhiều ưu đãi và trải nghiệm dịch vụ tốt nhất!</p>
+            <h2 class="fw-bold mb-3" style="color: var(--accent); font-size: 2.5rem;">Sẵn sàng đặt vé xem phim?</h2>
+            <p class="mb-4" style="color: var(--text-muted); font-size: 1.1rem;">Đăng ký tài khoản ngay để nhận nhiều ưu đãi và trải nghiệm dịch vụ tốt nhất!</p>
 
             @guest
-                <a href="{{ route('register') }}" class="btn btn-danger btn-lg">Đăng ký tài khoản</a>
+                <a href="{{ route('register') }}" class="btn btn-lg px-5 py-3" style="border-radius: 30px; font-weight: 700; font-size: 1.1rem;">Đăng ký tài khoản</a>
             @else
-                <button type="button" class="btn btn-secondary btn-lg" id="alreadyLoggedInBtn">
+                <button type="button" class="btn btn-secondary btn-lg px-5 py-3" id="alreadyLoggedInBtn" style="border-radius: 30px; font-weight: 700; font-size: 1.1rem;">
                     Đăng ký tài khoản
                 </button>
             @endguest
@@ -319,29 +347,35 @@
         .banner-media {
             max-height: 500px;
             object-fit: cover;
+            border-radius: var(--border-radius);
         }
 
         .poster-img {
             height: 280px;
             object-fit: cover;
-            border-radius: 16px 16px 0 0; /* bo tròn góc trên */
-            transition: transform 0.3s ease;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            transition: var(--transition);
         }
+
         .movie-card:hover .poster-img {
-            transform: scale(1.08); /* poster zoom nổi bật hơn */
+            transform: scale(1.08);
         }
+
         .movie-card {
-            border-radius: 16px; /* viền bo lớn */
+            border-radius: var(--border-radius);
             overflow: hidden;
             cursor: pointer;
             position: relative;
-            background-color: #ffffff; /* nền sáng để nổi bật trên background section */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* shadow rõ */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
+
         .movie-card:hover {
-            transform: translateY(-6px) scale(1.05);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45); /* hover shadow sâu hơn */
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
         }
 
         .movie-card .overlay {
@@ -350,9 +384,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: var(--transition);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -366,113 +400,60 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            padding: 6px 14px;
-            border-radius: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-weight: 700;
             font-size: 0.85rem;
             z-index: 2;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
-        }
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.45);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 14px; /* bo tròn overlay trùng card */
-        }
-        .overlay span {
-            font-size: 1.2rem;
-        }
-
-        .why-choose {
-            background: transparent;
-        }
-
-        .why-title {
-            font-size: 2.1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         .feature-card {
-            background: linear-gradient(180deg, rgba(8, 18, 30, 0.95), rgba(11, 23, 36, 0.95));
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 14px;
-            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
-            color: #dbeaf7;
-            min-height: 160px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            color: var(--text-light);
+            min-height: 200px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            text-align: center;
+            transition: var(--transition);
         }
 
         .feature-card:hover {
-            border: 1px solid red;
-            box-shadow: 0 6px 18px rgba(255, 0, 0, 0.5);
-            transform: translateY(-3px);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
         }
 
-        .feature-title {
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.25rem;
+        .feature-icon {
+            animation: float 3s ease-in-out infinite;
         }
 
-        .feature-desc {
-            color: #9fb6cc;
-            line-height: 1.6;
-            font-size: 0.98rem;
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
-        .section-featured {
-            background-color: rgba(255, 0, 0, 0.05);
-            border-radius: 12px;
-            padding: 40px 20px;
-            margin-bottom: 30px;
-        }
+        @media (max-width: 768px) {
+            .display-4 {
+                font-size: 2.5rem;
+            }
 
-        .section-nowshowing {
-            background-color: rgba(0, 123, 255, 0.05);
-            border-radius: 12px;
-            padding: 40px 20px;
-            margin-bottom: 30px;
-        }
-
-        .section-comingsoon {
-            background-color: rgba(40, 167, 69, 0.05);
-            border-radius: 12px;
-            padding: 40px 20px;
-            margin-bottom: 30px;
-        }
-
-        .section-featured h2,
-        .section-nowshowing h2,
-        .section-comingsoon h2 {
-            font-size: 2.5rem;
-            letter-spacing: 1px;
-        }
-
-        @media (max-width:768px) {
-
-            .section-featured h2,
-            .section-nowshowing h2,
-            .section-comingsoon h2 {
-                font-size: 2rem;
+            .feature-card {
+                min-height: 180px;
             }
         }
 
-        @media (max-width:576px) {
+        @media (max-width: 576px) {
+            .display-4 {
+                font-size: 2rem;
+            }
 
-            .section-featured h2,
-            .section-nowshowing h2,
-            .section-comingsoon h2 {
-                font-size: 1.8rem;
+            .feature-icon {
+                font-size: 2.5rem;
             }
         }
     </style>

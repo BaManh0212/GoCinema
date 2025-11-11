@@ -284,36 +284,66 @@
 
 @push('styles')
 <style>
-    :root { --bg-primary:#16213e; --card:rgba(255,255,255,0.03); --accent:#e53935; }
-    body{background:var(--bg-primary);}
-    .object-fit-cover{object-fit:cover;}
-    .movie-hero{position:relative; min-height:460px;}
-    .movie-hero .hero-bg{position:absolute; inset:0; filter: blur(2px) brightness(.45); transform: scale(1.04);}
-    .movie-hero .hero-overlay{position:absolute; inset:0; background:linear-gradient(180deg, rgba(9,12,20,0.18) 10%, rgba(9,12,20,0.85) 100%);}
-    .trailer-wrap iframe{border:0; background:#000;}
-    .glass{background:var(--card);backdrop-filter:blur(6px);}
-    .sticky-card{position:sticky; top:96px;}
-    .time-pill{border-color:rgba(255,255,255,.08); background: rgba(255,255,255,.02); color:#fff;}
-    .time-pill:hover{background:var(--accent);border-color:var(--accent);}
-    .star-rating{display:flex;gap:6px; align-items:center;}
-    .star-rating .star i{font-size:1.6rem; color:#7a8ba3; cursor:pointer; transition:.12s;}
-    .star-rating input:checked + .star i,
-    .star-rating .star.hover i,
-    .star-rating .star:hover i{color:#ffc107;}
-    .avatar{width:36px;height:36px;border-radius:50%;background:#243240;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
-    .review-item{background:rgba(255,255,255,0.02);}
-    /* PHIM LIÊN QUAN */
-    .related-modern .relx-card img {transition: transform 0.3s ease;}
-    .related-modern .relx-card:hover img {transform: scale(1.05);}
-    .related-modern .relx-card .overlay {background: rgba(0,0,0,0.35);opacity: 0; transition: opacity 0.3s ease; pointer-events: none;}
-    .related-modern .relx-card:hover .overlay {opacity: 1;}
-    .relx-title {font-size: .875rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
-     .movie-hero {position:relative;}
-    .hero-bg img{object-fit:cover;width:100%;height:100%;}
-    .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.9) 100%);}
-    .sticky-card{position:sticky;top:100px;}
-    .glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(6px);}
-    .content-frame{background:rgba(0,0,0,0.5);}
+:root {
+    --primary-bg: #0b1220;
+    --secondary-bg: #07101a;
+    --card-bg: #111827;
+    --text-light: #e6eef8;
+    --text-muted: #9ca3af;
+    --accent: #e53935;
+    --card-border: rgba(255,255,255,0.04);
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background: linear-gradient(180deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+    color: var(--text-light);
+    font-family: 'Inter', 'Poppins', sans-serif;
+}
+
+.object-fit-cover { object-fit: cover; }
+.movie-hero { position: relative; min-height: 460px; }
+.movie-hero .hero-bg { position: absolute; inset: 0; filter: blur(2px) brightness(.45); transform: scale(1.04); }
+.movie-hero .hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,12,20,0.18) 10%, rgba(9,12,20,0.85) 100%); }
+.trailer-wrap iframe { border: 0; background: #000; }
+.glass { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: var(--border-radius); }
+.sticky-card { position: sticky; top: 96px; }
+.time-pill { border-color: var(--card-border); background: rgba(255,255,255,.02); color: #fff; border-radius: 20px; transition: var(--transition); }
+.time-pill:hover { background: var(--accent); border-color: var(--accent); }
+.star-rating { display: flex; gap: 6px; align-items: center; }
+.star-rating .star i { font-size: 1.6rem; color: #7a8ba3; cursor: pointer; transition: .12s; }
+.star-rating input:checked + .star i,
+.star-rating .star.hover i,
+.star-rating .star:hover i { color: #ffc107; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: #243240; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+.review-item { background: rgba(255,255,255,0.02); border-radius: var(--border-radius); }
+
+/* PHIM LIÊN QUAN */
+.related-modern .relx-card img { transition: var(--transition); }
+.related-modern .relx-card:hover img { transform: scale(1.05); }
+.related-modern .relx-card .overlay { background: rgba(0,0,0,0.35); opacity: 0; transition: var(--transition); pointer-events: none; }
+.related-modern .relx-card:hover .overlay { opacity: 1; }
+.relx-title { font-size: .875rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+.hero-bg img { object-fit: cover; width: 100%; height: 100%; }
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.9) 100%); }
+.sticky-card { position: sticky; top: 100px; }
+.content-frame { background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border: 1px solid var(--card-border); }
+
+/* Override Bootstrap text classes for better contrast */
+.text-body-secondary {
+    color: var(--text-muted) !important;
+}
+
+.text-secondary {
+    color: var(--text-muted) !important;
+}
+
+.badge {
+    color: #fff !important;
+}
 </style>
 @endpush
 
