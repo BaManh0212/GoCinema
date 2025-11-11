@@ -11,6 +11,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\PhimController;
 use App\Http\Controllers\BaiVietController;
+use App\Http\Controllers\ChatbotController;
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -66,6 +67,12 @@ Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])
 //Bài viết
 Route::get('/tin-tuc', [BaiVietController::class, 'index'])->name('baiviet.index');
 Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet.show');
+// Chatbot
+Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index'); // trang hiển thị
+Route::get('/chatbot/test', [ChatbotController::class, 'test'])->name('chatbot.test'); // test endpoint
+Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send'); // gửi message
+Route::post('/chatbot/clear', [ChatbotController::class, 'clearChat'])->name('chatbot.clear');
+
 
 
 
