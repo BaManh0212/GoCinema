@@ -81,9 +81,29 @@ class PhimController extends Controller
         $theLoaiId = $request->integer('the_loai');
         $rapId = $request->integer('rap');
         $date = $request->filled('date') ? $request->date('date') : null;
+        $today = Carbon::now()->startOfDay();
 
         // ✅ Sử dụng quan hệ many-to-many: danhMuc -> phims()
         $query = $danhMuc->phims()->with(['theLoais', 'danhMucs']);
+
+        // 🔍 Lọc theo từ khóa
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where('tieu_de', 'like', "%{$search}%");
+        }
+
+        // 🎬 Lọc theo trạng thái
+        if ($request->filled('trang_thai')) {
+            if ($request->trang_thai === 'dang_chieu') {
+                $query->whereDate('ngay_cong_chieu', '<=', $today)
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('ngay_ket_thuc')
+                            ->orWhereDate('ngay_ket_thuc', '>=', $today);
+                    });
+            } elseif ($request->trang_thai === 'sap_chieu') {
+                $query->whereDate('ngay_cong_chieu', '>', $today);
+            }
+        }
 
         // 🎭 Lọc theo thể loại
         if ($theLoaiId) {
