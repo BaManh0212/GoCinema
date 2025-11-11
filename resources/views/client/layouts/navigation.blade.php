@@ -4,35 +4,44 @@
     $danhmucs = DanhMuc::orderBy('ten', 'asc')->get();
 @endphp
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm" id="mainNavbar">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
     <div class="container d-flex align-items-center">
 
         {{-- 🔹 Logo --}}
-        <a class="navbar-brand d-flex align-items-center fw-bold text-danger" href="{{ route('home') }}">
-            <img src="{{ asset('uploads/rap/logo-datn.png') }}" alt="GoCinema" style="height: 36px; margin-right: 8px;">
-            GoCinema
+        <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ route('home') }}" style="color: var(--accent);">
+            <img src="{{ asset('uploads/rap/logo-datn.png') }}" alt="GoCinema" style="height: 40px; margin-right: 10px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            <span style="font-size: 1.5rem; font-weight: 800;">GoCinema</span>
         </a>
 
         {{-- 🔹 Menu --}}
         <ul class="navbar-nav ms-auto d-flex align-items-center">
 
-            <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}">Trang chủ</a></li>
+            <li class="nav-item">
+                <a class="nav-link px-3" href="{{ route('home') }}" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-home me-1"></i>Trang chủ
+                </a>
+            </li>
             <span class="divider">|</span>
 
-            <li class="nav-item"><a class="nav-link px-3" href="#lich-chieu">Lịch Chiếu</a></li>
+            <li class="nav-item">
+                <a class="nav-link px-3" href="#lich-chieu" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-calendar-alt me-1"></i>Lịch Chiếu
+                </a>
+            </li>
             <span class="divider">|</span>
 
             {{-- 🔹 Danh mục phim --}}
             <li class="nav-item dropdown mega-parent">
-                <a class="nav-link px-3" href="{{ route('movies.index') }}">Danh Mục Phim</a>
+                <a class="nav-link px-3" href="{{ route('movies.index') }}" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-film me-1"></i>Danh Mục Phim
+                </a>
                 <div class="mega-box">
                     <div class="mega-container">
-                        <div class="row row-cols-4 g-2">
+                        <div class="row row-cols-4 g-3">
                             @foreach($danhmucs as $dm)
                                 <div class="col">
-                                    {{-- data-no-preserve: used by small JS below to ensure left-click navigates to the clean URL (no leftover query string) --}}
-                                    <a class="dropdown-item" href="{{ route('movies.category', $dm->slug) }}" data-no-preserve="1">
-                                        {{ $dm->ten }}
+                                    <a class="dropdown-item" href="{{ route('movies.category', $dm->slug) }}" data-no-preserve="1" style="border-radius: 8px; transition: var(--transition);">
+                                        <i class="fas fa-tag me-2" style="color: var(--accent);"></i>{{ $dm->ten }}
                                     </a>
                                 </div>
                             @endforeach
@@ -42,21 +51,29 @@
             </li>
             <span class="divider">|</span>
 
-            <li class="nav-item"><a class="nav-link px-3" href="{{route('baiviet.index')}}">Tin Tức</a></li>
+            <li class="nav-item">
+                <a class="nav-link px-3" href="{{route('baiviet.index')}}" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-newspaper me-1"></i>Tin Tức
+                </a>
+            </li>
             <span class="divider">|</span>
 
-            <li class="nav-item"><a class="nav-link px-3" href="{{ route('policies') }}">Quy định & Chính sách</a></li>
+            <li class="nav-item">
+                <a class="nav-link px-3" href="{{ route('policies') }}" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-shield-alt me-1"></i>Quy định & Chính sách
+                </a>
+            </li>
             <span class="divider">|</span>
 
             {{-- 🔹 Liên hệ (dropdown click mở giống auth) --}}
             <li class="nav-item dropdown">
-                <a class="nav-link px-3 dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                    Liên hệ
+                <a class="nav-link px-3 dropdown-toggle" href="#" data-bs-toggle="dropdown" style="font-weight: 500; transition: var(--transition);">
+                    <i class="fas fa-envelope me-1"></i>Liên hệ
                 </a>
-                <ul class="dropdown-menu shadow border-0 mt-2">
-                    <li><a class="dropdown-item" href="{{ route('contact.create') }}">📩 Gửi liên hệ</a></li>
+                <ul class="dropdown-menu shadow border-0 mt-2" style="background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 12px;">
+                    <li><a class="dropdown-item" href="{{ route('contact.create') }}" style="color: var(--text-light);"><i class="fas fa-paper-plane me-2" style="color: var(--accent);"></i>Gửi liên hệ</a></li>
                     @auth
-                        <li><a class="dropdown-item" href="{{ route('contact.history') }}">🗂️ Lịch sử liên hệ</a></li>
+                        <li><a class="dropdown-item" href="{{ route('contact.history') }}" style="color: var(--text-light);"><i class="fas fa-history me-2" style="color: var(--accent);"></i>Lịch sử liên hệ</a></li>
                     @endauth
                 </ul>
             </li>
@@ -66,33 +83,33 @@
         {{-- 🔹 Auth buttons --}}
         <div class="d-flex align-items-center ms-3">
             @guest
-                <a class="btn btn-outline-light btn-sm me-2" href="{{ route('login') }}">Đăng Nhập</a>
-                <a class="btn btn-outline-light btn-sm" href="{{ route('register') }}">Đăng ký</a>
+                <a class="btn btn-outline-light btn-sm me-2" href="{{ route('login') }}" style="border-radius: 20px; font-weight: 600; transition: var(--transition); border-color: var(--accent); color: var(--accent);">Đăng Nhập</a>
+                <a class="btn btn-danger btn-sm" href="{{ route('register') }}" style="border-radius: 20px; font-weight: 600;">Đăng ký</a>
             @else
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                        <img src="{{ Auth::user()->avatar_url ?? asset('uploads/default-avatar.png') }}" 
-                            alt="Avatar" 
+                    <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" style="border-radius: 20px; padding: 8px 12px; transition: var(--transition);">
+                        <img src="{{ Auth::user()->avatar_url ?? asset('uploads/default-avatar.png') }}"
+                            alt="Avatar"
                             class="rounded-circle me-2"
-                            style="width: 36px; height: 36px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);">
+                            style="width: 36px; height: 36px; object-fit: cover; border: 2px solid var(--accent);">
                         <span class="fw-semibold">{{ Auth::user()->ho_ten ?? Auth::user()->name }}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 12px;">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.index') }}">
-                                <i class="fas fa-user-circle me-2 text-primary"></i> Hồ sơ cá nhân
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.index') }}" style="color: var(--text-light);">
+                                <i class="fas fa-user-circle me-2" style="color: var(--accent);"></i> Hồ sơ cá nhân
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.rewards') }}">
-                                <i class="fas fa-gift me-2 text-warning"></i> Đổi điểm thưởng
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.rewards') }}" style="color: var(--text-light);">
+                                <i class="fas fa-gift me-2" style="color: var(--accent);"></i> Đổi điểm thưởng
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--card-border);"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button class="dropdown-item d-flex align-items-center text-danger" type="submit">
+                                <button class="dropdown-item d-flex align-items-center text-danger" type="submit" style="border: none; background: none; color: #ff6b6b;">
                                     <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
                                 </button>
                             </form>
@@ -106,15 +123,47 @@
 
 <style>
 #mainNavbar {
-    background: #16213e !important;
-    transition: 0.25s ease;
+    background: rgba(15, 12, 41, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
-.nav-link { color: #fff !important; font-weight: 500; }
-.nav-link:hover { text-decoration: underline; }
+
+#mainNavbar:hover {
+    background: rgba(15, 12, 41, 0.98) !important;
+}
+
+.nav-link {
+    color: var(--text-light) !important;
+    font-weight: 500;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--accent) !important;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: var(--transition);
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
 
 .divider {
     color: rgba(255,255,255,0.4);
     margin: 0 8px;
+    font-weight: 300;
 }
 
 /* ========== MEGA MENU DANH MỤC ========== */
@@ -126,15 +175,17 @@
     left: 50%;
     transform: translateX(-50%);
     width: 100vw;
-    max-width: 1180px;
-    background: rgba(15, 20, 35, 0.96);
-    backdrop-filter: blur(8px);
-    padding: 10px 0;
-    border-radius: 0 0 12px 12px;
+    max-width: 1200px;
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    padding: 20px 0;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
     opacity: 0;
     visibility: hidden;
-    transition: .22s ease;
+    transition: var(--transition);
     z-index: 999;
+    box-shadow: var(--shadow);
 }
 .mega-parent:hover .mega-box {
     opacity: 1;
@@ -142,26 +193,29 @@
     transform: translateX(-50%) translateY(0);
 }
 .mega-container {
-    max-height: 240px;
+    max-height: 300px;
     overflow-y: auto;
-    padding: 16px 30px;
+    padding: 20px 40px;
 }
 .mega-container::-webkit-scrollbar { width: 6px; }
 .mega-container::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.18);
+    background: var(--accent);
     border-radius: 20px;
 }
 .mega-box .dropdown-item {
-    padding: 6px 4px !important;
+    padding: 10px 12px !important;
     background: none !important;
-    color: #fff !important;
-    font-size: 0.94rem;
+    color: var(--text-light) !important;
+    font-size: 0.95rem;
     font-weight: 500;
-    transition: .2s ease;
+    transition: var(--transition);
+    border-radius: 8px;
+    margin-bottom: 5px;
 }
 .mega-box .dropdown-item:hover {
-    color: #ffb13a !important;
-    text-decoration: underline;
+    background: rgba(255, 107, 107, 0.1) !important;
+    color: var(--accent) !important;
+    transform: translateX(5px);
 }
 
 /* Ẩn caret (mũi tên) bootstrap */
@@ -172,21 +226,27 @@
 
 /* ========== DROPDOWN STYLE (Liên hệ + Auth) ========== */
 .dropdown-menu {
-    border-radius: 10px;
-    background-color: #111827;
-    color: #e5e7eb;
-    animation: fadeIn .2s ease;
+    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    color: var(--text-light);
+    animation: fadeIn .3s ease;
+    box-shadow: var(--shadow);
+    z-index: 1000;
 }
 .dropdown-item {
-    color: #e5e7eb;
+    color: var(--text-light);
     font-weight: 500;
+    transition: var(--transition);
 }
 .dropdown-item:hover {
-    background-color: #1f2937;
-    color: #fff;
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--accent);
+    transform: translateX(5px);
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 </style>

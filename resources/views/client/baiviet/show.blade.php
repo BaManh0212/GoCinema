@@ -3,7 +3,7 @@
 @section('title', $baiviet->tieu_de)
 
 @section('content')
-<div class="container py-5 mt-5 text-light">
+<div class="container py-5 text-light">
 
     {{-- Chi tiết bài viết --}}
     <div class="row justify-content-center mb-5">
@@ -73,44 +73,5 @@
 
 </div>
 
-{{-- CSS chuyên nghiệp --}}
-<style>
-/* Gradient tiêu đề */
-.text-gradient {
-    background: linear-gradient(90deg, #ff416c, #ff4b2b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.text-muted {
-    color: #adb5bd !important;
-}
 
-/* Card hover */
-.hover-card {
-    transition: all 0.3s ease-in-out;
-}
-.hover-card:hover img {
-    transform: scale(1.07);
-    transition: transform 0.3s;
-}
-.hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(255, 75, 43, 0.4);
-}
-
-/* Nội dung bài viết */
-.fs-5 {
-    font-size: 1.15rem;
-}
-
-/* Responsive spacing */
-@media (max-width:768px) {
-    h1.text-gradient {
-        font-size: 2rem !important;
-    }
-    .hover-card div[style*="height:180px"] {
-        height:150px !important;
-    }
-}
-</style>
 @endsection

@@ -3,7 +3,7 @@
 @section('title', 'Tin tức & Khuyến mãi - GoCinema')
 
 @section('content')
-<div class="container py-5 mt-5 text-light">
+<div class="container py-5 text-light">
     <h2 class="fw-bold mb-5 text-center text-gradient">Tin tức & Khuyến mãi</h2>
 
     <div class="row">
@@ -72,32 +72,5 @@
     </div>
 </div>
 
-{{-- 🎨 CSS --}}
-<style>
-.text-gradient {
-    background: linear-gradient(90deg, #ff416c, #ff4b2b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.card-hover:hover img {
-    transform: scale(1.05);
-}
-.card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 25px rgba(255, 75, 43, 0.3);
-}
-.card-body h5 {
-    font-size: 1rem;
-}
-.card-body p {
-    line-height: 1.4;
-}
-.form-check-input:checked {
-    background-color: #ff416c;
-    border-color: #ff416c;
-}
-.card-footer small {
-    font-size: 0.8rem;
-}
-</style>
+
 @endsection

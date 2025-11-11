@@ -3,7 +3,8 @@
 @section('title', 'Tất cả phim - GoCinema')
 
 @section('content')
-<div class="container py-5 mt-5 text-light">
+<section class="py-5">
+<div class="container text-light">
 
     {{-- ================== TIÊU ĐỀ ================== --}}
     <div class="text-center mb-5">
@@ -30,7 +31,7 @@
             {{-- Danh mục --}}
             <div class="col-md-4">
                 <label for="danh_muc" class="form-label fw-semibold text-light">Danh mục</label>
-                <select id="danh_muc" name="danh_muc" class="form-select">
+                <select id="danh_muc" name="danh_muc" class="form-select bg-body-tertiary border-secondary text-light">
                     <option value="">-- Tất cả danh mục --</option>
                     @foreach($danhMucs as $dm)
                         <option value="{{ $dm->id }}" {{ request('danh_muc') == $dm->id ? 'selected' : '' }}>
@@ -43,7 +44,7 @@
             {{-- Trạng thái --}}
             <div class="col-md-3">
                 <label for="trang_thai" class="form-label fw-semibold text-light">Trạng thái</label>
-                <select id="trang_thai" name="trang_thai" class="form-select">
+                <select id="trang_thai" name="trang_thai" class="form-select bg-body-tertiary border-secondary text-light">
                     <option value="">-- Tất cả --</option>
                     <option value="dang_chieu" {{ request('trang_thai') == 'dang_chieu' ? 'selected' : '' }}>🎟️ Đang chiếu</option>
                     <option value="sap_chieu" {{ request('trang_thai') == 'sap_chieu' ? 'selected' : '' }}>⏳ Sắp chiếu</option>
@@ -91,7 +92,7 @@
 
                         {{-- Thông tin phim --}}
                         <div class="card-body text-center p-3">
-                            <h6 class="card-title text-truncate mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
+                            <h6 class="card-title text-white mb-1 fw-semibold">{{ $phim->tieu_de }}</h6>
                         {{-- Danh mục --}}    
                             @if($phim->danhMucs->count())
                                 <small class="text-info d-block mb-2">
@@ -125,79 +126,16 @@
         {{ $movies->appends(request()->query())->links() }}
     </div>
 </div>
+</section>
 
-{{-- ================== CSS ================== --}}
+
+@endsection
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
 <style>
-.section-title {
-    font-size: 2.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(255,77,77,0.6);
-}
-
-/* --- Filter box --- */
-.filter-box {
-    border: 1px solid rgba(255,255,255,0.1);
-    background: linear-gradient(145deg, #141a2a, #101624);
-}
-
-/* --- Movie Card --- */
-.movie-card {
-    border-radius: 14px; /* bo tròn lớn */
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-    background-color: #1a1f2b; /* nền tối nhẹ, phù hợp theme */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* bóng nhẹ */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.movie-card:hover {
-    transform: translateY(-5px) scale(1.03);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); /* hover shadow nổi bật */
-}
-.poster-img {
-    height: 280px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-    border-radius: 14px 14px 0 0; /* bo góc trên */
-}
-.movie-card:hover .poster-img { transform: scale(1.05); }
-
-/* Nhãn trạng thái */
-.status-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    padding: 5px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    z-index: 2;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-/* Overlay */
-.movie-card .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.45);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 14px; /* overlay trùng card */
-}
-.movie-card:hover .overlay { opacity: 1; }
-.movie-card .overlay span {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
 /* Bộ lọc */
 form.bg-dark {
     background-color: #141a2a !important;
@@ -237,11 +175,6 @@ form.bg-dark {
     border: 1px solid #495057 !important;
 }
 </style>
-@endsection
-
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 @endpush
 
 @push('scripts')
