@@ -1,4 +1,4 @@
-<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #171515ff;">
+<footer class="text-light pt-5 pb-3 mt-5" style="background-color: #05030cff;">
     <div class="container" style="max-width: 1200px;">
         <div class="row gy-4">
             {{-- 🔹 Cột 1: Logo & giới thiệu --}}
@@ -19,9 +19,9 @@
                 <h6 class="fw-bold text-uppercase mb-3">Liên kết nhanh</h6>
                 <ul class="list-unstyled">
                     <li><a href="{{ route('home') }}" class="footer-link">Trang chủ</a></li>
-                    <li><a href="#" class="footer-link">Phim</a></li>
+                    <li><a href="{{ route('movies.index') }}" class="footer-link">Phim</a></li>
                     <li><a href="#" class="footer-link">Lịch chiếu</a></li>
-                    <li><a href="#" class="footer-link">Khuyến mãi</a></li>
+                    <li><a href="{{ route('baiviet.index') }}" class="footer-link">Khuyến mãi</a></li>
                     <li><a href="{{ route('contact.create') }}" class="footer-link">Liên hệ</a></li>
                 </ul>
             </div>
@@ -34,6 +34,12 @@
                     <li><i class="bi bi-telephone-fill text-danger me-2"></i>0359445669</li>
                     <li><i class="bi bi-envelope-fill text-danger me-2"></i>gocinema@gmail.com</li>
                 </ul>
+                <h6 class="fw-bold text-uppercase mb-3 mt-4">Theo dõi chúng tôi</h6>
+                <div class="d-flex gap-3">
+                    <a href="#" class="text-white" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                </div>
             </div>
         </div>
 

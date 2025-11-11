@@ -51,10 +51,10 @@
     @endif
 
     {{-- ================= PHIM NỔI BẬT ================= --}}
-    <section class="py-5" style="background: var(--secondary-bg);">
+    <section class="py-5 section-gradient-red">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">🎬 Phim nổi bật</h2>
+                <h2 class="fw-bold section-title" style="color: #ff6b6b; font-size: 2.5rem;">🎬 Phim nổi bật</h2>
                 <p class="text-secondary mb-0" style="color: var(--text-muted);">Khám phá những bộ phim hot nhất đang chiếu tại GoCinema</p>
             </div>
 
@@ -127,7 +127,7 @@
     <section class="py-5" style="background: var(--primary-bg);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">🎟️ Phim đang chiếu</h2>
+                <h2 class="fw-bold section-title" style="color: #4ecdc4; font-size: 2.5rem;">🎟️ Phim đang chiếu</h2>
                 <p class="text-secondary mb-0" style="color: var(--text-muted);">Xem ngay những bộ phim đang hot tại các rạp</p>
             </div>
 
@@ -200,7 +200,7 @@
     <section class="py-5" style="background: var(--secondary-bg);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="fw-bold section-title" style="color: var(--accent); font-size: 2.5rem;">⏳ Phim sắp chiếu</h2>
+                <h2 class="fw-bold section-title" style="color: #ffe66d; font-size: 2.5rem;">⏳ Phim sắp chiếu</h2>
                 <p class="text-secondary mb-0" style="color: var(--text-muted);">Đừng bỏ lỡ những bộ phim bom tấn sắp ra mắt</p>
             </div>
 
@@ -358,11 +358,13 @@
             height: 280px;
             object-fit: cover;
             border-radius: var(--border-radius) var(--border-radius) 0 0;
-            transition: var(--transition);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: brightness(1);
         }
 
         .movie-card:hover .poster-img {
-            transform: scale(1.08);
+            transform: scale(1.1) rotate(1deg);
+            filter: brightness(1.1) contrast(1.1);
         }
 
         .movie-card {
@@ -374,12 +376,13 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
             box-shadow: var(--shadow);
-            transition: var(--transition);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .movie-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 107, 107, 0.3);
+            border-color: rgba(255, 107, 107, 0.5);
         }
 
         .movie-card .overlay {
@@ -388,16 +391,67 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
             opacity: 0;
-            transition: var(--transition);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(2px);
         }
 
         .movie-card:hover .overlay {
             opacity: 1;
+        }
+
+        .movie-card .overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .movie-card:hover .overlay::before {
+            opacity: 1;
+        }
+
+        .movie-card .overlay span {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .movie-card:hover .overlay span {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .movie-card .overlay span::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: width 0.4s ease 0.2s;
+        }
+
+        .movie-card:hover .overlay span::after {
+            width: 60px;
         }
 
         .status-badge {
@@ -408,8 +462,15 @@
             border-radius: 20px;
             font-weight: 700;
             font-size: 0.85rem;
-            z-index: 2;
+            z-index: 3;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(1);
+        }
+
+        .movie-card:hover .status-badge {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
         }
 
         .feature-card {
