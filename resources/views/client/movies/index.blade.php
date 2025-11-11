@@ -110,8 +110,8 @@
                         </div>
 
                         {{-- Overlay --}}
-                        <div class="overlay d-flex justify-content-center align-items-center">
-                            <span class="text-white fw-bold">Xem chi tiết</span>
+                        <div class="overlay d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.6);">
+                            <span class="text-white fw-bold" style="font-size: 1.1rem;">Xem chi tiết</span>
                         </div>
                     </div>
                 </a>
