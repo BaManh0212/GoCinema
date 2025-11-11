@@ -318,7 +318,7 @@
             <p class="mb-4" style="color: var(--text-muted); font-size: 1.1rem;">Đăng ký tài khoản ngay để nhận nhiều ưu đãi và trải nghiệm dịch vụ tốt nhất!</p>
 
             @guest
-                <a href="{{ route('register') }}" class="btn btn-lg px-5 py-3" style="border-radius: 30px; font-weight: 700; font-size: 1.1rem;">Đăng ký tài khoản</a>
+                <a href="{{ route('register') }}" class="btn btn-danger btn-lg px-5 py-3" style="border-radius: 30px; font-weight: 700; font-size: 1.1rem;">Đăng ký tài khoản</a>
             @else
                 <button type="button" class="btn btn-secondary btn-lg px-5 py-3" id="alreadyLoggedInBtn" style="border-radius: 30px; font-weight: 700; font-size: 1.1rem;">
                     Đăng ký tài khoản
