@@ -16,10 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-    {{-- Bootstrap JS --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
+    {{-- Bootstrap JS (moved to end of body, load local to avoid QUIC issues) --}}
 
     {{-- Client CSS --}}
     <link rel="stylesheet" href="{{ asset('assets/css/client.css') }}">
@@ -83,10 +80,18 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const toastEl = document.getElementById('successToast');
-                const toast = new bootstrap.Toast(toastEl, {
-                    delay: 3000
-                });
-                toast.show();
+                // Support both Bootstrap 5 (class API) and Bootstrap 4 (jQuery plugin)
+                try {
+                    if (window.bootstrap && typeof window.bootstrap.Toast === 'function') {
+                        const toast = new window.bootstrap.Toast(toastEl, { delay: 3000 });
+                        toast.show();
+                    } else if (window.jQuery) {
+                        window.jQuery(toastEl).toast({ delay: 3000 });
+                        window.jQuery(toastEl).toast('show');
+                    }
+                } catch (e) {
+                    console.warn('Toast init warning:', e);
+                }
             });
         </script>
     @endif
@@ -103,7 +108,14 @@
     @include('client.layouts.footer')
 
     @stack('scripts')
-
+    
+    {{-- ✅ Chatbot Popup --}}
+    @include('components.chatbot-popup')
+    
+    {{-- jQuery (required for local Bootstrap 4 bundle) --}}
+    <script src="{{ asset('assets/admins/vendor/jquery/jquery.min.js') }}"></script>
+    {{-- Bootstrap Bundle JS (Local v4.6) --}}
+    <script src="{{ asset('assets/admins/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 </body>
 
 </html>
