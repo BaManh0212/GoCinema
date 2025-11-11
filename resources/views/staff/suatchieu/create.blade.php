@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('content')
 <div class="container mt-4">
@@ -11,7 +11,7 @@
 
     <div class="card border-0 shadow-lg rounded-4">
         <div class="card-body p-4">
-            <form action="{{ route('admin.suatchieu.autoStore') }}" method="POST">
+            <form action="{{ route('staff.suatchieu.autoStore') }}" method="POST">
                 @csrf
 
                 {{-- 🎞️ Thông tin cơ bản --}}
@@ -67,7 +67,7 @@
                         </div>
 
                         {{-- Giờ chiếu đầu tiên + gợi ý --}}
-                        <div class="col-md-6 mt-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Giờ chiếu đầu tiên trong ngày</label>
                             <div class="input-group">
                                 <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
@@ -88,27 +88,6 @@
                             </div>
                             <div class="form-text text-muted">Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
                         </div>
-
-                        {{-- Giờ chiếu cố định --}}
-                        <div class="col-12 mt-3">
-                            <label class="form-label fw-semibold">Chọn giờ chiếu cố định (có thể chọn nhiều)</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                @php
-                                    $gioCoDinh = ['08:00','11:00','14:00','17:00','20:00'];
-                                @endphp
-                                @foreach($gioCoDinh as $gio)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="gio_co_dinh[]" value="{{ $gio }}"
-                                            id="gio_{{ str_replace(':','',$gio) }}"
-                                            {{ is_array(old('gio_co_dinh')) && in_array($gio, old('gio_co_dinh')) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="gio_{{ str_replace(':','',$gio) }}">
-                                            {{ $gio }}
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
@@ -123,7 +102,7 @@
 
                 {{-- 🔘 Nút hành động --}}
                 <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary px-4 me-2 rounded-3">
+                    <a href="{{ route('staff.suatchieu.index') }}" class="btn btn-outline-secondary px-4 me-2 rounded-3">
                         <i class="bi bi-arrow-left"></i> Quay lại
                     </a>
                     <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
@@ -135,6 +114,7 @@
     </div>
 </div>
 @endsection
+
 
 {{-- ⚙️ Script & CSS --}}
 @push('scripts')
@@ -160,143 +140,35 @@
     </script>
 
     <style>
-    /* =================== Card & Container =================== */
-    .card {
-        background: linear-gradient(180deg, #ffffff, #f1f5f9);
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-    }
-    .container {
-        max-width: 900px;
-    }
+        /* Select2 style đẹp hơn */
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            border-radius: 0.5rem !important;
+            border: 1px solid #ced4da !important;
+        }
+        .select2-selection__rendered {
+            line-height: 36px !important;
+        }
+        .select2-selection__arrow {
+            height: 36px !important;
+        }
 
-    /* =================== Titles & Icons =================== */
-    h2, h5 {
-        color: #1e3a8a;
-    }
-    h2 i, h5 i {
-        vertical-align: middle;
-    }
-    h5 {
-        font-size: 1.15rem;
-    }
-    .fw-bold {
-        font-weight: 600;
-    }
+        /* Các card section và input */
+        h5 i { vertical-align: middle; }
+        .shadow-sm-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 
-    /* =================== Inputs & Select =================== */
-    .form-control, .form-select {
-        border-radius: 0.75rem;
-        padding: 0.5rem 0.75rem;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        border: 1px solid #ced4da;
-        transition: all 0.2s ease;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #4e73df;
-        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
-        outline: none;
-    }
-
-    /* =================== Select2 =================== */
-/* Đồng bộ chiều cao select2 */
-.select2-container .select2-selection--single {
-    height: 45px !important; /* chiều cao đủ chứa emoji + text */
-    border-radius: 0.75rem !important;
-    border: 1px solid #ced4da !important;
-    display: flex;
-    align-items: center; /* căn giữa nội dung theo chiều dọc */
-}
-
-/* Text hiển thị trong select2 */
-.select2-selection__rendered {
-    line-height: normal !important; /* không để line-height cố định */
-    padding-left: 0.5rem; /* khoảng cách từ viền */
-    white-space: nowrap; /* không xuống dòng */
-    overflow: hidden;
-    text-overflow: ellipsis; /* nếu dài sẽ hiển thị dấu ... */
-}
-
-/* Mũi tên dropdown */
-.select2-selection__arrow {
-    height: 45px !important;
-    display: flex;
-    align-items: center; /* căn giữa mũi tên */
-}
-
-/* Kết quả dropdown */
-.select2-results__option {
-    white-space: normal; /* vẫn cho xuống dòng khi list quá dài */
-}
-
-/* Input date/time đồng bộ chiều cao */
-input[type="date"], input[type="time"], .form-control {
-    height: 45px;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.75rem;
-}
-.row.g-3 {
-    gap: 1rem;
-}
-
-
-    /* =================== Checkbox =================== */
-    .form-check-input {
-        width: 1.25rem;
-        height: 1.25rem;
-        margin-top: 0.2rem;
-        accent-color: #4e73df;
-        cursor: pointer;
-    }
-    .form-check-label {
-        font-weight: 500;
-        margin-left: 0.3rem;
-    }
-
-    /* =================== Buttons =================== */
-    .btn-primary {
-        background: linear-gradient(90deg, #4e73df, #224abe);
-        border: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    .btn-primary:hover {
-        background: linear-gradient(90deg, #224abe, #1e3a8a);
-    }
-    .btn-outline-secondary {
-        border-radius: 0.75rem;
-        font-weight: 500;
-    }
-
-    /* =================== Dropdown Gợi ý giờ =================== */
-    .dropdown-menu {
-        border-radius: 0.75rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .dropdown-item:hover {
-        background-color: #4e73df;
-        color: #fff;
-    }
-
-    /* =================== Form helper text =================== */
-    .form-text {
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-
-    /* =================== Spacing & layout =================== */
-    .mb-4, .mb-3, .mt-3, .mt-4 {
-        margin-bottom: 1rem !important;
-        margin-top: 1rem !important;
-    }
-    .gap-2 > .form-check {
-        margin-bottom: 0.5rem;
-    }
-</style>
+        .card {
+            background: linear-gradient(180deg, #ffffff, #f9fbfd);
+        }
+        .form-label {
+            color: #495057;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #4e73df, #224abe);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #224abe, #1e3a8a);
+        }
+    </style>
 @endpush

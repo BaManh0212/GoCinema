@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
@@ -65,7 +65,7 @@ class SuatChieuController extends Controller
         $phims = Phim::orderBy('tieu_de')->get();
         $phongs = PhongChieu::orderBy('ten')->get();
 
-        return view('admin.suatchieu.index', compact('suatchieus', 'phims', 'phongs'));
+        return view('staff.suatchieu.index', compact('suatchieus', 'phims', 'phongs'));
     }
 
     /**
@@ -73,7 +73,7 @@ class SuatChieuController extends Controller
      */
     public function create()
     {
-        return view('admin.suatchieu.create', [
+        return view('staff.suatchieu.create', [
             'phims' => Phim::orderBy('tieu_de')->get(),
             'phongs' => PhongChieu::orderBy('ten')->get(),
         ]);
@@ -146,7 +146,7 @@ class SuatChieuController extends Controller
         'trang_thai' => 'hoat_dong',
     ]);
 
-    return redirect()->route('admin.suatchieu.index')
+    return redirect()->route('staff.suatchieu.index')
                      ->with('success', '🎉 Thêm suất chiếu thành công!');
 }
 
@@ -157,7 +157,7 @@ class SuatChieuController extends Controller
     {
         $suatchieu = SuatChieu::findOrFail($id);
 
-        return view('admin.suatchieu.edit', [
+        return view('staff.suatchieu.edit', [
             'suatchieu' => $suatchieu,
             'phims' => Phim::orderBy('tieu_de')->get(),
             'phongs' => PhongChieu::orderBy('ten')->get(),
@@ -229,7 +229,7 @@ class SuatChieuController extends Controller
         'gia_ve' => $gia_ve,
     ]);
 
-    return redirect()->route('admin.suatchieu.index')
+    return redirect()->route('staff.suatchieu.index')
                      ->with('success', '✅ Cập nhật suất chiếu thành công!');
 }
 
@@ -252,7 +252,7 @@ class SuatChieuController extends Controller
 
     $suatchieu->delete();
 
-    return redirect()->route('admin.suatchieu.index')
+    return redirect()->route('staff.suatchieu.index')
                      ->with('success', '🗑️ Đã xóa suất chiếu!');
 }
 
@@ -272,7 +272,7 @@ class SuatChieuController extends Controller
             ->where('suat_chieu_id', $id)
             ->pluck('ghe_id')->toArray();
 
-        return view('admin.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'giuTamIds'));
+        return view('staff.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'giuTamIds'));
     }
 
     /**
@@ -282,116 +282,111 @@ class SuatChieuController extends Controller
 {
     // 🎬 Validate phim
     $phim_id = $request->input('phim_id');
-    $phim = Phim::find($phim_id);
-    if (!$phim) return back()->withInput()->with('error', '⚠️ Vui lòng chọn phim hợp lệ.');
+    if (!$phim_id || !Phim::find($phim_id)) {
+        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phim hợp lệ.');
+    }
 
     // 🏠 Validate phòng
     $phong_id = $request->input('phong_id');
-    $phong = PhongChieu::find($phong_id);
-    if (!$phong) return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
+    if (!$phong_id || !PhongChieu::find($phong_id)) {
+        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
+    }
 
-    // 📅 Validate ngày
+    // 📅 Validate ngày bắt đầu
     try {
         $ngay_bat_dau = Carbon::parse($request->input('ngay_bat_dau'));
+    } catch (\Exception $e) {
+        return back()->withInput()->with('error', '⚠️ Ngày bắt đầu không hợp lệ.');
+    }
+
+    // 📅 Validate ngày kết thúc
+    try {
         $ngay_ket_thuc = Carbon::parse($request->input('ngay_ket_thuc'));
     } catch (\Exception $e) {
-        return back()->withInput()->with('error', '⚠️ Ngày không hợp lệ.');
-    }
-    if ($ngay_ket_thuc->lt($ngay_bat_dau)) {
-        return back()->withInput()->with('error', '❌ Ngày kết thúc phải sau ngày bắt đầu.');
+        return back()->withInput()->with('error', '⚠️ Ngày kết thúc không hợp lệ.');
     }
 
-    // ⏰ Thời gian bắt đầu
+    if ($ngay_ket_thuc->lt($ngay_bat_dau)) {
+        return back()->withInput()->with('error', '❌ Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+    }
+
+    // ⏰ Validate giờ bắt đầu mỗi ngày
     $gio_bat_dau_ngay = $request->input('gio_bat_dau_ngay');
     if (!preg_match('/^\d{2}:\d{2}$/', $gio_bat_dau_ngay)) {
-        return back()->withInput()->with('error', '⚠️ Giờ bắt đầu không hợp lệ.');
+        return back()->withInput()->with('error', '⚠️ Giờ bắt đầu không hợp lệ (HH:mm).');
     }
 
-    // 💰 Giá vé
-    $gia_ve = $request->input('gia_ve') ?? 70000;
+    // 💰 Validate giá vé
+    $gia_ve = $request->input('gia_ve');
+    if (!is_numeric($gia_ve) || $gia_ve < 0) {
+        return back()->withInput()->with('error', '⚠️ Giá vé phải là số lớn hơn hoặc bằng 0.');
+    }
 
-    // ⏱️ Thời lượng + thời gian dọn phòng
-    $thoiLuong = $phim->thoi_luong ?? 120;
+    // ⏱️ Lấy thời lượng phim và khoảng nghỉ
+    $phim = Phim::find($phim_id);
+    $thoiLuong = $phim->thoi_luong ?? 120; 
     $khoangNghi = 15;
-
-    // 🕒 Giờ cố định (nếu chọn)
-    $gioCoDinh = $request->input('gio_co_dinh', []);
-
     $period = CarbonPeriod::create($ngay_bat_dau, $ngay_ket_thuc);
+
     $conflicts = [];
-    $tongSuat = 0;
 
+    // kiểm tra toàn bộ suất trước
     foreach ($period as $ngay) {
-        // 1️⃣ Nếu có chọn giờ cố định, tạo theo từng giờ
-        if (!empty($gioCoDinh)) {
-            foreach ($gioCoDinh as $gio) {
-                $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio);
-                $end = (clone $start)->addMinutes($thoiLuong);
+        $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
 
-                // Kiểm tra trùng
-                $exists = SuatChieu::where('phong_id', $phong_id)
-                    ->where('gio_bat_dau', '<', $end)
-                    ->where('gio_ket_thuc', '>', $start)
-                    ->exists();
+        while ($start->hour < 23) {
+            $end = (clone $start)->addMinutes($thoiLuong);
+            if ($end->hour >= 23) break;
 
-                if ($exists) {
-                    $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
-                    continue;
-                }
+            $newStart = $start->toDateTimeString();
+            $newEnd   = $end->toDateTimeString();
 
-                SuatChieu::create([
-                    'phim_id' => $phim_id,
-                    'phong_id' => $phong_id,
-                    'gio_bat_dau' => $start,
-                    'gio_ket_thuc' => $end,
-                    'gia_ve' => $gia_ve,
-                    'trang_thai' => 'hoat_dong',
-                ]);
-                $tongSuat++;
+            $isConflict = SuatChieu::where('phong_id', $phong_id)
+                ->where('gio_bat_dau', '<', $newEnd)
+                ->where('gio_ket_thuc', '>', $newStart)
+                ->exists();
+
+            if ($isConflict) {
+                $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
             }
-        } else {
-            // 2️⃣ Nếu nhập giờ đầu tiên, tạo liên tục theo thời lượng + dọn phòng
-            $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
 
-            while ($start->hour < 23) {
-                $end = (clone $start)->addMinutes($thoiLuong);
-                if ($end->hour >= 23) break;
-
-                // Kiểm tra trùng
-                $exists = SuatChieu::where('phong_id', $phong_id)
-                    ->where('gio_bat_dau', '<', $end)
-                    ->where('gio_ket_thuc', '>', $start)
-                    ->exists();
-
-                if ($exists) {
-                    $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
-                    $start = $end->addMinutes($khoangNghi);
-                    continue;
-                }
-
-                SuatChieu::create([
-                    'phim_id' => $phim_id,
-                    'phong_id' => $phong_id,
-                    'gio_bat_dau' => $start,
-                    'gio_ket_thuc' => $end,
-                    'gia_ve' => $gia_ve,
-                    'trang_thai' => 'hoat_dong',
-                ]);
-                $tongSuat++;
-                $start = $end->addMinutes($khoangNghi);
-            }
+            $start = $end->addMinutes($khoangNghi);
         }
     }
 
+    // Nếu có bất kỳ conflict, trả về lỗi
     if (!empty($conflicts)) {
-        $msg = "❌ Một số suất chiếu không tạo được do trùng: " . implode(', ', array_slice($conflicts, 0, 5));
+        $msg = "❌ Không thể tạo suất chiếu, phòng đã có suất trùng: " . implode(', ', array_slice($conflicts, 0, 5));
         if (count($conflicts) > 5) $msg .= ', ...';
-        return back()->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công. {$msg}");
+        return back()->withInput()->with('error', $msg);
     }
 
-    return redirect()->route('admin.suatchieu.index')
-                     ->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công!");
+    // Tạo toàn bộ suất nếu không có conflict
+    $tongSuat = 0;
+    foreach ($period as $ngay) {
+        $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
+        while ($start->hour < 23) {
+            $end = (clone $start)->addMinutes($thoiLuong);
+            if ($end->hour >= 23) break;
+
+            SuatChieu::create([
+                'phim_id' => $phim_id,
+                'phong_id' => $phong_id,
+                'gio_bat_dau' => $start,
+                'gio_ket_thuc' => $end,
+                'gia_ve' => $gia_ve,
+                'trang_thai' => 'hoat_dong',
+            ]);
+
+            $tongSuat++;
+            $start = $end->addMinutes($khoangNghi);
+        }
+    }
+
+    return redirect()->route('staff.suatchieu.index')
+                     ->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công.");
 }
+
 
 
 

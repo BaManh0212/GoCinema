@@ -69,7 +69,7 @@
                             <i class="bi bi-funnel"></i> Lọc
                         </button>
                         <a href="{{ route('staff.phim.index') }}" class="btn btn-outline-danger rounded-pill px-4">
-                            <i class="bi bi-x-circle"></i> Xóa
+                            <i class="bi bi-x-circle"></i> Đặt lại
                         </a>
                     </div>
                 </div>
