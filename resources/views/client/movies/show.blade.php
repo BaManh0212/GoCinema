@@ -174,109 +174,88 @@
         </div>
 
         {{-- Bình luận & đánh giá --}}
-        <div class="row g-4 mt-4">
-            <div class="col-lg-6">
-                <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="fw-semibold mb-3">Bình luận & đánh giá</h5>
-                        @if(session('success')) <div class="alert alert-success py-2">{{ session('success') }}</div> @endif
-                        @if(session('error')) <div class="alert alert-danger py-2">{{ session('error') }}</div> @endif
+        {{-- Bình luận & đánh giá --}}
+    <div class="row g-4 mt-4 align-items-stretch">
+        {{-- Cột trái: Bình luận & đánh giá --}}
+        <div class="col-lg-6 d-flex">
+            <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm flex-fill d-flex flex-column">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Bình luận & đánh giá</h5>
+                    @if(session('success')) <div class="alert alert-success py-2">{{ session('success') }}</div> @endif
+                    @if(session('error')) <div class="alert alert-danger py-2">{{ session('error') }}</div> @endif
 
-                        @auth
-                        <form id="ratingForm" action="{{ route('phim.danh_gia.luu', $phim->slug) }}" method="POST" class="needs-validation" novalidate>
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label d-block mb-2">Chọn số sao</label>
-                                <div class="star-rating" role="radiogroup" aria-label="Số sao">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <input type="radio" name="so_sao" id="star{{ $i }}" value="{{ $i }}" class="d-none visually-hidden">
-                                        <label for="star{{ $i }}" class="star" data-value="{{ $i }}">
-                                            <i class="bi bi-star" aria-hidden="true"></i>
-                                        </label>
-                                    @endfor
-                                </div>
-                                <div class="invalid-feedback">Vui lòng chọn số sao.</div>
-                            </div>
-
-                            @auth
-                                @if (!empty($eligible) && $eligible)
-                                    <form action="{{ route('phim.danh_gia.luu', $phim->slug) }}" method="POST"
-                                        class="needs-validation" novalidate>
-                                        @csrf
-                                        <div class="mb-3">
-                                            <label class="form-label">Số sao</label>
-                                            <select name="so_sao" class="form-select" required>
-                                                @for ($i = 5; $i >= 1; $i--)
-                                                    <option value="{{ $i }}">{{ $i }} sao</option>
-                                                @endfor
-                                            </select>
-                                            <div class="invalid-feedback">Vui lòng chọn số sao.</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Bình luận</label>
-                                            <textarea name="binh_luan" rows="3" class="form-control" placeholder="Cảm nhận của bạn..."></textarea>
-                                        </div>
-                                        <button class="btn btn-danger"><i class="bi bi-send me-1"></i>Gửi đánh giá</button>
-                                    </form>
-                                @else
-                                    <div class="alert alert-secondary mb-0">
-                                        Bạn chỉ có thể gửi đánh giá sau khi đã <strong>mua vé và check-in thành công</strong>
-                                        cho phim này.
+                    @auth
+                        @if (!empty($eligible) && $eligible)
+                            <form id="ratingForm" action="{{ route('phim.danh_gia.luu', $phim->slug) }}" method="POST">
+                                @csrf
+                                <div class="mb-3">
+                                    <label class="form-label d-block mb-2">Chọn số sao</label>
+                                    <div class="star-rating" role="radiogroup" aria-label="Số sao">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <input type="radio" name="so_sao" id="star{{ $i }}" value="{{ $i }}" class="d-none">
+                                            <label for="star{{ $i }}" class="star" data-value="{{ $i }}">
+                                                <i class="bi bi-star"></i>
+                                            </label>
+                                        @endfor
                                     </div>
-                                @endif
-                            @else
-                                <div class="alert alert-secondary mb-0">
-                                    Vui lòng <a class="link-info" href="{{ url('/dang-nhap') }}">đăng nhập</a> để gửi đánh
-                                    giá.
                                 </div>
-                            @endauth
 
-                        </div>
-                            <div class="mb-3">
-                                <label class="form-label">Bình luận</label>
-                                <textarea name="binh_luan" rows="3" class="form-control" placeholder="Cảm nhận của bạn..."></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-danger" id="ratingSubmit">Gửi đánh giá</button>
-                        </form>
+                                <div class="mb-3">
+                                    <label class="form-label">Bình luận</label>
+                                    <textarea name="binh_luan" rows="3" class="form-control" placeholder="Cảm nhận của bạn..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-send me-1"></i>Gửi đánh giá
+                                </button>
+                            </form>
                         @else
-                            <div class="alert alert-secondary mb-0">Vui lòng <a class="link-info" href="{{ url('/dang-nhap') }}">đăng nhập</a> để gửi đánh giá.</div>
-                        @endauth
-                    </div>
+                            <div class="alert alert-secondary mb-0">
+                                Bạn chỉ có thể gửi đánh giá sau khi đã <strong>mua vé và check-in thành công</strong>.
+                            </div>
+                        @endif
+                    @else
+                        <div class="alert alert-secondary mb-0">
+                            Vui lòng <a class="link-info" href="{{ url('/dang-nhap') }}">đăng nhập</a> để gửi đánh giá.
+                        </div>
+                    @endauth
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg-6">
-                <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="fw-semibold mb-3">Đánh giá gần đây</h5>
-                        @php $danhgias = $phim->danhGias()->with('nguoiDung')->latest()->take(20)->get(); @endphp
-                        @forelse($danhgias as $dg)
-                            @php
-                                $name = $dg->nguoiDung->name ?? 'Người dùng';
-                                $initial = mb_strtoupper(mb_substr($name, 0, 1));
-                            @endphp
-                            <div class="border rounded-3 p-3 mb-3 bg-dark review-item">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar" aria-hidden="true">{{ $initial }}</div>
-                                        <div class="fw-semibold">{{ $name }}</div>
-                                    </div>
-                                    <div class="small text-body-secondary">{{ $dg->created_at?->format('d/m/Y H:i') }}</div>
+        {{-- Cột phải: Đánh giá gần đây --}}
+        <div class="col-lg-6 d-flex">
+            <div class="card bg-dark-subtle border-0 rounded-4 shadow-sm flex-fill d-flex flex-column">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Đánh giá gần đây</h5>
+                    @php $danhgias = $phim->danhGias()->with('nguoiDung')->latest()->take(20)->get(); @endphp
+                    @forelse($danhgias as $dg)
+                        @php
+                            $name = $dg->nguoiDung->name ?? 'Người dùng';
+                            $initial = mb_strtoupper(mb_substr($name, 0, 1));
+                        @endphp
+                        <div class="border rounded-3 p-3 mb-3 bg-dark review-item">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar">{{ $initial }}</div>
+                                    <div class="fw-semibold">{{ $name }}</div>
                                 </div>
-                                <div class="text-warning small mb-1">
-                                    {!! str_repeat('<i class="bi bi-star-fill"></i>', (int) $dg->so_sao) !!}
-                                    {!! str_repeat('<i class="bi bi-star"></i>', 5 - (int) $dg->so_sao) !!}
-                                </div>
-                                <div class="text-light">{{ $dg->binh_luan }}</div>
+                                <div class="small text-body-secondary">{{ $dg->created_at?->format('d/m/Y H:i') }}</div>
                             </div>
-                        @empty
-                            <div class="alert alert-secondary mb-0">Chưa có đánh giá nào.</div>
-                        @endforelse
-                    </div>
+                            <div class="text-warning small mb-1">
+                                {!! str_repeat('<i class="bi bi-star-fill"></i>', (int) $dg->so_sao) !!}
+                                {!! str_repeat('<i class="bi bi-star"></i>', 5 - (int) $dg->so_sao) !!}
+                            </div>
+                            <div class="text-light">{{ $dg->binh_luan }}</div>
+                        </div>
+                    @empty
+                        <div class="alert alert-secondary mb-0">Chưa có đánh giá nào.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     {{-- PHIM LIÊN QUAN --}}
     @if(!empty($relatedMovies) && $relatedMovies->count())
