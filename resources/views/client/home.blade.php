@@ -11,7 +11,7 @@
 
     {{-- ================= BANNER SLIDER ================= --}}
     @if ($banners->count())
-        <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div id="bannerCarousel" class="carousel slide position-relative" data-bs-ride="carousel">
             <div class="carousel-inner">
                 @foreach ($banners as $i => $banner)
                     <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
@@ -348,6 +348,10 @@
             max-height: 500px;
             object-fit: cover;
             border-radius: var(--border-radius);
+        }
+
+        #bannerCarousel {
+            z-index: 1;
         }
 
         .poster-img {

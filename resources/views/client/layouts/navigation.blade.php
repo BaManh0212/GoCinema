@@ -4,7 +4,7 @@
     $danhmucs = DanhMuc::orderBy('ten', 'asc')->get();
 @endphp
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-transparent" id="mainNavbar">
     <div class="container d-flex align-items-center">
 
         {{-- 🔹 Logo --}}
@@ -128,6 +128,14 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: var(--transition);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1030;
+}
+
+#mainNavbar.navbar-transparent {
+    background: rgba(15, 12, 41, 0.3) !important;
+    backdrop-filter: blur(5px);
+    border-bottom: none;
+    box-shadow: none;
 }
 
 #mainNavbar:hover {
@@ -273,4 +281,22 @@
             window.location.href = clean;
         }, false);
     })();
+
+    // Script to make navbar solid on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbar = document.getElementById('mainNavbar');
+        const banner = document.querySelector('#bannerCarousel');
+
+        if (banner) {
+            const bannerHeight = banner.offsetHeight;
+
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > bannerHeight - 80) {
+                    navbar.classList.remove('navbar-transparent');
+                } else {
+                    navbar.classList.add('navbar-transparent');
+                }
+            });
+        }
+    });
 </script>
