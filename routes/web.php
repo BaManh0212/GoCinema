@@ -168,12 +168,8 @@ Route::prefix('admin')
         Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
         Route::post('admin/phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
             ->name('admin.phongchieu.ghe.updateMap');
-        // Quản lý suất chiếu
-        Route::resource('suatchieu', AdminSuatChieuController::class)->names('suatchieu');
 
-        // Tạo nhanh tự động
-        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])
-            ->name('suatchieu.autoStore');
+        Route::resource('suatchieu', AdminSuatChieuController::class)->except(['show']);
 
         // Danh sách ghế trong suất chiếu
         Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
@@ -186,6 +182,10 @@ Route::prefix('admin')
         // Cập nhật trạng thái hàng loạt
         Route::post('suatchieu/bulk-update', [AdminSuatChieuController::class, 'bulkUpdate'])
             ->name('suatchieu.bulkUpdate');
+
+        // Tự động tạo suất chiếu
+        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])->name('suatchieu.autoStore');
+        Route::post('suatchieu/store-preview', [AdminSuatChieuController::class, 'storePreview'])->name('suatchieu.storePreview');
 
 
         // Quản lý danh mục

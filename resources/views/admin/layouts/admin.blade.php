@@ -67,6 +67,36 @@
             border-radius: 8px;
             font-size: 15px;
         }
+
+        /* Fix sidebar position */
+        .sidebar {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        /* Hide scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        #content-wrapper {
+            margin-left: 250px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static !important;
+                height: auto;
+            }
+            #content-wrapper {
+                margin-left: 0;
+            }
+        }
     </style>
 
     @stack('styles')
@@ -118,11 +148,6 @@
         {{-- End Content Wrapper --}}
     </div>
     {{-- End Page Wrapper --}}
-
-    {{-- Scroll to Top --}}
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
 
     {{-- Logout Modal --}}
     @include('admin.layouts.logout-modal')

@@ -1,23 +1,15 @@
-# TODO: Làm cho các trang client/movies và client/account chuyên nghiệp như trang home
+# TODO: Implement Suat Chieu Preview Feature
 
-## Thông tin thu thập
-- Trang home có theme tối hiện đại với hiệu ứng glassmorphism, biến CSS nhất quán, và hoạt hình mượt mà.
-- Các trang movies và account có style khác nhau—một số tối nhưng không bóng bẩy, và một trang account sáng.
-- Cần cập nhật CSS trong mỗi file để sử dụng cùng biến và style: nền tối, card glassmorphism, hiệu ứng hover, v.v. Bao gồm thay đổi account/index.blade.php sáng thành tối.
+## Tasks
+- [x] Sửa method `autoStore` trong SuatChieuController: Tạo mảng preview thay vì lưu DB, kiểm tra trùng và đánh dấu conflict.
+- [x] Thêm method `storePreview` trong SuatChieuController: Lưu mảng suất từ preview vào DB.
+- [x] Thêm route cho `storePreview` (POST /admin/suatchieu/store-preview).
+- [x] Cập nhật view `create.blade.php`: Hiển thị bảng preview bên dưới form nếu có data, với nút xóa (JS) và nút "Lưu vào danh sách".
+- [x] Thêm JS để xóa row trong bảng preview và cập nhật hidden inputs.
+- [ ] Test tính năng: Tạo preview, xóa suất, lưu vào DB, kiểm tra trùng.
 
-## Kế hoạch
-- Cập nhật CSS trong resources/views/client/movies/index.blade.php để khớp với home.
-- Cập nhật CSS trong resources/views/client/movies/category.blade.php.
-- Cập nhật CSS trong resources/views/client/movies/show.blade.php (đã có một số, nhưng làm nhất quán).
-- Cập nhật resources/views/client/account/index.blade.php (thay đổi thành tối).
-- Đảm bảo nhất quán trong account/profile.blade.php (đã tối).
-- Đảm bảo nhất quán trong account/my-vouchers.blade.php (đã tối).
-- Đảm bảo nhất quán trong account/point-history.blade.php (đã tối).
-- Đảm bảo nhất quán trong account/rewards.blade.php (đã tối).
-
-## Các file phụ thuộc
-- Tất cả các file blade trong client/movies và client/account.
-
-## Các bước tiếp theo
-- Sau khi cập nhật, kiểm tra các trang.
-- Sử dụng browser_action nếu cần để xác minh.
+## Notes
+- Preview data sẽ được truyền qua compact từ controller.
+- Sử dụng session hoặc hidden inputs để giữ data giữa requests.
+- Kiểm tra trùng: Cùng phòng, giờ chồng lấn với DB hiện tại.
+- Highlight đỏ nếu conflict.
