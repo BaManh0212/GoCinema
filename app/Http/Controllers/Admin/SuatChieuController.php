@@ -276,7 +276,7 @@ class SuatChieuController extends Controller
     }
 
     /**
-     * ⚙️ Tự động tạo suất chiếu nhiều ngày
+     * ⚙️ Tự động tạo suất chiếu nhiều ngày (Preview mode)
      */
    public function autoStore(Request $request)
 {
@@ -318,36 +318,32 @@ class SuatChieuController extends Controller
     $gioCoDinh = $request->input('gio_co_dinh', []);
 
     $period = CarbonPeriod::create($ngay_bat_dau, $ngay_ket_thuc);
-    $conflicts = [];
-    $tongSuat = 0;
+    $preview = []; // Mảng chứa suất đề xuất
 
     foreach ($period as $ngay) {
         // 1️⃣ Nếu có chọn giờ cố định, tạo theo từng giờ
         if (!empty($gioCoDinh)) {
             foreach ($gioCoDinh as $gio) {
                 $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio);
-                $end = (clone $start)->addMinutes($thoiLuong);
+                $end = (clone $start)->addMinutes($thoiLuong + $khoangNghi);
 
-                // Kiểm tra trùng
-                $exists = SuatChieu::where('phong_id', $phong_id)
+                // Kiểm tra trùng với DB
+                $conflict = SuatChieu::where('phong_id', $phong_id)
                     ->where('gio_bat_dau', '<', $end)
                     ->where('gio_ket_thuc', '>', $start)
                     ->exists();
 
-                if ($exists) {
-                    $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
-                    continue;
-                }
-
-                SuatChieu::create([
+                $preview[] = [
                     'phim_id' => $phim_id,
                     'phong_id' => $phong_id,
-                    'gio_bat_dau' => $start,
-                    'gio_ket_thuc' => $end,
+                    'gio_bat_dau' => $start->toDateTimeString(),
+                    'gio_ket_thuc' => $end->toDateTimeString(),
                     'gia_ve' => $gia_ve,
                     'trang_thai' => 'hoat_dong',
-                ]);
-                $tongSuat++;
+                    'conflict' => $conflict,
+                    'phim_ten' => $phim->tieu_de,
+                    'phong_ten' => $phong->ten,
+                ];
             }
         } else {
             // 2️⃣ Nếu nhập giờ đầu tiên, tạo liên tục theo thời lượng + dọn phòng
@@ -357,40 +353,33 @@ class SuatChieuController extends Controller
                 $end = (clone $start)->addMinutes($thoiLuong);
                 if ($end->hour >= 23) break;
 
-                // Kiểm tra trùng
-                $exists = SuatChieu::where('phong_id', $phong_id)
+                // Kiểm tra trùng với DB
+                $conflict = SuatChieu::where('phong_id', $phong_id)
                     ->where('gio_bat_dau', '<', $end)
                     ->where('gio_ket_thuc', '>', $start)
                     ->exists();
 
-                if ($exists) {
-                    $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
-                    $start = $end->addMinutes($khoangNghi);
-                    continue;
-                }
-
-                SuatChieu::create([
+                $preview[] = [
                     'phim_id' => $phim_id,
                     'phong_id' => $phong_id,
-                    'gio_bat_dau' => $start,
-                    'gio_ket_thuc' => $end,
+                    'gio_bat_dau' => $start->toDateTimeString(),
+                    'gio_ket_thuc' => $end->toDateTimeString(),
                     'gia_ve' => $gia_ve,
                     'trang_thai' => 'hoat_dong',
-                ]);
-                $tongSuat++;
+                    'conflict' => $conflict,
+                    'phim_ten' => $phim->tieu_de,
+                    'phong_ten' => $phong->ten,
+                ];
+
                 $start = $end->addMinutes($khoangNghi);
             }
         }
     }
 
-    if (!empty($conflicts)) {
-        $msg = "❌ Một số suất chiếu không tạo được do trùng: " . implode(', ', array_slice($conflicts, 0, 5));
-        if (count($conflicts) > 5) $msg .= ', ...';
-        return back()->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công. {$msg}");
-    }
+    // Lưu preview vào session
+    session(['suatchieu_preview' => $preview]);
 
-    return redirect()->route('admin.suatchieu.index')
-                     ->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công!");
+    return redirect()->back()->withInput()->with('preview', $preview);
 }
 
 
@@ -429,6 +418,51 @@ class SuatChieuController extends Controller
         ]);
 
         return back()->with('success', "✅ Đã cập nhật {$affected} suất chiếu trong ngày {$request->ngay}.");
+    }
+
+    /**
+     * 💾 Lưu preview suất chiếu vào DB
+     */
+    public function storePreview(Request $request)
+    {
+        $previewJson = $request->input('preview_data');
+        if (!$previewJson) {
+            return back()->with('error', '⚠️ Không có dữ liệu preview để lưu.');
+        }
+
+        $preview = json_decode($previewJson, true);
+        if (!$preview) {
+            return back()->with('error', '⚠️ Dữ liệu preview không hợp lệ.');
+        }
+
+        $saved = 0;
+        $skipped = 0;
+
+        foreach ($preview as $suat) {
+            if (!$suat['conflict']) {
+                SuatChieu::create([
+                    'phim_id' => $suat['phim_id'],
+                    'phong_id' => $suat['phong_id'],
+                    'gio_bat_dau' => $suat['gio_bat_dau'],
+                    'gio_ket_thuc' => $suat['gio_ket_thuc'],
+                    'gia_ve' => $suat['gia_ve'],
+                    'trang_thai' => $suat['trang_thai'],
+                ]);
+                $saved++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        // Xóa session sau khi lưu
+        session()->forget('suatchieu_preview');
+
+        $msg = "🚀 Đã lưu {$saved} suất chiếu thành công.";
+        if ($skipped > 0) {
+            $msg .= " Bỏ qua {$skipped} suất do trùng phòng hoặc giờ .";
+        }
+
+        return redirect()->route('admin.suatchieu.index')->with('success', $msg);
     }
 
     /**

@@ -1,136 +1,250 @@
 @extends('admin.layouts.admin')
 
+@section('title', 'Tạo suất chiếu tự động')
+
 @section('content')
 <div class="container mt-4">
 
-    {{-- 🏷️ Tiêu đề --}}
-    <div class="d-flex align-items-center mb-4">
-        <i class="bi bi-calendar2-plus text-primary fs-2 me-2"></i>
-        <h2 class="fw-bold text-primary mb-0">Tạo lịch suất chiếu tự động</h2>
+    {{-- 🏷️ Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0 text-gradient">
+                <i class="bi bi-calendar2-plus"></i> Tạo suất chiếu tự động
+            </h2>
+            <small class="text-muted">Tạo lịch chiếu tự động cho phim với nhiều tùy chọn</small>
+        </div>
+        <div>
+            <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-lg rounded-4">
-        <div class="card-body p-4">
-            <form action="{{ route('admin.suatchieu.autoStore') }}" method="POST">
-                @csrf
+    <form action="{{ route('admin.suatchieu.autoStore') }}" method="POST">
+        @csrf
 
-                {{-- 🎞️ Thông tin cơ bản --}}
-                <div class="border-bottom pb-3 mb-4">
-                    <h5 class="fw-bold text-secondary mb-3">
-                        <i class="bi bi-film text-primary me-2"></i>Thông tin phim & phòng chiếu
-                    </h5>
+        {{-- 🎞️ Thông tin cơ bản --}}
+        <div class="card section-card mb-4 shadow-sm">
+            <div class="card-header bg-light border-0">
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-film"></i> 🎬 Thông tin phim & phòng chiếu
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="phim_id" class="form-label fw-semibold">🎬 Phim</label>
+                        <select name="phim_id" id="phim_id" class="form-select form-select-lg rounded-pill @error('phim_id') is-invalid @enderror">
+                            <option value="">-- Chọn phim --</option>
+                            @foreach ($phims as $phim)
+                                <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
+                                    🎬 {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="phim_id" class="form-label fw-semibold">Phim</label>
-                            <select name="phim_id" id="phim_id" class="form-select select2 @error('phim_id') is-invalid @enderror">
-                                <option value="">-- Chọn phim --</option>
-                                @foreach ($phims as $phim)
-                                    <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
-                                        🎬 {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="col-md-6">
+                        <label for="phong_id" class="form-label fw-semibold">🏢 Phòng chiếu</label>
+                        <select name="phong_id" id="phong_id" class="form-select form-select-lg rounded-pill @error('phong_id') is-invalid @enderror">
+                            <option value="">-- Chọn phòng --</option>
+                            @foreach ($phongs as $phong)
+                                <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
+                                    🏢 {{ $phong->ten }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 📅 Thời gian --}}
+        <div class="card section-card mb-4 shadow-sm">
+            <div class="card-header bg-light border-0">
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-clock-history"></i> 📅 Thời gian chiếu
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">📅 Ngày bắt đầu</label>
+                        <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control form-control-lg rounded-pill">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">📅 Ngày kết thúc</label>
+                        <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control form-control-lg rounded-pill">
+                    </div>
+
+                    {{-- Giờ chiếu đầu tiên + gợi ý --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">⏰ Giờ chiếu đầu tiên trong ngày</label>
+                        <div class="input-group">
+                            <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
+                                value="{{ old('gio_bat_dau_ngay', '08:00') }}"
+                                class="form-control form-control-lg rounded-pill">
+                            <button class="btn btn-outline-primary rounded-pill" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                💡 Gợi ý
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item gio-goi-y" href="#">🌅 08:00</a></li>
+                                <li><a class="dropdown-item gio-goi-y" href="#">☀️ 10:00</a></li>
+                                <li><a class="dropdown-item gio-goi-y" href="#">🌞 13:00</a></li>
+                                <li><a class="dropdown-item gio-goi-y" href="#">🌇 15:30</a></li>
+                                <li><a class="dropdown-item gio-goi-y" href="#">🌆 18:00</a></li>
+                                <li><a class="dropdown-item gio-goi-y" href="#">🌙 20:30</a></li>
+                            </ul>
                         </div>
+                        <div class="form-text text-muted">💡 Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="phong_id" class="form-label fw-semibold">Phòng chiếu</label>
-                            <select name="phong_id" id="phong_id" class="form-select select2 @error('phong_id') is-invalid @enderror">
-                                <option value="">-- Chọn phòng --</option>
-                                @foreach ($phongs as $phong)
-                                    <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
-                                        🏢 {{ $phong->ten }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- Giờ chiếu cố định --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">⏰ Chọn giờ chiếu cố định (có thể chọn nhiều)</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @php
+                                $gioCoDinh = ['08:00','11:00','14:00','17:00','20:00'];
+                            @endphp
+                            @foreach($gioCoDinh as $gio)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="gio_co_dinh[]" value="{{ $gio }}"
+                                        id="gio_{{ str_replace(':','',$gio) }}"
+                                        {{ is_array(old('gio_co_dinh')) && in_array($gio, old('gio_co_dinh')) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="gio_{{ str_replace(':','',$gio) }}">
+                                        ⏰ {{ $gio }}
+                                    </label>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                {{-- 📅 Thời gian --}}
-                <div class="border-bottom pb-3 mb-4">
-                    <h5 class="fw-bold text-secondary mb-3">
-                        <i class="bi bi-clock-history text-primary me-2"></i>Thời gian chiếu
-                    </h5>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Ngày bắt đầu</label>
-                            <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control rounded-3 shadow-sm-sm">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Ngày kết thúc</label>
-                            <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control rounded-3 shadow-sm-sm">
-                        </div>
-
-                        {{-- Giờ chiếu đầu tiên + gợi ý --}}
-                        <div class="col-md-6 mt-3">
-                            <label class="form-label fw-semibold">Giờ chiếu đầu tiên trong ngày</label>
-                            <div class="input-group">
-                                <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
-                                    value="{{ old('gio_bat_dau_ngay', '08:00') }}"
-                                    class="form-control rounded-start-3 shadow-sm-sm">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                    Gợi ý
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item gio-goi-y" href="#">08:00</a></li>
-                                    <li><a class="dropdown-item gio-goi-y" href="#">10:00</a></li>
-                                    <li><a class="dropdown-item gio-goi-y" href="#">13:00</a></li>
-                                    <li><a class="dropdown-item gio-goi-y" href="#">15:30</a></li>
-                                    <li><a class="dropdown-item gio-goi-y" href="#">18:00</a></li>
-                                    <li><a class="dropdown-item gio-goi-y" href="#">20:30</a></li>
-                                </ul>
-                            </div>
-                            <div class="form-text text-muted">Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
-                        </div>
-
-                        {{-- Giờ chiếu cố định --}}
-                        <div class="col-12 mt-3">
-                            <label class="form-label fw-semibold">Chọn giờ chiếu cố định (có thể chọn nhiều)</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                @php
-                                    $gioCoDinh = ['08:00','11:00','14:00','17:00','20:00'];
-                                @endphp
-                                @foreach($gioCoDinh as $gio)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="gio_co_dinh[]" value="{{ $gio }}"
-                                            id="gio_{{ str_replace(':','',$gio) }}"
-                                            {{ is_array(old('gio_co_dinh')) && in_array($gio, old('gio_co_dinh')) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="gio_{{ str_replace(':','',$gio) }}">
-                                            {{ $gio }}
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
+        {{-- 💰 Giá vé --}}
+        <div class="card section-card mb-4 shadow-sm">
+            <div class="card-header bg-light border-0">
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-cash-stack"></i> 💰 Giá vé
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="number" name="gia_ve" min="0" step="1000"
+                            value="{{ old('gia_ve', 70000) }}" class="form-control form-control-lg rounded-pill"
+                            placeholder="Nhập giá vé...">
+                        <div class="form-text text-muted">💰 Giá vé mặc định: 70,000 VNĐ</div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                {{-- 💰 Giá vé --}}
-                <div class="mb-4">
-                    <h5 class="fw-bold text-secondary mb-3">
-                        <i class="bi bi-cash-stack text-primary me-2"></i>Giá vé
-                    </h5>
-                    <input type="number" name="gia_ve" min="0" step="1000"
-                        value="{{ old('gia_ve', 70000) }}" class="form-control rounded-3 shadow-sm-sm w-50">
-                </div>
+        {{-- 🔘 Nút hành động --}}
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
+                <i class="bi bi-magic"></i> Tạo tự động
+            </button>
+        </div>
+    </form>
 
-                {{-- 🔘 Nút hành động --}}
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-outline-secondary px-4 me-2 rounded-3">
-                        <i class="bi bi-arrow-left"></i> Quay lại
-                    </a>
-                    <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
-                        <i class="bi bi-save"></i> Tạo tự động
-                    </button>
+            {{-- 📋 Bảng preview suất chiếu đề xuất --}}
+            @if(session('preview') && !empty(session('preview')))
+                <div class="mt-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-eye"></i> 👀 Đề xuất suất chiếu
+                        </h5>
+                        <form action="{{ route('admin.suatchieu.storePreview') }}" method="POST" class="d-inline" id="store-preview-form-top">
+                            @csrf
+                            <input type="hidden" name="preview_data" id="preview-data-input-top" value="{{ json_encode(session('preview')) }}">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                                <i class="bi bi-check-circle"></i> Lưu vào danh sách
+                            </button>
+                        </form>
+                    </div>
+
+                    {{-- 🔍 Bộ lọc cho bảng preview --}}
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body py-3">
+                            <form id="preview-filter-form" class="row g-3 align-items-center">
+                                <div class="col-md-3">
+                                    <input type="text" id="filter-phim" class="form-control rounded-pill" placeholder="🔍 Tìm theo tên phim...">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" id="filter-ngay" class="form-control rounded-pill">
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="filter-phong" class="form-select rounded-pill">
+                                        <option value="">-- Chọn phòng chiếu --</option>
+                                        @foreach ($phongs as $phong)
+                                            <option value="{{ $phong->ten }}">{{ $phong->ten }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="filter-trang-thai" class="form-select rounded-pill">
+                                        <option value="">-- Trạng thái --</option>
+                                        <option value="ok">✅ OK</option>
+                                        <option value="conflict">❌ Trùng lấn</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="preview-table">
+                            <thead class="table-header text-white">
+                                <tr class="text-center">
+                                    <th style="width: 70px;">STT</th>
+                                    <th class="text-start">🎬 Phim</th>
+                                    <th>🏢 Phòng</th>
+                                    <th>⏰ Bắt đầu</th>
+                                    <th>⏰ Kết thúc</th>
+                                    <th>💰 Giá vé</th>
+                                    <th>📊 Trạng thái</th>
+                                    <th width="120px">⚙️ Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-table-body">
+                                @foreach(session('preview') as $index => $suat)
+                                    <tr class="table-row {{ $suat['conflict'] ? 'table-danger' : '' }}" data-index="{{ $index }}" data-phim="{{ $suat['phim_ten'] }}" data-phong="{{ $suat['phong_ten'] }}" data-ngay="{{ \Carbon\Carbon::parse($suat['gio_bat_dau'])->format('Y-m-d') }}" data-trang-thai="{{ $suat['conflict'] ? 'conflict' : 'ok' }}">
+                                        <td class="text-center fw-bold text-muted">{{ $index + 1 }}</td>
+                                        <td class="fw-semibold">{{ $suat['phim_ten'] }}</td>
+                                        <td class="text-center">{{ $suat['phong_ten'] }}</td>
+                                        <td class="text-center">{{ \Carbon\Carbon::parse($suat['gio_bat_dau'])->format('d/m/Y H:i') }}</td>
+                                        <td class="text-center">{{ \Carbon\Carbon::parse($suat['gio_ket_thuc'])->format('d/m/Y H:i') }}</td>
+                                        <td class="text-center">{{ number_format($suat['gia_ve']) }} VNĐ</td>
+                                        <td class="text-center">
+                                            @if($suat['conflict'])
+                                                <span class="badge bg-danger rounded-pill px-3">❌ Trùng lấn</span>
+                                            @else
+                                                <span class="badge bg-success rounded-pill px-3">✅ OK</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm remove-row" data-index="{{ $index }}">
+                                                <i class="bi bi-trash3"></i> Xóa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+
                 </div>
-            </form>
+            @endif
         </div>
     </div>
 </div>
@@ -156,6 +270,74 @@
                 e.preventDefault();
                 $('#gio_bat_dau_ngay').val($(this).text().trim());
             });
+
+            // Xóa row trong bảng preview
+            $(document).on('click', '.remove-row', function() {
+                const index = $(this).data('index');
+                $(`tr[data-index="${index}"]`).remove();
+
+                // Cập nhật hidden input
+                let previewDataTop = JSON.parse($('#preview-data-input-top').val());
+                previewDataTop.splice(index, 1);
+                $('#preview-data-input-top').val(JSON.stringify(previewDataTop));
+
+                // Cập nhật STT
+                $('#preview-table-body tr').each(function(i) {
+                    $(this).find('td:first').text(i + 1);
+                    $(this).attr('data-index', i);
+                    $(this).find('.remove-row').attr('data-index', i);
+                });
+            });
+
+            // Lọc bảng preview
+            function filterPreviewTable() {
+                const phimFilter = $('#filter-phim').val().toLowerCase();
+                const ngayFilter = $('#filter-ngay').val();
+                const phongFilter = $('#filter-phong').val();
+                const trangThaiFilter = $('#filter-trang-thai').val();
+
+                $('#preview-table-body tr').each(function() {
+                    const row = $(this);
+                    const phim = row.data('phim').toLowerCase();
+                    const ngay = row.data('ngay');
+                    const phong = row.data('phong');
+                    const trangThai = row.data('trang-thai');
+
+                    const matchPhim = !phimFilter || phim.includes(phimFilter);
+                    const matchNgay = !ngayFilter || ngay === ngayFilter;
+                    const matchPhong = !phongFilter || phong === phongFilter;
+                    const matchTrangThai = !trangThaiFilter || trangThai === trangThaiFilter;
+
+                    if (matchPhim && matchNgay && matchPhong && matchTrangThai) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                });
+
+                // Cập nhật STT sau khi lọc
+                let visibleIndex = 1;
+                $('#preview-table-body tr:visible').each(function() {
+                    $(this).find('td:first').text(visibleIndex++);
+                });
+            }
+
+            // Gắn sự kiện lọc
+            $('#filter-phim, #filter-ngay, #filter-phong, #filter-trang-thai').on('input change', filterPreviewTable);
+
+            // Khởi tạo DataTable cho preview table (không phân trang)
+            if ($('#preview-table').length > 0) {
+                $('#preview-table').DataTable({
+                    paging: false, // Tắt phân trang
+                    searching: false, // Tắt search mặc định của DataTable
+                    ordering: false, // Tắt sắp xếp
+                    info: false, // Tắt thông tin số lượng
+                    lengthChange: false, // Tắt chọn số lượng hiển thị
+                    language: {
+                        emptyTable: "Không có dữ liệu"
+                    }
+                });
+            }
         });
     </script>
 
@@ -297,6 +479,55 @@ input[type="date"], input[type="time"], .form-control {
     }
     .gap-2 > .form-check {
         margin-bottom: 0.5rem;
+    }
+
+    /* =================== Table Styles =================== */
+    .table-header {
+        background: linear-gradient(90deg, #4e73df, #224abe);
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+    .table-row:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+    }
+    .table-danger {
+        background-color: #ffe6e6 !important;
+    }
+    .table-danger:hover {
+        background-color: #ffcccc !important;
+    }
+
+    /* =================== Badge Styles =================== */
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* =================== Text Gradient =================== */
+    .text-gradient {
+        background: linear-gradient(90deg, #4e73df, #224abe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* =================== Section Cards =================== */
+    .section-card {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+    .section-card:hover {
+        border-color: #4e73df;
+        box-shadow: 0 5px 15px rgba(78,115,223,0.1) !important;
+    }
+    .section-card .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+        padding: 1rem 1.5rem;
+    }
+    .section-card .card-body {
+        padding: 1.5rem;
     }
 </style>
 @endpush
