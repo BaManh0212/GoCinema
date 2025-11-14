@@ -58,6 +58,9 @@ Route::get('/danh-muc/{slug}', [PhimController::class, 'category'])->name('movie
 // Trang chi tiết phim
 Route::get('/phim/{slug}', [PhimController::class, 'show'])->name('movies.show');
 
+// Trang lịch chiếu
+Route::get('/lich-chieu', [PhimController::class, 'schedule'])->name('schedule.index');
+
 // JSON lịch chiếu (nếu cần load bằng JS) + Lưu đánh giá
 Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson'])->name('movies.schedule.json');
 Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])

@@ -201,7 +201,7 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div>
                         <table class="table table-hover" id="preview-table">
                             <thead class="table-header text-white">
                                 <tr class="text-center">
@@ -328,13 +328,20 @@
             // Khởi tạo DataTable cho preview table (không phân trang)
             if ($('#preview-table').length > 0) {
                 $('#preview-table').DataTable({
-                    paging: false, // Tắt phân trang
-                    searching: false, // Tắt search mặc định của DataTable
-                    ordering: false, // Tắt sắp xếp
-                    info: false, // Tắt thông tin số lượng
-                    lengthChange: false, // Tắt chọn số lượng hiển thị
+                    paging: true,        // ✅ Bật phân trang
+                    pageLength: 10,      // số dòng mỗi trang (tùy chọn)
+                    searching: false,
+                    ordering: false,
+                    info: true,          // bật dòng “Đang xem từ…”
+                    lengthChange: true,  // cho người dùng chọn hiển thị 10/25/50
                     language: {
-                        emptyTable: "Không có dữ liệu"
+                        emptyTable: "Không có dữ liệu",
+                        lengthMenu: "Hiển thị _MENU_ dòng",
+                        info: "Hiển thị _START_ đến _END_ của _TOTAL_ suất",
+                        paginate: {
+                            next: "Trang sau",
+                            previous: "Trang trước",
+                        }
                     }
                 });
             }
@@ -482,6 +489,10 @@ input[type="date"], input[type="time"], .form-control {
     }
 
     /* =================== Table Styles =================== */
+    #preview-table {
+        table-layout: fixed;
+        width: 100%;
+    }
     .table-header {
         background: linear-gradient(90deg, #4e73df, #224abe);
         border-radius: 0.75rem 0.75rem 0 0;

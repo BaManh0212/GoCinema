@@ -264,4 +264,64 @@ class PhimController extends Controller
 
         return back()->with('success', 'Cảm ơn bạn đã đánh giá!');
     }
+
+    /**
+     * Trang lịch chiếu theo ngày
+     */
+    public function schedule(Request $request)
+    {
+        $selectedDate = $request->get('date', now()->format('Y-m-d'));
+        $selectedPhim = $request->get('phim');
+        $selectedDanhMuc = $request->get('danh_muc');
+
+        // Lấy danh sách phim có suất chiếu trong ngày được chọn
+        $query = Phim::with(['danhMucs', 'theLoais'])
+            ->whereHas('suatChieus', function ($q) use ($selectedDate) {
+                $q->where('trang_thai', 'hoat_dong')
+                  ->whereDate('gio_bat_dau', $selectedDate);
+            });
+
+        // Lọc theo phim
+        if ($selectedPhim) {
+            $query->where('id', $selectedPhim);
+        }
+
+        // Lọc theo danh mục
+        if ($selectedDanhMuc) {
+            $query->whereHas('danhMucs', function ($q) use ($selectedDanhMuc) {
+                $q->where('danh_muc.id', $selectedDanhMuc);
+            });
+        }
+
+        $movies = $query->orderBy('tieu_de')->get();
+
+        // Dữ liệu cho bộ lọc
+        $allPhims = Phim::whereHas('suatChieus', function ($q) {
+            $q->where('trang_thai', 'hoat_dong')
+              ->whereBetween('gio_bat_dau', [now(), now()->addDays(7)]);
+        })->orderBy('tieu_de')->get();
+
+        $danhMucs = DanhMuc::orderBy('ten')->get();
+
+        // Tạo danh sách 7 ngày
+        $dates = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = now()->addDays($i);
+            $dates[] = [
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->isoFormat('ddd • DD/MM'),
+                'is_today' => $date->isToday(),
+            ];
+        }
+
+        return view('client.schedule.index', compact(
+            'movies',
+            'dates',
+            'selectedDate',
+            'allPhims',
+            'danhMucs',
+            'selectedPhim',
+            'selectedDanhMuc'
+        ));
+    }
 }

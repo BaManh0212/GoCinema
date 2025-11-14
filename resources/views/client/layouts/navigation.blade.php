@@ -24,7 +24,7 @@
             <span class="divider">|</span>
 
             <li class="nav-item">
-                <a class="nav-link px-3" href="#lich-chieu" style="font-weight: 500; transition: var(--transition);">
+                <a class="nav-link px-3" href="{{ route('schedule.index') }}" style="font-weight: 500; transition: var(--transition);">
                     <i class="fas fa-calendar-alt me-1"></i>Lịch Chiếu
                 </a>
             </li>
