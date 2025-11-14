@@ -12,14 +12,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0 text-gradient">
-                <i class="bi bi-folder2-open"></i> Quản lý suất chiếu
+                <i class="bi bi-calendar2-event"></i> Quản lý suất chiếu
             </h2>
             <small class="text-muted">Xem, lọc và quản lý các suất chiếu</small>
-        </div>
-        <div>
-            <a href="{{ route('staff.suatchieu.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm suất chiếu
-            </a>
         </div>
     </div>
 
@@ -27,13 +22,13 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('staff.suatchieu.index') }}" class="row g-3 align-items-center">
-                <div class="col-md-3">
+                <div class="col-auto">
                     <input type="text" name="q" class="form-control" placeholder="Tìm theo tên phim..." value="{{ request('q') }}">
                 </div>
-                <div class="col-md-2">
+                <div class="col-auto">
                     <input type="date" name="ngay_chieu" class="form-control" value="{{ request('ngay_chieu') }}">
                 </div>
-                <div class="col-md-2">
+                <div class="col-auto">
                     <select name="phong_id" class="form-select rounded-pill">
                         <option value="">-- Chọn phòng chiếu --</option>
                         @foreach ($phongs as $phong)
@@ -43,7 +38,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-auto">
                     <select name="trang_thai" class="form-select rounded-pill">
                         <option value="">-- Trạng thái --</option>
                         @foreach(['hoat_dong' => 'Hoạt động', 'tam_dung' => 'Tạm dừng', 'huy' => 'Hủy'] as $value => $label)
@@ -51,7 +46,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-auto">
                     <select name="sort" class="form-select rounded-pill">
                         <option value="">-- Sắp xếp theo --</option>
                         <option value="time_asc" {{ request('sort') == 'time_asc' ? 'selected' : '' }}>Giờ chiếu ↑</option>
@@ -60,7 +55,7 @@
                         <option value="movie_desc" {{ request('sort') == 'movie_desc' ? 'selected' : '' }}>Tên phim (Z→A)</option>
                     </select>
                 </div>
-                <div class="col-md-12 text-end">
+                <div class="ms-auto text-end">
                     <button type="submit" class="btn btn-primary shadow-sm rounded-pill px-4 me-2">
                         <i class="fas fa-search"></i> Tìm kiếm
                     </button>
@@ -71,53 +66,20 @@
             </form>
         </div>
     </div>
-    {{-- ⚙️ Cập nhật trạng thái hàng loạt --}} 
-    <div class="card mb-4 border-0 shadow-sm"> 
-        <div class="card-body py-3"> 
-            <form action="{{ route('staff.suatchieu.bulkUpdate') }}" method="POST" class="row g-3 align-items-end"> 
-                @csrf 
-                <div class="col-md-3"> 
-                    <label class="form-label mb-0 fw-semibold">Ngày chiếu</label> 
-                    <input type="date" name="ngay" class="form-control" required> 
-                </div> 
-                <div class="col-md-3"> 
-                    <label class="form-label mb-0 fw-semibold">Phòng chiếu</label> 
-                    <select name="phong_id" class="form-select rounded-pill"> 
-                        <option value="">-- Tất cả phòng --</option> 
-                        @foreach ($phongs as $phong) 
-                        <option value="{{ $phong->id }}">{{ $phong->ten }}</option> 
-                        @endforeach </select> </div> <div class="col-md-3"> 
-                            <label class="form-label mb-0 fw-semibold">Trạng thái mới</label> 
-                            <select name="trang_thai" class="form-select rounded-pill" required> 
-                                <option value="hoat_dong">🟢 Hoạt động</option> 
-                                <option value="tam_dung">⏸️ Tạm dừng</option> 
-                                <option value="huy">❌ Hủy</option> </select> 
-                            </div> <div class="col-md-3"> 
-                                <label class="form-label mb-0 fw-semibold">Lý do (nếu có)</label> 
-                                <input type="text" name="ly_do_huy" class="form-control" placeholder="VD: Bảo trì, sự cố, ..."> 
-                            </div> 
-                            <div class="col-12 text-end mt-3"> 
-                                <button type="submit" class="btn btn-warning rounded-pill px-4 shadow-sm"> 
-                                    <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái hàng loạt </button> 
-                                </div> 
-                            </form> 
-                        </div> 
-                    </div>
 
     {{-- 📋 Danh sách suất chiếu --}}
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0 text-center">
-                <thead class="table-primary text-uppercase text-secondary">
-                    <tr>
-                        <th>STT</th>
-                        <th>Phim</th>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-header text-white">
+                    <tr class="text-center">
+                        <th style="width: 70px;">STT</th>
+                        <th class="text-start">Phim</th>
                         <th>Phòng chiếu</th>
                         <th>Giờ bắt đầu</th>
                         <th>Giờ kết thúc</th>
                         <th>Giá vé (VNĐ)</th>
                         <th>Trạng thái</th>
-                        <th width="220px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -127,13 +89,13 @@
                             $gioKetThuc = Carbon::parse($s->gio_ket_thuc);
                             $canEdit = $now->lt($gioBatDau); // có thể sửa/xóa nếu chưa bắt đầu
                         @endphp
-                        <tr>
-                            <td>{{ $suatchieus->firstItem() + $key }}</td>
-                            <td class="text-start ps-4">{{ $s->phim?->tieu_de ?? 'Không có' }}</td>
-                            <td>{{ $s->phong?->ten ?? 'Không có' }}</td>
-                            <td>{{ $gioBatDau->format('H:i d/m/Y') }}</td>
-                            <td>{{ $gioKetThuc->format('H:i d/m/Y') }}</td>
-                            <td>{{ number_format($s->gia_ve, 0, ',', '.') }}</td>
+                        <tr class="table-row">
+                            <td class="text-center fw-bold text-muted">{{ $suatchieus->firstItem() + $key }}</td>
+                            <td class="fw-semibold">{{ $s->phim?->tieu_de ?? 'Không có' }}</td>
+                            <td class="text-center">{{ $s->phong?->ten ?? 'Không có' }}</td>
+                            <td class="text-center">{{ $gioBatDau->format('H:i d/m/Y') }}</td>
+                            <td class="text-center">{{ $gioKetThuc->format('H:i d/m/Y') }}</td>
+                            <td class="text-center">{{ number_format($s->gia_ve, 0, ',', '.') }}</td>
 
                             {{-- Trạng thái --}}
                             <td>
@@ -143,7 +105,7 @@
                                     <form action="{{ route('staff.suatchieu.updateTrangThai', $s->id) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
-                                        <select name="trang_thai" class="form-select form-select-sm w-auto"
+                                        <select name="trang_thai" class="form-select rounded-pill form-select rounded-pill-sm w-auto"
                                                 onchange="this.form.submit()"
                                                 {{ !$canEdit ? 'disabled title=Không thể thay đổi trạng thái suất đã bắt đầu' : '' }}>
                                             @foreach(['hoat_dong'=>'🟢 Hoạt động','tam_dung'=>'⏸️ Tạm dừng','huy'=>'❌ Hủy'] as $value=>$label)
@@ -153,48 +115,65 @@
                                     </form>
                                 @endif
                             </td>
-
-                           {{-- Hành động --}}
-                    <td>
-                        <a href="{{ route('staff.suatchieu.ghe', $s->id) }}" class="btn btn-sm btn-outline-info rounded-pill">
-                            Ghế
-                        </a>
-
-                        @if($canEdit)
-                            <a href="{{ route('staff.suatchieu.edit', $s->id) }}" class="btn btn-sm btn-outline-primary me-1">Sửa</a>
-                            <form action="{{ route('staff.suatchieu.destroy', $s->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                            </form>
-                        @else
-                            <span class="btn btn-sm btn-outline-primary me-1 disabled" title="Không thể sửa suất đã bắt đầu">Sửa</span>
-                            <span class="btn btn-sm btn-outline-danger disabled" title="Không thể xóa suất đã bắt đầu">Xóa</span>
-                        @endif
-                    </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-muted py-5">Không có suất chiếu nào.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox"></i> Không có suất chiếu nào phù hợp.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
-        <div class="card-footer d-flex justify-content-end">
-            {{ $suatchieus->links('pagination::bootstrap-5') }}
+            <div class="mt-3 d-flex justify-content-end">
+                {{ $suatchieus->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
 </div>
 
+{{-- 🎨 CSS đồng bộ --}}
 <style>
 .text-gradient {
     background: linear-gradient(90deg, #007bff, #00c3ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-.table-row:hover { background-color: #e9f5ff; transform: scale(1.01); }
-select.form-select-sm { min-width: 130px; }
+.table-header {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+}
+.table-row {
+    background-color: #fff;
+    transition: all 0.25s ease-in-out;
+}
+.table-row:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.table-row:hover {
+    background-color: #e9f5ff;
+    transform: scale(1.01);
+}
+.table th {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-bottom: none !important;
+}
+.table td {
+    padding: 1rem 1.2rem;
+    vertical-align: middle;
+}
+.card {
+    border-radius: 1rem;
+}
+.ms-auto {
+    margin-left: auto !important;
+}
+.text-end {
+    text-align: right !important;
+}
+select.form-select.rounded-pill-sm {
+    min-width: 130px;
+}
 .disabled {
     pointer-events: none;
     opacity: 0.6;
@@ -204,6 +183,5 @@ select.form-select-sm { min-width: 130px; }
     font-size: 0.85rem;
     padding: 0.35em 0.6em;
 }
-
 </style>
 @endsection
