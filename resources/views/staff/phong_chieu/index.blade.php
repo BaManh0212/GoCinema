@@ -10,11 +10,6 @@
             </h2>
             <small class="text-muted">Xem, lọc và quản lý các phòng chiếu</small>
         </div>
-        <div>
-            <a href="{{ route('staff.phongchieu.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm phòng chiếu
-            </a>
-        </div>
     </div>
 
   {{-- 🔍 Bộ lọc --}}
@@ -74,7 +69,6 @@
                         <th>Mã phòng</th>
                         <th>Định dạng</th>
                         <th>Trạng thái</th>
-                        <th width="200px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,22 +86,6 @@
                                 @else
                                     <span class="badge bg-danger">Ngừng sử dụng</span>
                                 @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('staff.phongchieu.ghe', $p->id) }}" class="btn btn-sm btn-outline-warning me-1">
-                                    <i class="bi bi-ui-checks"></i> Quản lý ghế
-                                </a>
-                                <a href="{{ route('staff.phongchieu.edit', $p->id) }}" class="btn btn-sm btn-outline-primary me-1">
-                                    <i class="bi bi-pencil-square"></i> Sửa
-                                </a>
-                                <form action="{{ route('staff.phongchieu.destroy', $p->id) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Bạn có chắc muốn xóa phòng này không?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash3"></i> Xóa
-                                    </button>
-                                </form>
                             </td>
                         </tr>
                     @empty
