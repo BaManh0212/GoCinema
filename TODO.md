@@ -1,15 +1,11 @@
-# TODO: Implement Suat Chieu Preview Feature
+# TODO: Create Schedule Page for Client
 
 ## Tasks
-- [x] Sửa method `autoStore` trong SuatChieuController: Tạo mảng preview thay vì lưu DB, kiểm tra trùng và đánh dấu conflict.
-- [x] Thêm method `storePreview` trong SuatChieuController: Lưu mảng suất từ preview vào DB.
-- [x] Thêm route cho `storePreview` (POST /admin/suatchieu/store-preview).
-- [x] Cập nhật view `create.blade.php`: Hiển thị bảng preview bên dưới form nếu có data, với nút xóa (JS) và nút "Lưu vào danh sách".
-- [x] Thêm JS để xóa row trong bảng preview và cập nhật hidden inputs.
-- [ ] Test tính năng: Tạo preview, xóa suất, lưu vào DB, kiểm tra trùng.
-
-## Notes
-- Preview data sẽ được truyền qua compact từ controller.
-- Sử dụng session hoặc hidden inputs để giữ data giữa requests.
-- Kiểm tra trùng: Cùng phòng, giờ chồng lấn với DB hiện tại.
-- Highlight đỏ nếu conflict.
+- [x] Add route for schedule page in routes/web.php
+- [x] Add schedule method in PhimController
+- [x] Create resources/views/client/schedule/index.blade.php view
+- [x] Update navigation link in navigation.blade.php to point to new route
+- [x] Implement day buttons (7 days)
+- [x] Implement filters by movie and category
+- [x] Display movie cards for selected day
+- [x] Test the page functionality (routes cleared, ready for manual testing)

@@ -321,11 +321,17 @@ class SuatChieuController extends Controller
     $preview = []; // Mảng chứa suất đề xuất
 
     foreach ($period as $ngay) {
+        $ngayStr = $ngay->format('Y-m-d');
+        $endOfDay = Carbon::parse($ngayStr . ' 23:59:59');
+
         // 1️⃣ Nếu có chọn giờ cố định, tạo theo từng giờ
         if (!empty($gioCoDinh)) {
             foreach ($gioCoDinh as $gio) {
-                $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio);
+                $start = Carbon::parse($ngayStr . ' ' . $gio);
                 $end = (clone $start)->addMinutes($thoiLuong + $khoangNghi);
+
+                // Bỏ qua nếu suất chiếu kết thúc sau 23:59
+                if ($end->gt($endOfDay)) continue;
 
                 // Kiểm tra trùng với DB
                 $conflict = SuatChieu::where('phong_id', $phong_id)
@@ -347,11 +353,11 @@ class SuatChieuController extends Controller
             }
         } else {
             // 2️⃣ Nếu nhập giờ đầu tiên, tạo liên tục theo thời lượng + dọn phòng
-            $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
+            $start = Carbon::parse($ngayStr . ' ' . $gio_bat_dau_ngay);
 
-            while ($start->hour < 23) {
+            while ($start->lte(Carbon::parse($ngayStr . ' 23:00'))) {
                 $end = (clone $start)->addMinutes($thoiLuong);
-                if ($end->hour >= 23) break;
+                if ($end->gt($endOfDay)) break;
 
                 // Kiểm tra trùng với DB
                 $conflict = SuatChieu::where('phong_id', $phong_id)
