@@ -21,14 +21,7 @@
                    value="{{ old('tieu_de', $phim->tieu_de) }}" placeholder="Nhập tên phim...">
             @error('tieu_de') <div class="text-danger mt-1">{{ $message }}</div> @enderror
         </div>
-        {{-- Slug (tự động) --}}
-        <div class="mb-3">
-            <label class="form-label fw-bold">Slug (tự động tạo)</label>
-            <input type="text" name="slug" id="slug"
-                class="form-control bg-light"
-                value="{{ old('slug', $phim->slug) }}"
-                readonly>
-        </div>
+
         {{-- Mô tả phim --}}
         <div class="mb-3">
             <label class="form-label fw-bold">Mô tả</label>
@@ -178,23 +171,6 @@
     line-height: 30px;
 }
 </style>
-{{-- Script tạo slug --}}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const titleInput = document.querySelector('input[name="tieu_de"]');
-    const slugInput = document.querySelector('input[name="slug"]');
-
-    titleInput.addEventListener('input', function() {
-        const slug = this.value
-            .toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu tiếng Việt
-            .replace(/[^a-z0-9\s-]/g, '') // bỏ ký tự đặc biệt
-            .trim()
-            .replace(/\s+/g, '-');
-        slugInput.value = slug;
-    });
-});
-</script>
 
 @endsection
 

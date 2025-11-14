@@ -23,8 +23,8 @@
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- QUẢN LÝ NỘI DUNG -->
-    <div class="sidebar-heading">🎬 Quản lý nội dung</div>
+    <!-- NỘI DUNG & BANNER -->
+    <div class="sidebar-heading">🎬 Nội dung & Banner</div>
 
     <!-- Phim -->
     <li class="nav-item {{ request()->is('admin/phim*') ? 'active' : '' }}">
@@ -61,19 +61,20 @@
             </div>
         </div>
     </li>
+
     <!-- Banner -->
-    <div class="sidebar-heading">🎨 Quản lý banner</div>
     <li class="nav-item {{ request()->is('admin/banners*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.banners.index') }}">
             <i class="fas fa-image"></i>
             <span>Banner</span>
         </a>
     </li>
+
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- QUẢN LÝ RẠP & SUẤT CHIẾU -->
-    <div class="sidebar-heading">🏢 Phòng chiếu & Suất chiếu</div>
+    <!-- RẠP & SUẤT CHIẾU -->
+    <div class="sidebar-heading">🏢 Rạp & Suất chiếu</div>
 
     <!-- Rạp -->
     <li class="nav-item {{ request()->is('admin/rap*') ? 'active' : '' }}">
@@ -82,6 +83,7 @@
             <span>Rạp chiếu</span>
         </a>
     </li>
+
     <!-- Phòng chiếu -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhongChieu" aria-expanded="false" aria-controls="menuPhongChieu">
@@ -140,7 +142,7 @@
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- QUẢN LÝ BÁN HÀNG -->
+    <!-- BÁN HÀNG & ƯU ĐÃI -->
     <div class="sidebar-heading">💰 Bán hàng & Ưu đãi</div>
 
     <li class="nav-item {{ request()->is('admin/combo*') ? 'active' : '' }}">
@@ -158,26 +160,16 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuGiamGia" aria-expanded="false" aria-controls="menuGiamGia">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuUuDai" aria-expanded="false" aria-controls="menuUuDai">
             <i class="fas fa-fw fa-percent"></i>
-            <span>Mã giảm giá</span>
+            <span>Ưu đãi</span>
         </a>
-        <div id="menuGiamGia" class="collapse" data-parent="#accordionSidebar">
+        <div id="menuUuDai" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
-                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
-            </div>
-        </div>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDoiDiem" aria-expanded="false" aria-controls="menuDoiDiem">
-            <i class="fas fa-fw fa-percent"></i>
-            <span>Ưu đãi đổi điểm</span>
-        </a>
-        <div id="menuDoiDiem" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{ route('admin.voucher.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách mã</a>
-                <a class="collapse-item" href="{{ route('admin.voucher.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã mới</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Mã giảm giá</a>
+                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã giảm giá</a>
+                <a class="collapse-item" href="{{ route('admin.voucher.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Ưu đãi đổi điểm</a>
+                <a class="collapse-item" href="{{ route('admin.voucher.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm ưu đãi đổi điểm</a>
             </div>
         </div>
     </li>
@@ -185,8 +177,8 @@
     <!-- Divider -->
     <hr class="sidebar-divider">
 
-    <!-- NGƯỜI DÙNG & ĐƠN -->
-    <div class="sidebar-heading">👥 Người dùng & Đơn hàng</div>
+    <!-- QUẢN LÝ HỆ THỐNG -->
+    <div class="sidebar-heading">👥 Quản lý hệ thống</div>
 
     <li class="nav-item">
         <a class="nav-link collapsed" href="/admin/nguoi-dung" data-toggle="collapse" data-target="#menuTaiKhoan" aria-expanded="false" aria-controls="menuTaiKhoan">
@@ -211,17 +203,15 @@
                 <a class="collapse-item" href="{{ route('admin.donve.checkin') }}"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
             </div>
         </div>
-    </li>    
-    <hr class="sidebar-divider">
-    <div class="sidebar-heading">Quản lý bài viết</div>
+    </li>
+
     <li class="nav-item {{ request()->is('admin/baiviet*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.baiviet.index') }}">
             <i class="fas fa-newspaper"></i>
             <span>Bài viết</span>
         </a>
     </li>
-    <hr class="sidebar-divider">
-    <div class="sidebar-heading">Quản lý liên hệ</div>
+
     <li class="nav-item {{ request()->is('admin/contacts*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('admin.contacts.index') }}">
             <i class="fas fa-envelope"></i>
