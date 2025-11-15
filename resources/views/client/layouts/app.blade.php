@@ -495,11 +495,12 @@
     @include('client.layouts.footer')
 
     @stack('scripts')
-    
+
     {{-- ✅ Chatbot Popup --}}
     @include('components.chatbot-popup')
-    
+
     {{-- Bootstrap JS Bundle v5 loaded in head --}}
+
 </body>
 
 </html>

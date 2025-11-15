@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('baiviets', function (Blueprint $table) {
-            $table->date('ngay_phat_hanh')->nullable()->after('loai');
+            if (!Schema::hasColumn('baiviets', 'ngay_phat_hanh')) {
+                $table->date('ngay_phat_hanh')->nullable()->after('loai');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('baiviets', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('baiviets', 'ngay_phat_hanh')) {
+                $table->dropColumn('ngay_phat_hanh');
+            }
         });
     }
 };

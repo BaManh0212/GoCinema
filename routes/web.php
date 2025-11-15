@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Http;
 // Controllers dùng chung
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
@@ -11,7 +11,11 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\PhimController;
 use App\Http\Controllers\BaiVietController;
+
+//  chatbot ai
 use App\Http\Controllers\ChatbotController;
+
+
 // Controllers của Admin
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -41,6 +45,7 @@ use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 use App\Http\Controllers\Staff\SuatChieuController as StaffSuatChieuController;
 use App\Http\Controllers\Staff\PhongChieuController as StaffPhongChieuController;
 use App\Http\Controllers\Staff\GheController as StaffGheController;
+;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,8 +78,10 @@ Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet
 // Chatbot
 Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index'); // trang hiển thị
 Route::get('/chatbot/test', [ChatbotController::class, 'test'])->name('chatbot.test'); // test endpoint
-Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send'); // gửi message
-Route::post('/chatbot/clear', [ChatbotController::class, 'clearChat'])->name('chatbot.clear');
+Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])
+    //->middleware('throttle:5,1') // tối đa 5 request mỗi phút
+    ->name('chatbot.message');// gửi message
+
 
 
 
@@ -364,6 +371,7 @@ Route::prefix('staff')
         Route::post('suatchieu/bulk-update', [StaffSuatChieuController::class, 'bulkUpdate'])
             ->name('suatchieu.bulkUpdate');
     });
+
 
 /*
 |--------------------------------------------------------------------------
