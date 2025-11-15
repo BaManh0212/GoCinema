@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\NguoiDung;
-use App\Models\VaiTro;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\VaiTro;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,10 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed roles first
-        $this->call(VaiTroSeeder::class);
-
-
+        // Seed các bảng cơ bản
         $this->call([
             VaiTroSeeder::class,
             AdminSeeder::class,
@@ -26,12 +21,18 @@ class DatabaseSeeder extends Seeder
             DinhDangSeeder::class,
             DanhMucSeeder::class,
             RapSeeder::class,
+            OrdersSeeder::class,
+            ChatHistorySeeder::class,
+            MovieSeeder::class,
+            ShowtimeSeeder::class,
+            ComboSeeder::class,
+             // ✅ Thêm seeder lịch sử chat
         ]);
 
-
-        // Create some users using the User factory (Breeze)
+        // Tạo user mẫu bằng factory
         $users = User::factory(10)->create();
-        // assign default role 'khach_hang' if exists
+
+        // Gán vai trò 'khach_hang' nếu có
         $khach = VaiTro::where('ten', 'khach_hang')->first();
         if ($khach) {
             foreach ($users as $u) {
@@ -40,7 +41,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // Ensure there's a manager user
+        // Tạo admin nếu chưa có
         $manager = VaiTro::where('ten', 'quan_ly')->first();
         if ($manager) {
             User::firstOrCreate([
@@ -48,14 +49,9 @@ class DatabaseSeeder extends Seeder
             ], [
                 'ho_ten' => 'Admin',
                 'email' => 'admin@gmail.com',
-                'password' => 'password',
+                'password' => bcrypt('password'),
                 'vai_tro_id' => $manager->id,
             ]);
         }
-    $this->call(PhimSeeder::class);
-
-    // Seed sample orders for admin testing
-    $this->call(OrdersSeeder::class);
-
     }
 }

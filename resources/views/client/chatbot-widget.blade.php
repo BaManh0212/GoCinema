@@ -1,6 +1,6 @@
 <div id="chat-widget">
     <div id="chat-header">
-        <span>Chatbot AI</span>
+        <span>🎬 GoCinema Chatbot</span>
         <button id="chat-toggle">×</button>
     </div>
     <div id="chat-body">
@@ -29,7 +29,6 @@
     z-index: 9999;
     font-family: sans-serif;
 }
-
 #chat-header {
     background: #0d6efd;
     padding: 10px;
@@ -38,79 +37,15 @@
     align-items: center;
     cursor: pointer;
 }
-
-#chat-body {
-    display: none;
-    flex-direction: column;
-    height: 400px;
-}
-
-#chatbox {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    background: #222;
-}
-
-#chatbox .message {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-
-#chatbox .message.user {
-    justify-content: flex-end;
-}
-
-#chatbox .message .avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin: 0 5px;
-    object-fit: cover;
-}
-
-#chatbox .message .text {
-    max-width: 70%;
-    padding: 8px 12px;
-    border-radius: 10px;
-}
-
-#chatbox .message.user .text {
-    background: #0d6efd;
-    color: #fff;
-}
-
-#chatbox .message.bot .text {
-    background: #444;
-}
-
-#chat-form {
-    display: flex;
-    border-top: 1px solid #333;
-}
-
-#chat-form input {
-    flex: 1;
-    border: none;
-    padding: 10px;
-    background: #111;
-    color: #fff;
-}
-
-#chat-form button {
-    background: #0d6efd;
-    border: none;
-    color: white;
-    padding: 0 15px;
-    cursor: pointer;
-}
-
-#chat-clear {
-    background: #dc3545;
-    border: none;
-    color: white;
-}
+#chat-body { display: none; flex-direction: column; height: 400px; }
+#chatbox { flex: 1; overflow-y: auto; padding: 10px; background: #222; }
+#chatbox .message { margin-bottom: 10px; padding: 6px 10px; border-radius: 8px; }
+#chatbox .message.user { background: #0d6efd; color: #fff; text-align: right; }
+#chatbox .message.bot { background: #444; color: #fff; text-align: left; }
+#chat-form { display: flex; margin-top: 5px; }
+#chat-form input { flex: 1; padding: 8px; border: none; background: #111; color: #fff; }
+#chat-form button { padding: 0 12px; border: none; background: #0d6efd; color: #fff; cursor: pointer; }
+#chat-clear { margin-top: 5px; border: none; background: #dc3545; color: #fff; padding: 5px; cursor: pointer; }
 </style>
 @endpush
 
@@ -121,21 +56,14 @@ const chatHeader = document.getElementById('chat-header');
 const chatBody = document.getElementById('chat-body');
 const chatbox = document.getElementById('chatbox');
 const chatForm = document.getElementById('chat-form');
-const chatToggle = document.getElementById('chat-toggle');
 const chatClear = document.getElementById('chat-clear');
 
-// Toggle chat
+// Toggle chat window
 chatHeader.addEventListener('click', () => {
     chatBody.style.display = chatBody.style.display === 'block' ? 'none' : 'block';
 });
 
-chatToggle.addEventListener('click', () => chatBody.style.display = 'none');
-
-// Render history từ session
-const chatHistory = @json(session('chat_history', []));
-chatHistory.forEach(m => renderMessage(m.role, m.content));
-
-// Gửi tin nhắn
+// Submit message
 chatForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     const input = document.getElementById('message');
@@ -144,55 +72,48 @@ chatForm.addEventListener('submit', async function(e) {
     renderMessage('user', message);
     input.value = '';
 
+    const csrfToken = '{{ csrf_token() }}';
+    const url = '{{ route("chatbot.message") }}';
+
     try {
-        const res = await fetch("{{ route('chatbot.send') }}", {
+        const res = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
             },
             body: JSON.stringify({ message }),
         });
+
         const data = await res.json();
-        renderMessage('bot', data.reply);
+
+        if (res.ok && data.reply) {
+            renderMessage('bot', data.reply);
+        } else if (data.error) {
+            renderMessage('bot', `⚠️ ${data.error}`);
+        } else {
+            renderMessage('bot', '⚠️ Không có phản hồi từ máy chủ.');
+        }
     } catch (err) {
-        renderMessage('bot', 'Có lỗi xảy ra');
+        renderMessage('bot', '⚠️ Lỗi kết nối máy chủ.');
     }
 });
 
-// Xóa chat
+// Clear chat
 chatClear.addEventListener('click', async () => {
     await fetch("{{ route('chatbot.clear') }}", {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        },
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
     });
     chatbox.innerHTML = '';
 });
 
-// Hàm render message
+// Render message
 function renderMessage(role, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('message', role);
-
-    const avatar = document.createElement('img');
-    avatar.classList.add('avatar');
-    avatar.src = role === 'user' ? '{{ asset("images/user-avatar.png") }}' : '{{ asset("images/bot-avatar.png") }}';
-
-    const textDiv = document.createElement('div');
-    textDiv.classList.add('text');
-    textDiv.textContent = text;
-
-    if(role === 'user'){
-        msgDiv.appendChild(textDiv);
-        msgDiv.appendChild(avatar);
-    } else {
-        msgDiv.appendChild(avatar);
-        msgDiv.appendChild(textDiv);
-    }
-
-    chatbox.appendChild(msgDiv);
+    const div = document.createElement('div');
+    div.classList.add('message', role);
+    div.textContent = text;
+    chatbox.appendChild(div);
     chatbox.scrollTop = chatbox.scrollHeight;
 }
 </script>

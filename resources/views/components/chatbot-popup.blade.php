@@ -30,11 +30,11 @@
 
     {{-- Input Area --}}
     <div class="chatbot-input-area">
-        <input 
-            type="text" 
-            id="chatbot-input" 
-            class="chatbot-input" 
-            placeholder="Nhập tin nhắn..." 
+        <input
+            type="text"
+            id="chatbot-input"
+            class="chatbot-input"
+            placeholder="Nhập tin nhắn..."
             maxlength="500"
         >
         <button id="chatbot-send-btn" class="chatbot-send-btn" title="Gửi">
@@ -390,12 +390,12 @@
 
             // Send to server with better error handling
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-            const url = '{{ route("chatbot.send") }}';
-            
+            const url = '{{ route("chatbot.message") }}';
+
             console.log('Sending message:', message);
             console.log('URL:', url);
             console.log('CSRF Token present:', !!csrfToken);
-            
+
             fetch(url, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -409,14 +409,14 @@
             })
             .then(response => {
                 console.log('Response received:',  response.status, response.statusText);
-                
+
                 if (!response.ok) {
                     return response.text().then(text => {
                         console.error('Error response body:', text);
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     });
                 }
-                
+
                 return response.json();
             })
             .then(data => {
@@ -447,8 +447,8 @@
 
             const avatarDiv = document.createElement('div');
             avatarDiv.className = `chatbot-avatar ${role === 'bot' ? 'bot-avatar' : 'user-avatar'}`;
-            avatarDiv.innerHTML = role === 'bot' 
-                ? '<i class="bi bi-robot"></i>' 
+            avatarDiv.innerHTML = role === 'bot'
+                ? '<i class="bi bi-robot"></i>'
                 : '<i class="bi bi-person-fill"></i>';
 
             const contentDiv = document.createElement('div');

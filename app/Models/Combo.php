@@ -11,7 +11,7 @@ class Combo extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'combo';
+    protected $table = 'combos';
 
     protected $fillable = [
         'ten',
