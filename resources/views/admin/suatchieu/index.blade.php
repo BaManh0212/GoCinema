@@ -157,10 +157,10 @@
                             {{-- Hành động --}}
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('admin.suatchieu.ghe', $s->id) }}"
-                                       class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
-                                        <i class="bi bi-eye"></i> Ghế
-                                    </a>
+<a href="{{ route('admin.suatchieu.show', $s->id) }}" 
+   class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+    <i class="bi bi-eye"></i> Ghế
+</a>
 
                                     @if($canEdit)
                                         {{-- ✏️ Nút sửa --}}

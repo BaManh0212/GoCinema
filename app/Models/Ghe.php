@@ -12,20 +12,11 @@ class Ghe extends Model
     protected $table = 'ghe';
 
     protected $fillable = [
-        'phong_id',
-        'hang',
-        'cot',
-        'loai',
-        'trang_thai',
-        'ngay_tao',
-        'ngay_cap_nhat',
-        'ngay_xoa'
+        'so_do_id', 'ten', 'hang', 'cot', 'loai', 'trang_thai'
     ];
 
-    public $timestamps = false;
-
-    public function phong()
+    public function soDo()
     {
-        return $this->belongsTo(PhongChieu::class, 'phong_id');
+        return $this->belongsTo(SoDoGhe::class, 'so_do_id');
     }
 }
