@@ -13,6 +13,7 @@ class ChiTietVe extends Model
 
     protected $fillable = [
         'don_dat_ve_id',
+        'suat_chieu_id',
         'ghe_id',
         'gia',
         'loai_ghe',
@@ -28,5 +29,10 @@ class ChiTietVe extends Model
     public function ghe()
     {
         return $this->belongsTo(Ghe::class, 'ghe_id');
+    }
+    
+    public function suatChieu()
+    {
+        return $this->belongsTo(SuatChieu::class, 'suat_chieu_id');
     }
 }

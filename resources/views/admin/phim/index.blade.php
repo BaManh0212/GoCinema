@@ -89,19 +89,6 @@
 
 
 
-    {{-- ✅ Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
-
-
     {{-- 🎬 Danh sách phim --}}
     @forelse($phims as $phim)
         @php
@@ -171,8 +158,8 @@
     @endforelse
 
     {{-- Phân trang --}}
-    <div class="d-flex justify-content-center mt-4">
-        {{ $phims->appends(request()->query())->links() }}
+    <div class="mt-3 d-flex justify-content-end">
+        {{ $phims->links('pagination::bootstrap-5') }}
     </div>
 </div>
 

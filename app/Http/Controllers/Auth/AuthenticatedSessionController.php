@@ -17,7 +17,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('client.auth.login');
     }
 
     /**
@@ -34,16 +34,25 @@ class AuthenticatedSessionController extends Controller
         // --- ✅ Xác định tên vai trò (từ quan hệ vaiTro hoặc cột loai_tai_khoan)
         $roleName = strtolower($user->vaiTro->ten ?? $user->loai_tai_khoan ?? '');
 
+        // --- ✅ Tạo thông báo đăng nhập thành công
+        $successMessage = 'Đăng nhập thành công! Chào mừng ' . $user->ho_ten ?? $user->name ?? 'bạn';
+
         // --- ✅ Chuyển hướng theo vai trò
         switch ($roleName) {
             case 'quan_ly':
-                return redirect()->intended(route('admin.dashboard', absolute: false));
+                return redirect()
+                    ->intended(route('admin.dashboard', absolute: false))
+                    ->with('success', $successMessage);
 
             case 'nhan_vien':
-                return redirect()->intended(route('staff.dashboard', absolute: false));
+                return redirect()
+                    ->intended(route('staff.dashboard', absolute: false))
+                    ->with('success', $successMessage);
 
             default:
-                return redirect()->intended(route('dashboard', absolute: false));
+                return redirect()
+                    ->intended(route('home', absolute: false))
+                    ->with('success', $successMessage);
         }
     }
 
@@ -76,6 +85,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')
+            ->with('success', 'Bạn đã đăng xuất thành công!');
     }
 }

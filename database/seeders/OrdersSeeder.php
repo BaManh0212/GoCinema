@@ -132,6 +132,7 @@ class OrdersSeeder extends Seeder
             if ($seat1) {
                 ChiTietVe::create([
                     'don_dat_ve_id' => $don->id,
+                    'suat_chieu_id' => $suatId,
                     'ghe_id' => $seat1->id,
                     'gia' => $gia,
                     'loai_ghe' => $seat1->loai ?? 'thuong',
@@ -141,6 +142,7 @@ class OrdersSeeder extends Seeder
             if ($seat2) {
                 ChiTietVe::create([
                     'don_dat_ve_id' => $don->id,
+                    'suat_chieu_id' => $suatId,
                     'ghe_id' => $seat2->id,
                     'gia' => $gia,
                     'loai_ghe' => $seat2->loai ?? 'thuong',

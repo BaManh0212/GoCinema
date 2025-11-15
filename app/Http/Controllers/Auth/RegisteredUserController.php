@@ -18,7 +18,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        return view('client.auth.register');
     }
 
     /**
@@ -37,7 +37,7 @@ class RegisteredUserController extends Controller
             'ho_ten' => $request->ho_ten,
             'email' => $request->email,
             'so_dien_thoai' => $request->so_dien_thoai,
-            'password' => $request->password, // sẽ tự động hash vào mat_khau nhờ mutator
+            'password' => $request->password, // sẽ tự động hash nhờ mutator
             'vai_tro_id' => 1, // khách hàng mặc định
             'kich_hoat' => true,
             'loai_tai_khoan' => 'khach_hang',
@@ -46,8 +46,12 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        // Đăng nhập ngay sau khi đăng ký
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        // ✅ Thông báo đăng ký thành công
+        return redirect()
+            ->route('home')
+            ->with('success', 'Đăng ký tài khoản thành công! Chào mừng ' . $user->ho_ten . ' đến với GoCinema 🎉');
     }
 }

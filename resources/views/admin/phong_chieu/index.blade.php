@@ -64,21 +64,6 @@
     </div>
 </div>
 
- 
-    {{-- ✅ Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
-
-
-
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body p-0">
             <table class="table table-hover align-middle mb-0 text-center">

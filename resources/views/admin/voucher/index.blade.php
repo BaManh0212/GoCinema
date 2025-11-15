@@ -13,26 +13,11 @@
             <small class="text-muted">Xem, lọc và quản lý các voucher đổi điểm</small>
         </div>
         <div>
-            <a href="{{ route('admin.voucher.create') }}" class="btn btn-success shadow-sm rounded-pill px-4 me-2">
-                <i class="bi bi-plus-circle"></i> Thêm Voucher
-            </a>
             <a href="{{ route('admin.voucher.trashed') }}" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
                 <i class="bi bi-trash"></i> Thùng rác
             </a>
         </div>
     </div>
-
-    {{-- ====== THÔNG BÁO ====== --}}
-    @if(session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
 
     {{-- ====== BỘ LỌC ====== --}}
     <div class="card mb-4 border-0 shadow-sm rounded-4">

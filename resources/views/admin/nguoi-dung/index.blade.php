@@ -42,19 +42,7 @@
                 </a>
             @endforeach
         </div>
-    </div>
-
-    {{-- ✅ Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
+                </div>
 
     {{-- 📋 Bảng người dùng --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
@@ -62,12 +50,10 @@
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
                     <tr class="text-center">
-                        <th>#</th>
                         <th class="text-start">Họ tên</th>
                         <th class="text-start">Email</th>
                         <th>SĐT</th>
                         <th>Vai trò</th>
-                        <th>Điểm</th>
                         <th>Ngày tạo</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
@@ -76,7 +62,6 @@
                 <tbody>
                     @forelse ($nguoiDung as $user)
                         <tr class="table-row">
-                            <td class="text-center fw-bold text-muted">{{ $user->id }}</td>
                             <td class="fw-semibold text-start">{{ ucfirst($user->ho_ten) }}</td>
                             <td class="text-start">{{ $user->email }}</td>
                             <td>{{ $user->so_dien_thoai ?? '—' }}</td>
@@ -84,10 +69,6 @@
                                 <span class="badge bg-{{ $user->vaiTro->ten == 'quan_ly' ? 'success' : ($user->vaiTro->ten == 'nhan_vien' ? 'info' : 'primary') }} bg-opacity-75 px-3 py-2 shadow-sm">
                                     {{ ucfirst($user->vaiTro->ten ?? '—') }}
                                 </span>
-                            </td>
-                            <td class="fw-bold text-primary">
-                                {{ number_format($user->diem ?? 0, 0, ',', '.') }}
-                                <i class="bi bi-star-fill text-warning"></i>
                             </td>
                             <td>{{ $user->created_at ? $user->created_at->format('d/m/Y H:i') : '—' }}</td>
                             <td>
@@ -126,6 +107,9 @@
                     @endforelse
                 </tbody>
             </table>
+            <div class="mt-3">
+                {{ $nguoiDung->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
 </div>

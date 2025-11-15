@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@section('title', 'Quản lý bài viết')
+
 @section('content')
 <div class="container mt-4">
 
@@ -48,19 +50,8 @@
         </div>
     </div>
 
-    {{-- ✅ Thông báo --}}
-    @if (session('success'))
-        <div class="alert alert-success shadow-sm rounded-3">
-            <i class="bi bi-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
 
-    {{-- 📋 Bảng danh mục --}}
+    {{-- 📋 Bảng danh sách --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -69,7 +60,6 @@
                         <th style="width: 70px;">STT</th>
                         <th class="text-start">Tên danh mục</th>
                         <th class="text-start">Slug</th>
-                        <th class="text-start">Mô tả</th>
                         <th style="width: 160px;">Số lượng phim</th>
                         <th style="width: 220px;">Hành động</th>
                     </tr>
@@ -80,21 +70,17 @@
                             <td class="text-center fw-bold text-muted">{{ $dm->id }}</td>
                             <td class="fw-semibold">{{ $dm->ten }}</td>
                             <td class="text-muted">{{ $dm->slug }}</td>
-                            <td class="text-truncate" style="max-width: 300px;">{{ $dm->mo_ta ?? '-' }}</td>
                             <td class="text-center">
                                 <span class="badge bg-info bg-opacity-75 px-3 py-2 shadow-sm">
                                     {{ $dm->phims_count }}
                                 </span>
                             </td>
-                            <td class="text-center">
+                            <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    
-                                    {{-- 👁️ Nút xem chi tiết --}}
                                     <a href="{{ route('admin.danhmuc.show', $dm->id) }}" 
                                        class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-eye"></i> Xem
                                     </a>
-
                                     {{-- ✏️ Nút sửa --}}
                                     <a href="{{ route('admin.danhmuc.edit', $dm->id) }}" 
                                        class="btn btn-sm btn-warning rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
@@ -116,30 +102,30 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox"></i> Không có danh mục nào phù hợp.
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox"></i> Không có bài viết nào phù hợp.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+            <div class="mt-3 d-flex justify-content-end">
+                {{ $danhmucs->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
 </div>
 
-
-{{-- 🎨 CSS tùy chỉnh --}}
+{{-- 🎨 CSS đồng bộ --}}
 <style>
 .text-gradient {
     background: linear-gradient(90deg, #007bff, #00c3ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-
 .table-header {
     background: linear-gradient(90deg, #007bff, #00c3ff);
 }
-
 .table-row {
     background-color: #fff;
     transition: all 0.25s ease-in-out;
@@ -151,7 +137,6 @@
     background-color: #e9f5ff;
     transform: scale(1.01);
 }
-
 .table th {
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -161,17 +146,6 @@
     padding: 1rem 1.2rem;
     vertical-align: middle;
 }
-
-.btn-light {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
-    transition: all 0.2s ease;
-}
-.btn-light:hover {
-    background-color: #e9ecef;
-    transform: scale(1.05);
-}
-
 .card {
     border-radius: 1rem;
 }

@@ -26,7 +26,6 @@ class PhimController extends Controller
     // 🗂️ Lọc theo danh mục
     if ($request->filled('danh_muc_id')) {
         $query->whereHas('danhMucs', function ($q) use ($request) {
-            // so sánh theo id của danh mục liên quan (fully-qualified to avoid ambiguity)
             $q->where('danh_muc.id', $request->danh_muc_id);
         });
     }
@@ -36,27 +35,45 @@ class PhimController extends Controller
         $query->where('ngon_ngu_id', $request->ngon_ngu_id);
     }
 
-    // 🎞️ Lọc theo trạng thái (0: ngưng chiếu, 1: đang chiếu, 2: sắp chiếu)
+    // 🎞️ Lọc theo trạng thái dựa trên ngày
+    $today = now()->toDateString();
+
     if ($request->filled('trang_thai')) {
-        $query->where('trang_thai', $request->trang_thai);
+        switch ($request->trang_thai) {
+            case 0: // Ngưng chiếu
+                $query->whereNotNull('ngay_ket_thuc')
+                      ->whereDate('ngay_ket_thuc', '<', $today);
+                break;
+
+            case 1: // Đang chiếu
+                $query->whereDate('ngay_cong_chieu', '<=', $today)
+                      ->where(function($q) use ($today) {
+                          $q->whereNull('ngay_ket_thuc')
+                            ->orWhereDate('ngay_ket_thuc', '>=', $today);
+                      });
+                break;
+
+            case 2: // Sắp chiếu
+                $query->whereDate('ngay_cong_chieu', '>', $today);
+                break;
+        }
     }
 
     // 📅 Sắp xếp theo ngày công chiếu mới nhất
     $query->orderByDesc('ngay_cong_chieu');
 
     // 📄 Phân trang
-    $phims = $query->paginate(10)->appends($request->query());
+    $phims = $query->paginate(5)->appends($request->query());
 
-    // ⚙️ Xác định trạng thái chiếu theo ngày
+    // ⚙️ Thêm trạng thái chiếu cho hiển thị
     foreach ($phims as $phim) {
-        $today = now();
         $ngayBatDau = $phim->ngay_cong_chieu ? Carbon::parse($phim->ngay_cong_chieu) : null;
         $ngayKetThuc = $phim->ngay_ket_thuc ? Carbon::parse($phim->ngay_ket_thuc) : null;
 
-        if ($ngayBatDau && $today->lt($ngayBatDau)) {
+        if ($ngayBatDau && now()->lt($ngayBatDau)) {
             $phim->trang_thai_chieu = 'Sắp chiếu';
             $phim->trang_thai_mau = 'bg-info text-dark';
-        } elseif ($ngayKetThuc && $today->gt($ngayKetThuc)) {
+        } elseif ($ngayKetThuc && now()->gt($ngayKetThuc)) {
             $phim->trang_thai_chieu = 'Ngưng chiếu';
             $phim->trang_thai_mau = 'bg-secondary text-white';
         } else {

@@ -61,6 +61,22 @@ class Phim extends Model
     {
         return $this->belongsToMany(DanhMuc::class, 'phim_danh_muc', 'phim_id', 'danh_muc_id');
     }
+    public function danhGias()
+    {
+        return $this->hasMany(DanhGia::class, 'phim_id');
+    }
+    public function lichChieus()
+    {
+        return $this->hasMany(SuatChieu::class, 'phim_id');
+    }
+
+    /**
+     * Quan hệ: các suất chiếu thuộc về phim này
+     */
+    public function suatChieus()
+    {
+        return $this->hasMany(\App\Models\SuatChieu::class, 'phim_id');
+    }
     // 📅 Getter tùy chỉnh
     public function getNgayCongChieuFormattedAttribute()
     {
@@ -89,14 +105,13 @@ class Phim extends Model
     }
     public function getTrangThaiTuDongAttribute()
     {
-    $today = now()->startOfDay();
-    $start = $this->ngay_cong_chieu ? \Carbon\Carbon::parse($this->ngay_cong_chieu)->startOfDay() : null;
-    $end = $this->ngay_ket_thuc ? \Carbon\Carbon::parse($this->ngay_ket_thuc)->endOfDay() : null;
+        $today = now()->startOfDay();
+        $start = $this->ngay_cong_chieu ? \Carbon\Carbon::parse($this->ngay_cong_chieu)->startOfDay() : null;
+        $end = $this->ngay_ket_thuc ? \Carbon\Carbon::parse($this->ngay_ket_thuc)->endOfDay() : null;
 
-    if (!$start) return 'Không xác định';
-    if ($today->lt($start)) return 'Sắp chiếu';
-    if ($end && $today->gt($end)) return 'Ngưng chiếu';
-    return 'Đang chiếu';
+        if (!$start) return 'Không xác định';
+        if ($today->lt($start)) return 'Sắp chiếu';
+        if ($end && $today->gt($end)) return 'Ngưng chiếu';
+        return 'Đang chiếu';
     }
-
 }
