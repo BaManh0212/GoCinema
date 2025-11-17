@@ -94,7 +94,7 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('admin.phongchieu.ghe', $p->id) }}" class="btn btn-sm btn-outline-warning me-1">
+                                <a href="{{ route('phongchieu.ghe', $p->id) }}" class="btn btn-sm btn-outline-warning me-1">
                                     <i class="bi bi-ui-checks"></i> Quản lý ghế
                                 </a>
                                 <a href="{{ route('admin.phongchieu.edit', $p->id) }}" class="btn btn-sm btn-outline-primary me-1">

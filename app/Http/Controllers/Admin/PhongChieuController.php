@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\PhongChieu;
 use App\Models\DinhDang;
 use App\Models\Rap; // 👈 nếu bạn có model Rap
+use App\Models\Ghe;
 
 class PhongChieuController extends Controller
 {
@@ -74,12 +75,22 @@ class PhongChieuController extends Controller
         'ten' => 'required|string|max:255',
         'dinh_dang_id' => 'nullable|exists:dinh_dang,id',
         'trang_thai' => 'required|in:hoat_dong,bao_tri,ngung_su_dung',
-        'so_do' => 'nullable|string', // thêm validate
+        'so_do' => 'nullable|string',
+        'so_hang' => 'required|integer|min:1|max:50',
+        'so_cot' => 'required|integer|min:1|max:50',
     ], [
         'ten.required' => 'Tên phòng chiếu không được để trống.',
         'ten.max' => 'Tên phòng không được vượt quá 255 ký tự.',
         'dinh_dang_id.exists' => 'Định dạng không hợp lệ.',
         'trang_thai.required' => 'Trạng thái là bắt buộc.',
+        'so_hang.required' => 'Số hàng là bắt buộc.',
+        'so_hang.integer' => 'Số hàng phải là số nguyên.',
+        'so_hang.min' => 'Số hàng tối thiểu là 1.',
+        'so_hang.max' => 'Số hàng tối đa là 50.',
+        'so_cot.required' => 'Số cột là bắt buộc.',
+        'so_cot.integer' => 'Số cột phải là số nguyên.',
+        'so_cot.min' => 'Số cột tối thiểu là 1.',
+        'so_cot.max' => 'Số cột tối đa là 50.',
     ]);
 
     $validated['rap_id'] = 1;
@@ -92,7 +103,11 @@ class PhongChieuController extends Controller
     }
 
     try {
-        PhongChieu::create($validated);
+        $phongChieu = PhongChieu::create($validated);
+
+        // Tự động tạo ghế mặc định là 'thuong'
+        $this->createDefaultSeats($phongChieu);
+
         return redirect()->route('admin.phongchieu.index')
             ->with('success', 'Thêm phòng chiếu thành công');
     } catch (\Exception $e) {
@@ -113,13 +128,22 @@ class PhongChieuController extends Controller
     {
         $validated = $request->validate([
             'ten' => 'required|string|max:255',
-            'tong_ghe' => 'required|integer|min:1',
             'dinh_dang_id' => 'nullable|exists:dinh_dang,id',
             'trang_thai' => 'required|in:hoat_dong,bao_tri,ngung_su_dung',
+            'so_do' => 'nullable|string',
+            'so_hang' => 'required|integer|min:1|max:50',
+            'so_cot' => 'required|integer|min:1|max:50',
         ], [
             'ten.required' => 'Tên phòng chiếu không được để trống.',
-            'tong_ghe.required' => 'Tổng ghế là bắt buộc.',
             'trang_thai.required' => 'Trạng thái là bắt buộc.',
+            'so_hang.required' => 'Số hàng là bắt buộc.',
+            'so_hang.integer' => 'Số hàng phải là số nguyên.',
+            'so_hang.min' => 'Số hàng tối thiểu là 1.',
+            'so_hang.max' => 'Số hàng tối đa là 50.',
+            'so_cot.required' => 'Số cột là bắt buộc.',
+            'so_cot.integer' => 'Số cột phải là số nguyên.',
+            'so_cot.min' => 'Số cột tối thiểu là 1.',
+            'so_cot.max' => 'Số cột tối đa là 50.',
         ]);
 
         $validated['rap_id'] = 1;
@@ -156,5 +180,31 @@ class PhongChieuController extends Controller
                 'error' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Tự động tạo ghế mặc định cho phòng chiếu mới
+     */
+    private function createDefaultSeats(PhongChieu $phongChieu)
+    {
+        $seats = [];
+
+        for ($hangIndex = 0; $hangIndex < $phongChieu->so_hang; $hangIndex++) {
+            $hang = chr(65 + $hangIndex); // A, B, C, ...
+
+            for ($cot = 1; $cot <= $phongChieu->so_cot; $cot++) {
+                $seats[] = [
+                    'phong_id' => $phongChieu->id,
+                    'hang' => $hang,
+                    'cot' => $cot,
+                    'loai' => 'thuong', // Mặc định là ghế thường
+                    'trang_thai' => 'hoat_dong',
+                    'ngay_tao' => now(),
+                    'ngay_cap_nhat' => now(),
+                ];
+            }
+        }
+
+        Ghe::insert($seats);
     }
 }

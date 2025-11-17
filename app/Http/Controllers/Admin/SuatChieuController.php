@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
+use App\Models\GheSuatChieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -268,11 +269,23 @@ class SuatChieuController extends Controller
             ->orderBy('hang')->orderBy('cot')->get()
             ->groupBy('hang');
 
+        // Lấy trạng thái ghế theo suất chiếu
+        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
+            ->pluck('trang_thai', 'ghe_id')
+            ->toArray();
+
         $giuTamIds = DB::table('ghe_giu_tam')
             ->where('suat_chieu_id', $id)
             ->pluck('ghe_id')->toArray();
 
-        return view('admin.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'giuTamIds'));
+        // Lấy ghế đã đặt
+        $gheDaDat = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->where('trang_thai', 'da_dat')
+            ->pluck('ghe_id')
+            ->toArray();
+
+        return view('admin.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'gheStatuses', 'giuTamIds', 'gheDaDat'));
     }
 
     /**
@@ -493,5 +506,37 @@ class SuatChieuController extends Controller
 
     return back()->with('success', '✅ Cập nhật trạng thái suất chiếu thành công!');
 }
+
+    /**
+     * 🎭 Cập nhật trạng thái ghế theo suất chiếu
+     */
+    public function updateGheTrangThai(Request $request, $id)
+    {
+        $request->validate([
+            'ghe_id' => 'required|exists:ghe,id',
+            'trang_thai' => 'required|in:hoat_dong,bao_tri,vo_hieu_hoa',
+        ]);
+
+        $suatChieu = SuatChieu::findOrFail($id);
+
+        // Kiểm tra ghế có thuộc phòng của suất chiếu không
+        $ghe = GheSuatChieu::where('suat_chieu_id', $id)
+            ->where('ghe_id', $request->ghe_id)
+            ->first();
+
+        if (!$ghe) {
+            // Nếu chưa có bản ghi, tạo mới
+            GheSuatChieu::create([
+                'suat_chieu_id' => $id,
+                'ghe_id' => $request->ghe_id,
+                'trang_thai' => $request->trang_thai,
+            ]);
+        } else {
+            // Cập nhật trạng thái
+            $ghe->update(['trang_thai' => $request->trang_thai]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
+    }
 
 }

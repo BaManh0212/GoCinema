@@ -4,55 +4,67 @@
 
 @section('content')
 <div class="container">
-    <h4 class="mb-4 text-primary fw-bold">🎬 Sơ đồ ghế phòng chiếu</h4>
-
-    {{-- Chú thích màu --}}
-    <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
-        <div><span class="legend-box seat-vip"></span> Ghế VIP</div>
-        <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
-        <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
-        <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
-        <div><span class="legend-box seat-dat"></span> Ghế đã đặt</div>
-        <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-primary fw-bold">🎬 Quản lý ghế suất chiếu</h4>
+        <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-secondary">← Quay lại danh sách</a>
     </div>
 
-    {{-- Sơ đồ ghế --}}
-    <div class="seat-map p-4 border rounded bg-white shadow-sm">
-        <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">{{ $suatchieu->phim->tieu_de }} - {{ $suatchieu->phong->ten }}</h5>
+            <small class="text-muted">{{ \Carbon\Carbon::parse($suatchieu->gio_bat_dau)->format('d/m/Y H:i') }} - {{ \Carbon\Carbon::parse($suatchieu->gio_ket_thuc)->format('H:i') }}</small>
+        </div>
+        <div class="card-body">
+            {{-- Chú thích màu --}}
+            <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
+                <div><span class="legend-box seat-vip"></span> Ghế VIP</div>
+                <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
+                <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
+                <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
+                <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
+                <div><span class="legend-box seat-dat"></span> Ghế đã đặt</div>
+                <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
+            </div>
 
-        <div class="d-flex flex-column align-items-center">
-            @foreach ($ghes as $hang => $danhSachGhe)
-                <div class="d-flex mb-2">
-                    @foreach ($danhSachGhe as $ghe)
-                        {{-- @php
-                            $classes = 'seat seat-' . $ghe->loai;
-                            $trangthai = 'hoat_dong';
+            {{-- Sơ đồ ghế --}}
+            <div class="seat-map p-4 border rounded bg-white shadow-sm">
+                <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
 
-                            if(in_array($ghe->id, $gheDaDat)){
-                                $classes = 'seat seat-dat';
-                                $trangthai = 'da_dat';
-                            } elseif(in_array($ghe->id, $giuTamIds)){
-                                $classes = 'seat seat-giu-tam';
-                                $trangthai = 'giu_tam';
-                            }
-                        @endphp --}}
+                <div class="d-flex flex-column align-items-center">
+                    @foreach ($ghes as $hang => $danhSachGhe)
+                        <div class="d-flex mb-2">
+                            @foreach ($danhSachGhe as $ghe)
+                                @php
+                                    $classes = 'seat seat-' . $ghe->loai;
+                                    $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
 
-                        {{-- <div class="{{ $classes }}"
-                             data-hang="{{ $ghe->hang }}"
-                             data-cot="{{ $ghe->cot }}"
-                             data-loai="{{ $ghe->loai }}"
-                             data-trangthai="{{ $trangthai }}">
-                            {{ $ghe->hang }}{{ $ghe->cot }}
-                        </div> --}}
+                                    if(in_array($ghe->id, $gheDaDat)){
+                                        $classes = 'seat seat-dat';
+                                        $trangthai = 'da_dat';
+                                    } elseif(in_array($ghe->id, $giuTamIds)){
+                                        $classes = 'seat seat-giu-tam';
+                                        $trangthai = 'giu_tam';
+                                    } elseif($trangthai === 'bao_tri'){
+                                        $classes = 'seat seat-bao-tri';
+                                    } elseif($trangthai === 'vo_hieu_hoa'){
+                                        $classes = 'seat seat-vo-hieu-hoa';
+                                    }
+                                @endphp
+
+                                <div class="{{ $classes }}"
+                                     data-ghe-id="{{ $ghe->id }}"
+                                     data-hang="{{ $ghe->hang }}"
+                                     data-cot="{{ $ghe->cot }}"
+                                     data-loai="{{ $ghe->loai }}"
+                                     data-trangthai="{{ $trangthai }}">
+                                    {{ $ghe->hang }}{{ $ghe->cot }}
+                                </div>
+                            @endforeach
+                        </div>
                     @endforeach
                 </div>
-            @endforeach
+            </div>
         </div>
-    </div>
-
-    {{-- Nút lưu sơ đồ --}}
-    <div class="mt-4 text-end">
-        <button id="btnSaveLayout" class="btn btn-success px-4">💾 Lưu sơ đồ</button>
     </div>
 </div>
 @endsection
@@ -77,6 +89,7 @@
 .seat-doi { background-color: #98FB98; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
+.seat-vo-hieu-hoa { background-color: #6B7280 !important; }
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; }
 
@@ -116,42 +129,56 @@ document.querySelectorAll('.seat').forEach(seat => {
         // Nếu ghế đã đặt hoặc giữ tạm => không đổi trạng thái
         if(seat.dataset.trangthai === 'da_dat' || seat.dataset.trangthai === 'giu_tam') return;
 
-        const isBaoTri = seat.dataset.trangthai === 'bao_tri';
-        if (isBaoTri) {
-            seat.dataset.trangthai = 'hoat_dong';
-            seat.classList.remove('seat-bao-tri');
-            seat.classList.add('seat-' + seat.dataset.loai);
-        } else {
-            seat.dataset.trangthai = 'bao_tri';
-            seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong');
-            seat.classList.add('seat-bao-tri');
+        const currentStatus = seat.dataset.trangthai;
+        let newStatus, newClass;
+
+        // Chu kỳ: hoat_dong -> bao_tri -> vo_hieu_hoa -> hoat_dong
+        if (currentStatus === 'hoat_dong') {
+            newStatus = 'bao_tri';
+            newClass = 'seat-bao-tri';
+        } else if (currentStatus === 'bao_tri') {
+            newStatus = 'vo_hieu_hoa';
+            newClass = 'seat-vo-hieu-hoa';
+        } else if (currentStatus === 'vo_hieu_hoa') {
+            newStatus = 'hoat_dong';
+            newClass = 'seat-' + seat.dataset.loai;
         }
+
+        // Cập nhật UI
+        seat.dataset.trangthai = newStatus;
+        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-vo-hieu-hoa');
+        seat.classList.add(newClass);
+
+        // Gửi AJAX để lưu
+        updateSeatStatus(seat.dataset.gheId, newStatus);
     });
 });
 
-// Gửi dữ liệu lên server
-document.getElementById('btnSaveLayout').addEventListener('click', () => {
-    const seats = Array.from(document.querySelectorAll('.seat')).map(seat => ({
-        hang: seat.dataset.hang,
-        cot: seat.dataset.cot,
-        loai: seat.dataset.loai,
-        trang_thai: seat.dataset.trangthai
-    }));
-
-    fetch(`{{ route('admin.admin.phongchieu.ghe.updateMap', $phong->id ?? 21) }}`, {
-        method: 'POST',
+// Hàm cập nhật trạng thái ghế qua AJAX
+function updateSeatStatus(gheId, trangThai) {
+    fetch(`{{ route('admin.suatchieu.ghe.updateTrangThai', $suatchieu->id) }}`, {
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
-        body: JSON.stringify({ seats })
+        body: JSON.stringify({
+            ghe_id: gheId,
+            trang_thai: trangThai
+        })
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success) alert('✅ Đã lưu trạng thái ghế thành công!');
-        else alert('❌ Lưu thất bại!');
+        if (!data.success) {
+            alert('❌ Cập nhật thất bại: ' + (data.message || 'Lỗi không xác định'));
+            // Có thể reload trang để khôi phục trạng thái
+            location.reload();
+        }
     })
-    .catch(() => alert('❌ Lỗi kết nối!'));
-});
+    .catch(() => {
+        alert('❌ Lỗi kết nối!');
+        location.reload();
+    });
+}
 </script>
 @endpush

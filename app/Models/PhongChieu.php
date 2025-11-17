@@ -16,6 +16,8 @@ class PhongChieu extends Model
         'ten',
         'tong_ghe',
         'so_do',
+        'so_hang',
+        'so_cot',
         'dinh_dang_id',
         'trang_thai',
         'ngay_tao',
