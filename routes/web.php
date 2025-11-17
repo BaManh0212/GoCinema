@@ -1,5 +1,5 @@
 <?php
-
+namespace App\Http\Controllers\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -41,7 +41,9 @@ use App\Http\Controllers\Staff\DonDatVeController as StaffDonDatVeController;
 use App\Http\Controllers\Staff\SuatChieuController as StaffSuatChieuController;
 use App\Http\Controllers\Staff\PhongChieuController as StaffPhongChieuController;
 use App\Http\Controllers\Staff\GheController as StaffGheController;
-
+use App\Http\Controllers\Admin\SoDoGheController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\OrderController;
 /*
 |--------------------------------------------------------------------------
 | Trang chính
@@ -66,7 +68,14 @@ Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson
 Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])
     ->middleware('auth')
     ->name('phim.danh_gia.luu');
+// Đặt vé
+Route::get('/booking', [BookingController::class, 'show'])->name('booking.show');
+Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/coupon/check', [BookingController::class, 'check'])->name('coupon.check');
 
+// Đơn vé
+Route::get('/orders', [OrderController::class, 'index'])->name('order.index');
+Route::get('/order/{id}', [OrderController::class, 'show'])->name('order.show');
 //Bài viết
 Route::get('/tin-tuc', [BaiVietController::class, 'index'])->name('baiviet.index');
 Route::get('/tin-tuc/{slug}', [BaiVietController::class, 'show'])->name('baiviet.show');
@@ -162,6 +171,16 @@ Route::prefix('admin')
         // Quản lý phòng chiếu
         Route::resource('phongchieu', AdminPhongChieuController::class)->names('phongchieu');
         // Quản lý ghế theo từng phòng
+        Route::resource('sodo', SoDoGheController::class)->names('sodo');
+        Route::get('/admin/sodoghe/{phong_id}', [SoDoGheController::class, 'show'])
+        ->name('admin.sodoghe.show');
+        // Xem sơ đồ ghế của suất chiếu
+      Route::prefix('suatchieu')->name('suatchieu.')->group(function () {
+        Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'showAdmin'])->name('show');
+    });
+        Route::post('/admin/sodo/update-seat-status', [SoDoGheController::class, 'updateSeatStatus'])
+        ->name('admin.sodo.updateSeatStatus');
+        //  Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'show'])->name('show'); // chi tiết
         // Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
         // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
         // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');

@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use App\Models\PhongChieu;
 use App\Models\DinhDang;
 use App\Models\Rap; // 👈 nếu bạn có model Rap
+use App\Models\SoDoGhe;
 
 class PhongChieuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PhongChieu::with(['dinhDang', 'ghes'])
-            ->withCount('ghes');
+        $query = PhongChieu::with(['dinhDang']);
+            // ->withCount('ghes');
 
         // 🔍 Tìm kiếm theo tên hoặc mã phòng
         if ($request->filled('q')) {
@@ -62,29 +63,32 @@ class PhongChieuController extends Controller
         return view('admin.phong_chieu.index', compact('phongchieus', 'raps'));
     }
 
-    public function create()
-    {
-        $dinhdangs = DinhDang::orderBy('ten')->get();
-        return view('admin.phong_chieu.create', compact('dinhdangs'));
-    }
+public function create()
+{
+    $dinhdangs = DinhDang::orderBy('ten')->get();
+    return view('admin.phong_chieu.create', compact('dinhdangs'));
+}
 
-    public function store(Request $request)
-    {
+public function store(Request $request)
+{
+    // Validate dữ liệu phòng chiếu
     $validated = $request->validate([
         'ten' => 'required|string|max:255',
         'dinh_dang_id' => 'nullable|exists:dinh_dang,id',
         'trang_thai' => 'required|in:hoat_dong,bao_tri,ngung_su_dung',
-        'so_do' => 'nullable|string', // thêm validate
+        'so_do' => 'nullable|string',
+        'ma_tran' => 'nullable|json', // cho phép gửi ma trận ghế
     ], [
         'ten.required' => 'Tên phòng chiếu không được để trống.',
         'ten.max' => 'Tên phòng không được vượt quá 255 ký tự.',
         'dinh_dang_id.exists' => 'Định dạng không hợp lệ.',
         'trang_thai.required' => 'Trạng thái là bắt buộc.',
+        'ma_tran.json' => 'Sơ đồ ghế không hợp lệ.'
     ]);
 
     $validated['rap_id'] = 1;
-    $validated['so_do'] = $request->input('so_do'); // thêm so_do vào validated
 
+    // Kiểm tra trùng tên phòng
     if (PhongChieu::where('ten', $validated['ten'])->exists()) {
         return back()->withInput()->withErrors([
             'ten' => 'Phòng chiếu này đã tồn tại.'
@@ -92,15 +96,26 @@ class PhongChieuController extends Controller
     }
 
     try {
-        PhongChieu::create($validated);
+        // Tạo phòng chiếu
+        $phong = PhongChieu::create($validated);
+
+        // Nếu có sơ đồ ghế thì tạo luôn
+        if (!empty($validated['ma_tran'])) {
+            SoDoGhe::create([
+                'phong_id' => $phong->id,
+                'ma_tran' => $validated['ma_tran']
+            ]);
+        }
+
         return redirect()->route('admin.phongchieu.index')
-            ->with('success', 'Thêm phòng chiếu thành công');
+            ->with('success', 'Thêm phòng chiếu thành công.');
     } catch (\Exception $e) {
         return back()->withInput()->withErrors([
             'error' => 'Có lỗi xảy ra: ' . $e->getMessage()
         ]);
     }
-    }
+}
+
 
     public function edit($id)
     {
