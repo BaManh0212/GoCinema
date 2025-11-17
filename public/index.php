@@ -1,5 +1,5 @@
 <?php
-
+namespace App\Http\Controllers\Client;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 error_reporting(E_ALL);

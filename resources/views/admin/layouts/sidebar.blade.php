@@ -120,23 +120,24 @@
         </div>
     </div>
 </li>
-   {{-- <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuGhe"
-        aria-expanded="false" aria-controls="menuGhe">
+{{-- <li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSodo"
+        aria-expanded="false" aria-controls="menuSodo">
         <i class="fas fa-fw fa-chair"></i>
-        <span>Ghế</span>
+        <span>Sơ đồ ghế</span>
     </a>
-    <div id="menuGhe" class="collapse" data-parent="#accordionSidebar">
+    <div id="menuSodo" class="collapse" data-parent="#accordionSidebar">
         <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="#">
-                <i class="fas fa-list fa-sm mr-2"></i> Danh sách ghế
+            <a class="collapse-item" href="{{ route('admin.sodo.index') }}">
+                <i class="fas fa-list fa-sm mr-2"></i> Danh sách sơ đồ ghế
             </a>
-            <a class="collapse-item" href="#">
-                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm ghế mới
+            <a class="collapse-item" href="{{ route('admin.sodo.create') }}">
+                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm sơ đồ
             </a>
         </div>
     </div>
 </li> --}}
+
 
 
     <!-- Divider -->

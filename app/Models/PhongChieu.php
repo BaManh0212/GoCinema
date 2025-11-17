@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-use App\Models\Ghe;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,7 +9,7 @@ class PhongChieu extends Model
 {
     use HasFactory;
 
-    protected $table = 'phong_chieu'; // Tên bảng trong database
+    protected $table = 'phong_chieu';
 
     protected $fillable = [
         'rap_id',
@@ -23,30 +23,35 @@ class PhongChieu extends Model
         'ngay_xoa',
     ];
 
-    public $timestamps = false; // Vì bảng đang dùng cột ngày_tao / ngày_cap_nhat thay cho timestamps mặc định
+    public $timestamps = false;
 
-    /**
-     * Quan hệ: Phòng chiếu thuộc về một rạp.
-     */
+    // Phòng chiếu thuộc về một rạp
     public function rap()
     {
         return $this->belongsTo(Rap::class, 'rap_id');
     }
 
-    /**
-     * Quan hệ: Phòng chiếu có một định dạng chiếu (2D, 3D, IMAX, v.v...).
-     */
+    // Phòng chiếu có định dạng (2D, 3D, IMAX,...)
     public function dinhDang()
     {
         return $this->belongsTo(DinhDang::class, 'dinh_dang_id');
     }
-      // Quan hệ với Ghe (một phòng có nhiều ghế)
-    public function ghe()
-    {
-        return $this->hasMany(Ghe::class, 'phong_id', 'id');
-    }
+
+    // Ghế của phòng
     public function ghes()
     {
-    return $this->hasMany(Ghe::class, 'phong_id', 'id');
+        return $this->hasMany(Ghe::class, 'phong_id');
+    }
+
+    // Sơ đồ ghế của phòng (mỗi phòng 1 sơ đồ)
+    public function soDoGhe()
+    {
+        return $this->hasOne(SoDoGhe::class, 'phong_id');
+    }
+
+    // Suất chiếu trong phòng
+    public function suatChieu()
+    {
+        return $this->hasMany(SuatChieu::class, 'phong_id');
     }
 }

@@ -28,16 +28,15 @@ class SuatChieu extends Model
     | 🔗 Quan hệ
     |--------------------------------------------------------------------------
     */
-    public function phim()
-    {
-        return $this->belongsTo(Phim::class, 'phim_id');
-    }
+public function phim()
+{
+    return $this->belongsTo(Phim::class, 'phim_id', 'id');
+}
 
-    public function phong()
-    {
-        return $this->belongsTo(PhongChieu::class, 'phong_id');
-    }
-
+public function phong()
+{
+    return $this->belongsTo(PhongChieu::class, 'phong_id', 'id');
+}
     // Giữ alias để tương thích nếu có view/controller cũ dùng
     public function phongChieu()
     {

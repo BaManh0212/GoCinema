@@ -121,7 +121,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h5 class="fw-semibold mb-0">Lịch chiếu (7 ngày tới)</h5>
-                    <a href="{{ route('movies.schedule.json', $phim->slug) }}" class="small text-info" target="_blank">JSON</a>
+                    {{-- <a href="{{ route('movies.schedule.json', $phim->slug) }}" class="small text-info" target="_blank">JSON</a> --}}
                 </div>
 
                 @if($lichChieuTheoNgay->isEmpty())
