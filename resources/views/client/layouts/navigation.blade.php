@@ -77,12 +77,6 @@
                     @endauth
                 </ul>
             </li>
-         <li class="nav-item">
-    <a class="nav-link px-3" href="{{ route('order.index') }}"
-       style="font-weight: 500; transition: var(--transition);">
-        <i class="fas fa-shield-alt me-1"></i>Đơn vé
-    </a>
-</li>
         </ul>
 
         {{-- 🔹 Auth buttons --}}
@@ -108,6 +102,11 @@
                         <li>
                             <a class="dropdown-item d-flex align-items-center" href="{{ route('account.rewards') }}" style="color: var(--text-light);">
                                 <i class="fas fa-gift me-2" style="color: var(--accent);"></i> Đổi điểm thưởng
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.bookings') }}" style="color: var(--text-light);">
+                                <i class="fas fa-ticket-alt me-2" style="color: var(--accent);"></i> Lịch sử đặt vé
                             </a>
                         </li>
                         <li><hr class="dropdown-divider" style="border-color: var(--card-border);"></li>

@@ -38,11 +38,6 @@ class DonDatVeController extends Controller
             'chiTietVes.ghe'
         ])->findOrFail($id);
 
-        // Nếu đơn đã hủy thì không cho xem chi tiết
-        if ($donVe->trang_thai === 'da_huy') {
-            return redirect()->route('admin.donve.index')->withErrors(['error' => 'Đơn đã hủy, không thể xem chi tiết.']);
-        }
-
         return view('admin.donve.show', compact('donVe'));
     }
 

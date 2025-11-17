@@ -16,7 +16,7 @@
     <h2>🎟️ Vé xem phim - {{ $donVe->suatChieu->phim->tieu_de ?? 'N/A' }}</h2>
 
     <p><strong>Mã đơn:</strong> {{ $donVe->ma_don }}</p>
-    <p><strong>Khách hàng:</strong> {{ $donVe->nguoiDung->ten ?? 'N/A' }}</p>
+    <p><strong>Khách hàng:</strong> {{ $donVe->nguoiDung->ho_ten ?? 'N/A' }}</p>
     <p><strong>Phòng chiếu:</strong> {{ $donVe->suatChieu->phongChieu->ten ?? 'N/A' }}</p>
     <p><strong>Giờ chiếu:</strong> {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('H:i d/m/Y') }}</p>
 

@@ -78,7 +78,7 @@
                         <tr class="table-row text-center">
                             <td class="fw-bold text-muted">{{ $loop->iteration }}</td>
                             <td class="fw-semibold text-primary">{{ $don->ma_don }}</td>
-                            <td>{{ $don->nguoiDung->ten ?? 'N/A' }}</td>
+                            <td>{{ $don->nguoiDung->ho_ten ?? 'N/A' }}</td>
                             <td>{{ $don->suatChieu->phim->tieu_de ?? 'N/A' }}</td>
                             <td>{{ \Carbon\Carbon::parse($don->suatChieu->gio_bat_dau)->format('H:i d/m/Y') }}</td>
                             <td class="fw-semibold">{{ number_format($don->tong_tien, 0, ',', '.') }} đ</td>

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,26 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chi_tiet_ve', function (Blueprint $table) {
+        Schema::create('ghe_suat_chieu', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedBigInteger('don_dat_ve_id');
             $table->unsignedBigInteger('suat_chieu_id');
             $table->unsignedBigInteger('ghe_id');
-
-            $table->decimal('gia', 12, 2);
-
-            $table->enum('loai_ghe', ['thuong','vip','doi']);
-            $table->enum('trang_thai', ['cho_thanh_toan','da_thanh_toan','da_su_dung','da_huy']);
-
-            $table->dateTime('thoi_gian_su_dung')->nullable();
-
+            $table->enum('trang_thai', ['hoat_dong', 'bao_tri', 'vo_hieu_hoa'])->default('hoat_dong');
             $table->timestamps();
 
-            // Foreign keys
-            $table->foreign('don_dat_ve_id')->references('id')->on('don_dat_ve')->onDelete('cascade');
             $table->foreign('suat_chieu_id')->references('id')->on('suat_chieu')->onDelete('cascade');
             $table->foreign('ghe_id')->references('id')->on('ghe')->onDelete('cascade');
+            $table->unique(['suat_chieu_id', 'ghe_id']);
         });
     }
 
@@ -38,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('chi_tiet_ve');
+        Schema::dropIfExists('ghe_suat_chieu');
     }
 };

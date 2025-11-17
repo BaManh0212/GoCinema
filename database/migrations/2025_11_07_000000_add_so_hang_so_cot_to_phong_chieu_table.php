@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('ghe_suat_chieu', function (Blueprint $table) {
-            //
+        Schema::table('phong_chieu', function (Blueprint $table) {
+            $table->integer('so_hang')->default(10)->after('so_do');
+            $table->integer('so_cot')->default(15)->after('so_hang');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('ghe_suat_chieu', function (Blueprint $table) {
-            //
+        Schema::table('phong_chieu', function (Blueprint $table) {
+            $table->dropColumn(['so_hang', 'so_cot']);
         });
     }
 };
