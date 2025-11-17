@@ -40,7 +40,7 @@ class BookingController extends Controller
         }
 
         // Lấy sơ đồ ghế
-        $ghes = $suatChieu->phong->ghe()
+        $ghes = $suatChieu->phong->ghes()
             ->orderBy('hang')
             ->orderBy('cot')
             ->get()
@@ -97,6 +97,8 @@ class BookingController extends Controller
         try {
             // Kiểm tra ghế có khả dụng không
             foreach ($gheIds as $gheId) {
+                // Khóa hàng ghế để tuần tự hóa thao tác
+                DB::table('ghe')->where('id', $gheId)->lockForUpdate()->first();
                 // Kiểm tra ghế đã đặt
                 $daDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
@@ -133,18 +135,26 @@ class BookingController extends Controller
                 ->where('nguoi_dung_id', auth()->id())
                 ->delete();
 
-            // Thêm ghế giữ tạm mới
-            $holdData = [];
+            // Thêm ghế giữ tạm mới (bắt duplicate nếu có race)
             foreach ($gheIds as $gheId) {
-                $holdData[] = [
-                    'suat_chieu_id' => $suatChieuId,
-                    'ghe_id' => $gheId,
-                    'nguoi_dung_id' => auth()->id(),
-                    'het_han' => Carbon::now()->addMinutes(10),
-                ];
+                try {
+                    DB::table('ghe_giu_tam')->insert([
+                        'suat_chieu_id' => $suatChieuId,
+                        'ghe_id' => $gheId,
+                        'nguoi_dung_id' => auth()->id(),
+                        'het_han' => Carbon::now()->addMinutes(10),
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // 23000: integrity constraint violation (duplicate key), MySQL 1062
+                    if ($e->getCode() == 23000) {
+                        $seat = Ghe::find($gheId);
+                        throw new \Exception('Ghế ' . ($seat?->so_ghe_ngoi ?? ($seat?->hang . $seat?->cot)) . ' vừa được người khác chọn.');
+                    }
+                    throw $e;
+                }
             }
-
-            DB::table('ghe_giu_tam')->insert($holdData);
 
             DB::commit();
 
@@ -324,14 +334,21 @@ class BookingController extends Controller
             // Tạo chi tiết vé
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
-                ChiTietVe::create([
-                    'don_dat_ve_id' => $donDatVe->id,
-                    'suat_chieu_id' => $suatChieuId,
-                    'ghe_id' => $gheId,
-                    'gia' => $ghePrices[$gheId],
-                    'loai_ghe' => $ghe->loai,
-                    'trang_thai' => 'da_dat',
-                ]);
+                try {
+                    ChiTietVe::create([
+                        'don_dat_ve_id' => $donDatVe->id,
+                        'suat_chieu_id' => $suatChieuId,
+                        'ghe_id' => $gheId,
+                        'gia' => $ghePrices[$gheId],
+                        'loai_ghe' => $ghe->loai,
+                        'trang_thai' => 'da_dat',
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->getCode() == 23000) {
+                        throw new \Exception('Ghế ' . ($ghe?->so_ghe_ngoi ?? ($ghe?->hang . $ghe?->cot)) . ' vừa được người khác đặt.');
+                    }
+                    throw $e;
+                }
             }
 
             // Tạo chi tiết combo nếu có
@@ -613,7 +630,7 @@ class BookingController extends Controller
     {
         $donDatVe = DonDatVe::where('id', $id)
             ->where('nguoi_dung_id', auth()->id())
-            ->where('trang_thai', 'cho_thanh_toan')
+            ->whereIn('trang_thai', ['cho_thanh_toan', 'da_thanh_toan'])
             ->firstOrFail();
 
         // Kiểm tra thời gian hủy (trước 2 giờ chiếu)
@@ -624,22 +641,22 @@ class BookingController extends Controller
 
         DB::beginTransaction();
         try {
-            // Xóa chi tiết vé
-            $donDatVe->chiTietVes()->delete();
+            // Đánh dấu chi tiết vé đã hủy để giữ lịch sử và trả ghế
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_huy']);
 
-            // Xóa combo
-            DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
+            // Cập nhật trạng thái đơn
+            $donDatVe->trang_thai = 'da_huy';
+            $donDatVe->save();
 
-            // Xóa đơn
-            $donDatVe->delete();
+            // KHÔNG xóa bản ghi combo để lưu lịch sử; nếu muốn, có thể thêm cờ trạng thái riêng
 
             DB::commit();
 
-            return redirect('/')->with('success', 'Đã hủy đặt vé thành công.');
+            return redirect()->route('account.bookings')->with('success', 'Đã hủy đơn và lưu lịch sử thành công.');
 
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->with('error', 'Có lỗi xảy ra khi hủy vé.');
+            return back()->with('error', 'Có lỗi xảy ra khi hủy đơn.');
         }
     }
 }

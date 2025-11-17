@@ -263,9 +263,9 @@ class SuatChieuController extends Controller
      */
     public function gheIndex($id)
     {
-        $suatchieu = SuatChieu::with(['phong.ghe'])->findOrFail($id);
+        $suatchieu = SuatChieu::with(['phong.ghes'])->findOrFail($id);
 
-        $ghes = $suatchieu->phong->ghe()
+        $ghes = $suatchieu->phong->ghes()
             ->orderBy('hang')->orderBy('cot')->get()
             ->groupBy('hang');
 
@@ -286,6 +286,36 @@ class SuatChieuController extends Controller
             ->toArray();
 
         return view('admin.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'gheStatuses', 'giuTamIds', 'gheDaDat'));
+    }
+
+    /**
+     * 🔄 API: Lấy trạng thái ghế theo thời gian thực cho suất chiếu (đồng bộ với mua vé/giữ tạm)
+     */
+    public function seatStatus($id)
+    {
+        // Tổng hợp trạng thái mới nhất
+        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
+            ->pluck('trang_thai', 'ghe_id')
+            ->toArray();
+
+        $giuTamIds = DB::table('ghe_giu_tam')
+            ->where('suat_chieu_id', $id)
+            ->where('het_han', '>', now())
+            ->pluck('ghe_id')
+            ->toArray();
+
+        $gheDaDat = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+            ->pluck('ghe_id')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'ghe_statuses' => $gheStatuses,
+            'giu_tam_ids' => $giuTamIds,
+            'ghe_da_dat' => $gheDaDat,
+        ]);
     }
 
     /**

@@ -1,5 +1,4 @@
 <?php
-namespace App\Http\Controllers\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -78,10 +77,7 @@ Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson
 Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])
     ->middleware('auth')
     ->name('phim.danh_gia.luu');
-// Đặt vé
-Route::get('/booking', [BookingController::class, 'show'])->name('booking.show');
-Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
-Route::post('/coupon/check', [BookingController::class, 'check'])->name('coupon.check');
+// (removed duplicate legacy booking routes that referenced non-existent methods)
 
 // Đơn vé
 Route::get('/orders', [OrderController::class, 'index'])->name('order.index');
@@ -187,7 +183,8 @@ Route::prefix('admin')
         ->name('admin.sodoghe.show');
         // Xem sơ đồ ghế của suất chiếu
       Route::prefix('suatchieu')->name('suatchieu.')->group(function () {
-        Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'showAdmin'])->name('show');
+        Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'gheIndex'])->name('show');
+        Route::get('/{suatChieu}/seat-status', [AdminSuatChieuController::class, 'seatStatus'])->name('seatStatus');
     });
         Route::post('/admin/sodo/update-seat-status', [SoDoGheController::class, 'updateSeatStatus'])
         ->name('admin.sodo.updateSeatStatus');

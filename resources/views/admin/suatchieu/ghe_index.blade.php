@@ -180,5 +180,51 @@ function updateSeatStatus(gheId, trangThai) {
         location.reload();
     });
 }
+
+// ================== Đồng bộ theo thời gian thực ==================
+function applyLiveStatus(payload) {
+    const gheStatuses = payload.ghe_statuses || {};
+    const giuTamIds = new Set(payload.giu_tam_ids || []);
+    const gheDaDats = new Set(payload.ghe_da_dat || []);
+
+    document.querySelectorAll('.seat').forEach(seat => {
+        const gheId = parseInt(seat.dataset.gheId, 10);
+        const loai = seat.dataset.loai; // thuong/vip/doi
+
+        let status = gheStatuses[gheId] || 'hoat_dong';
+        if (gheDaDats.has(gheId)) status = 'da_dat';
+        else if (giuTamIds.has(gheId)) status = 'giu_tam';
+
+        // Cập nhật dataset + class
+        seat.dataset.trangthai = status;
+        seat.classList.remove('seat-vip','seat-doi','seat-thuong','seat-bao-tri','seat-vo_hieu_hoa','seat-vo-hieu-hoa','seat-dat','seat-giu-tam');
+
+        if (status === 'da_dat') {
+            seat.classList.add('seat-dat');
+        } else if (status === 'giu_tam') {
+            seat.classList.add('seat-giu-tam');
+        } else if (status === 'bao_tri') {
+            seat.classList.add('seat-bao-tri');
+        } else if (status === 'vo_hieu_hoa') {
+            seat.classList.add('seat-vo-hieu-hoa');
+        } else {
+            // hoạt động -> theo loại ghế
+            seat.classList.add('seat-' + loai);
+        }
+    });
+}
+
+async function fetchLiveStatus() {
+    try {
+        const res = await fetch(`{{ route('admin.suatchieu.seatStatus', $suatchieu->id) }}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.success) applyLiveStatus(data);
+    } catch (_) { /* ignore transient errors */ }
+}
+
+// Poll mỗi 5s và fetch ngay khi tải trang
+fetchLiveStatus();
+setInterval(fetchLiveStatus, 5000);
 </script>
 @endpush

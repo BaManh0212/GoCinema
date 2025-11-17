@@ -12,11 +12,7 @@ class Ghe extends Model
     protected $table = 'ghe';
 
     protected $fillable = [
-        'so_do_id', 'ten', 'hang', 'cot', 'loai', 'trang_thai'
+        'phong_id', 'hang', 'cot', 'loai', 'trang_thai'
     ];
 
-    public function soDo()
-    {
-        return $this->belongsTo(SoDoGhe::class, 'so_do_id');
-    }
 }

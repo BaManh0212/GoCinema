@@ -121,7 +121,7 @@
                         <a href="{{ route('home') }}" class="btn btn-primary">
                             <i class="bi bi-house me-1"></i>Về trang chủ
                         </a>
-                        <a href="{{ route('account.index') }}" class="btn btn-outline-primary">
+                        <a href="{{ route('account.bookings') }}" class="btn btn-outline-primary">
                             <i class="bi bi-person me-1"></i>Xem lịch sử đặt vé
                         </a>
                         @if($donDatVe->trang_thai === 'cho_thanh_toan')

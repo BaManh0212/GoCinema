@@ -77,12 +77,6 @@
                     @endauth
                 </ul>
             </li>
-         <li class="nav-item">
-    <a class="nav-link px-3" href="{{ route('order.index') }}"
-       style="font-weight: 500; transition: var(--transition);">
-        <i class="fas fa-shield-alt me-1"></i>Đơn vé
-    </a>
-</li>
         </ul>
 
         {{-- 🔹 Auth buttons --}}

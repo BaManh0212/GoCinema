@@ -273,7 +273,7 @@ document.getElementById('btnConvertVip').addEventListener('click', () => {
         return;
     }
 
-    fetch(`{{ route('phongchieu.ghe.convertRowsToVip', $phong->id) }}`, {
+    fetch(`{{ route('admin.phongchieu.ghe.convertRowsToVip', $phong->id) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -303,7 +303,7 @@ document.getElementById('btnConvertNormal').addEventListener('click', () => {
         return;
     }
 
-    fetch(`{{ route('phongchieu.ghe.convertRowsToNormal', $phong->id) }}`, {
+    fetch(`{{ route('admin.phongchieu.ghe.convertRowsToNormal', $phong->id) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -337,7 +337,7 @@ document.getElementById('btnConvertDouble').addEventListener('click', () => {
         return;
     }
 
-    fetch(`{{ route('phongchieu.ghe.convertToDoubleSeats', $phong->id) }}`, {
+    fetch(`{{ route('admin.phongchieu.ghe.convertToDoubleSeats', $phong->id) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ document.getElementById('btnSaveLayout').addEventListener('click', () => {
         trang_thai: seat.dataset.trangthai
     }));
 
-    fetch(`{{ route('phongchieu.ghe.updateMap', $phong->id) }}`, {
+    fetch(`{{ route('admin.phongchieu.ghe.updateMap', $phong->id) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
