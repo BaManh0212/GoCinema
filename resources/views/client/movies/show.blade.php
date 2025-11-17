@@ -70,11 +70,6 @@
                             </div>
                             <div class="small text-body-secondary">{{ $soDanhGia }} lượt</div>
                         </div>
-                        <div class="ms-2 text-end d-none d-md-block">
-                            <a href="#lichchieu" class="btn btn-danger rounded-3 px-3 py-2 btn-book">
-                                <i class="bi bi-ticket-perforated-fill me-1"></i>Đặt vé
-                            </a>
-                        </div>
                     </div>
 
                     <hr class="border-secondary-subtle">

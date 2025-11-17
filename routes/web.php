@@ -61,6 +61,16 @@ Route::get('/phim/{slug}', [PhimController::class, 'show'])->name('movies.show')
 // Trang lịch chiếu
 Route::get('/lich-chieu', [PhimController::class, 'schedule'])->name('schedule.index');
 
+// Đặt vé
+Route::get('/booking', [App\Http\Controllers\BookingController::class, 'index'])->name('booking.index');
+Route::post('/booking/hold-seats', [App\Http\Controllers\BookingController::class, 'holdSeats'])->name('booking.holdSeats');
+Route::post('/booking/check-voucher', [App\Http\Controllers\BookingController::class, 'checkVoucher'])->name('booking.check-voucher');
+Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])->name('booking.store');
+Route::get('/booking/payment/{id}', [App\Http\Controllers\BookingController::class, 'payment'])->name('booking.payment');
+Route::post('/booking/process-payment/{id}', [App\Http\Controllers\BookingController::class, 'processPayment'])->name('booking.process-payment');
+Route::get('/booking/confirm/{id}', [App\Http\Controllers\BookingController::class, 'confirm'])->name('booking.confirm');
+Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->name('booking.cancel');
+
 // JSON lịch chiếu (nếu cần load bằng JS) + Lưu đánh giá
 Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson'])->name('movies.schedule.json');
 Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])
@@ -97,6 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
         Route::get('/my-vouchers', [AccountController::class, 'myVouchers'])->name('my-vouchers');
         Route::get('/point-history', [AccountController::class, 'pointHistory'])->name('point-history');
+        Route::get('/bookings', [AccountController::class, 'bookings'])->name('bookings');
         Route::put('/update-profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::post('/redeem-voucher/{voucherId}', [AccountController::class, 'redeemVoucher'])->name('redeem-voucher');

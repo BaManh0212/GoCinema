@@ -26,7 +26,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="fw-bold mb-3 text-secondary">Thông tin khách hàng</h5>
-            <p><strong>Tên:</strong> {{ $donVe->nguoiDung->ten ?? 'N/A' }}</p>
+            <p><strong>Tên:</strong> {{ $donVe->nguoiDung->ho_ten ?? 'N/A' }}</p>
             <p><strong>Email:</strong> {{ $donVe->nguoiDung->email ?? 'N/A' }}</p>
             <p><strong>Trạng thái:</strong>
                 @php
