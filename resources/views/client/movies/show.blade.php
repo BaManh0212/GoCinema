@@ -122,7 +122,11 @@
                 @if($lichChieuTheoNgay->isEmpty())
                     <div class="p-4 border rounded-3 text-body-secondary bg-white">Hiện chưa có lịch chiếu.</div>
                 @else
-                    @php $dates = $lichChieuTheoNgay->keys()->values(); @endphp
+                    @php
+                        $dates = collect();
+                        $start = \Carbon\Carbon::today();
+                        for ($i=0; $i<7; $i++) { $dates->push($start->copy()->addDays($i)->format('Y-m-d')); }
+                    @endphp
 
                     <ul class="nav nav-pills gap-2 flex-nowrap overflow-auto pb-2" id="dayTabs" role="tablist" style="scrollbar-width:thin;">
                         @foreach($dates as $i => $date)
@@ -136,10 +140,13 @@
                     <div class="tab-content mt-3">
                         @foreach($dates as $i => $date)
                             @php
-                                $ds = $lichChieuTheoNgay[$date];
+                                $ds = $lichChieuTheoNgay[$date] ?? collect();
                                 $byRap = $ds->groupBy(fn($s) => $s->phong->rap->ten ?? 'Khác');
                             @endphp
                             <div class="tab-pane fade {{ $i===0? 'show active':'' }}" id="pane-{{ $i }}" role="tabpanel">
+                                @if($ds->isEmpty())
+                                    <div class="p-3 text-body-secondary bg-white rounded">Không có suất chiếu cho ngày này.</div>
+                                @else
                                 @foreach($byRap as $rapTen => $items)
                                     <div class="mb-3">
                                         <div class="fw-semibold mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ $rapTen }}</div>
@@ -161,6 +168,7 @@
                                     </div>
                                     @if(!$loop->last)<hr class="border-secondary-subtle">@endif
                                 @endforeach
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -367,6 +375,52 @@ body {
             s.querySelector('i').classList.toggle('bi-star', val > v);
         });
     }
+
+    // ================= Auto switch schedule tabs =================
+    (function(){
+        const container = document.getElementById('lichchieu');
+        if (!container) return;
+        const tabButtons = Array.from(document.querySelectorAll('#dayTabs .nav-link'));
+        const tabPanes = Array.from(document.querySelectorAll('.tab-content .tab-pane'));
+        if (tabButtons.length === 0 || tabPanes.length === 0) return;
+
+        let idx = tabButtons.findIndex(b => b.classList.contains('active'));
+        if (idx < 0) idx = 0;
+        let paused = false;
+        let timer = null;
+
+        function showTabAt(i){
+            const next = ((i % tabButtons.length) + tabButtons.length) % tabButtons.length;
+            const btn = tabButtons[next];
+            if (!btn) return;
+            // Use Bootstrap Tab API if available
+            try {
+                const tab = new bootstrap.Tab(btn);
+                tab.show();
+            } catch (_) {
+                // Fallback: simulate click
+                btn.click();
+            }
+            idx = next;
+        }
+
+        function start(){
+            if (timer) return;
+            timer = setInterval(()=>{ if (!paused) showTabAt(idx+1); }, 8000);
+        }
+        function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+
+        // Pause on hover
+        container.addEventListener('mouseenter', ()=>{ paused = true; });
+        container.addEventListener('mouseleave', ()=>{ paused = false; });
+
+        // Update idx on manual click and briefly pause
+        tabButtons.forEach((btn, i)=>{
+            btn.addEventListener('click', ()=>{ idx = i; paused = true; setTimeout(()=>paused=false, 4000); });
+        });
+
+        start();
+    })();
 </script>
 @endpush
 @endsection
