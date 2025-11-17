@@ -94,9 +94,9 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('admin.admin.sodoghe.show', $p->id) }}" class="btn btn-sm btn-outline-info me-1">
-        <i class="bi bi-grid"></i> Sơ đồ ghế
-    </a>
+                                <a href="{{ route('phongchieu.ghe', $p->id) }}" class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-ui-checks"></i> Quản lý ghế
+                                </a>
                                 <a href="{{ route('admin.phongchieu.edit', $p->id) }}" class="btn btn-sm btn-outline-primary me-1">
                                     <i class="bi bi-pencil-square"></i> Sửa
                                 </a>

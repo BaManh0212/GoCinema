@@ -110,6 +110,11 @@
                                 <i class="fas fa-gift me-2" style="color: var(--accent);"></i> Đổi điểm thưởng
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="{{ route('account.bookings') }}" style="color: var(--text-light);">
+                                <i class="fas fa-ticket-alt me-2" style="color: var(--accent);"></i> Lịch sử đặt vé
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider" style="border-color: var(--card-border);"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">

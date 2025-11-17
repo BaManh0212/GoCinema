@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
+use App\Models\GheSuatChieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -258,7 +259,37 @@ class SuatChieuController extends Controller
 
 
     /**
-    * ⚙️ Tự động tạo suất chiếu nhiều ngày (Preview mode)
+     * 🎟️ Xem sơ đồ ghế
+     */
+    public function gheIndex($id)
+    {
+        $suatchieu = SuatChieu::with(['phong.ghe'])->findOrFail($id);
+
+        $ghes = $suatchieu->phong->ghe()
+            ->orderBy('hang')->orderBy('cot')->get()
+            ->groupBy('hang');
+
+        // Lấy trạng thái ghế theo suất chiếu
+        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
+            ->pluck('trang_thai', 'ghe_id')
+            ->toArray();
+
+        $giuTamIds = DB::table('ghe_giu_tam')
+            ->where('suat_chieu_id', $id)
+            ->pluck('ghe_id')->toArray();
+
+        // Lấy ghế đã đặt
+        $gheDaDat = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->where('trang_thai', 'da_dat')
+            ->pluck('ghe_id')
+            ->toArray();
+
+        return view('admin.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'gheStatuses', 'giuTamIds', 'gheDaDat'));
+    }
+
+    /**
+     * ⚙️ Tự động tạo suất chiếu nhiều ngày (Preview mode)
      */
    public function autoStore(Request $request)
 {
@@ -475,30 +506,37 @@ class SuatChieuController extends Controller
 
     return back()->with('success', '✅ Cập nhật trạng thái suất chiếu thành công!');
 }
-public function showAdmin($suatChieuId)
-{
-    // Lấy suất chiếu theo ID
-    $suatChieu = SuatChieu::with('phong.soDoGhe')->findOrFail($suatChieuId);
-    $phong = $suatChieu->phong;
 
-    // Kiểm tra phòng và sơ đồ ghế
-    if (!$phong || !$phong->soDoGhe) {
-        return back()->with('error', 'Phòng này chưa có sơ đồ ghế!');
+    /**
+     * 🎭 Cập nhật trạng thái ghế theo suất chiếu
+     */
+    public function updateGheTrangThai(Request $request, $id)
+    {
+        $request->validate([
+            'ghe_id' => 'required|exists:ghe,id',
+            'trang_thai' => 'required|in:hoat_dong,bao_tri,vo_hieu_hoa',
+        ]);
+
+        $suatChieu = SuatChieu::findOrFail($id);
+
+        // Kiểm tra ghế có thuộc phòng của suất chiếu không
+        $ghe = GheSuatChieu::where('suat_chieu_id', $id)
+            ->where('ghe_id', $request->ghe_id)
+            ->first();
+
+        if (!$ghe) {
+            // Nếu chưa có bản ghi, tạo mới
+            GheSuatChieu::create([
+                'suat_chieu_id' => $id,
+                'ghe_id' => $request->ghe_id,
+                'trang_thai' => $request->trang_thai,
+            ]);
+        } else {
+            // Cập nhật trạng thái
+            $ghe->update(['trang_thai' => $request->trang_thai]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
     }
-
-    // Lấy ma trận ghế từ JSON
-    $matrix = json_decode($phong->soDoGhe->ma_tran, true) ?: [];
-
-    // Lấy trạng thái ghế đã đặt
-    $trangThaiGhe = DB::table('ghe_suat_chieu')
-        ->where('suat_chieu_id', $suatChieu->id)
-        ->pluck('trang_thai', 'ghe_id');
-
-    // Truyền sang view admin
-    return view('admin.suatchieu.show', compact(
-        'suatChieu', 'phong', 'matrix', 'trangThaiGhe'
-    ));
-}
-
 
 }

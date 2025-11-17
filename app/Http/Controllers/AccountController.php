@@ -175,6 +175,26 @@ class AccountController extends Controller
     }
 
     /**
+     * Hiển thị lịch sử đặt vé
+     */
+    public function bookings()
+    {
+        $user = Auth::user();
+
+        $bookings = DonDatVe::with([
+            'suatChieu.phim',
+            'suatChieu.phong.rap',
+            'chiTietVes.ghe',
+            'maGiamGia'
+        ])
+        ->where('nguoi_dung_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+        return view('client.account.bookings', compact('user', 'bookings'));
+    }
+
+    /**
      * Đổi mật khẩu
      */
     public function changePassword(Request $request)

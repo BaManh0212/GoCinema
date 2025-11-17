@@ -63,6 +63,16 @@ Route::get('/phim/{slug}', [PhimController::class, 'show'])->name('movies.show')
 // Trang lịch chiếu
 Route::get('/lich-chieu', [PhimController::class, 'schedule'])->name('schedule.index');
 
+// Đặt vé
+Route::get('/booking', [App\Http\Controllers\BookingController::class, 'index'])->name('booking.index');
+Route::post('/booking/hold-seats', [App\Http\Controllers\BookingController::class, 'holdSeats'])->name('booking.holdSeats');
+Route::post('/booking/check-voucher', [App\Http\Controllers\BookingController::class, 'checkVoucher'])->name('booking.check-voucher');
+Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])->name('booking.store');
+Route::get('/booking/payment/{id}', [App\Http\Controllers\BookingController::class, 'payment'])->name('booking.payment');
+Route::post('/booking/process-payment/{id}', [App\Http\Controllers\BookingController::class, 'processPayment'])->name('booking.process-payment');
+Route::get('/booking/confirm/{id}', [App\Http\Controllers\BookingController::class, 'confirm'])->name('booking.confirm');
+Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->name('booking.cancel');
+
 // JSON lịch chiếu (nếu cần load bằng JS) + Lưu đánh giá
 Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson'])->name('movies.schedule.json');
 Route::post('/phim/{slug}/danh-gia', [PhimController::class, 'luuDanhGia'])
@@ -106,6 +116,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
         Route::get('/my-vouchers', [AccountController::class, 'myVouchers'])->name('my-vouchers');
         Route::get('/point-history', [AccountController::class, 'pointHistory'])->name('point-history');
+        Route::get('/bookings', [AccountController::class, 'bookings'])->name('bookings');
         Route::put('/update-profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::put('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::post('/redeem-voucher/{voucherId}', [AccountController::class, 'redeemVoucher'])->name('redeem-voucher');
@@ -188,8 +199,14 @@ Route::prefix('admin')
         Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
         Route::post('phongchieu/{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
         Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
-        Route::post('admin/phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
-            ->name('admin.phongchieu.ghe.updateMap');
+Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'])
+    ->name('phongchieu.ghe.updateMap');
+        Route::post('phongchieu/{id}/ghe/convert-vip', [GheController::class, 'convertRowsToVip'])
+            ->name('phongchieu.ghe.convertRowsToVip');
+        Route::post('phongchieu/{id}/ghe/convert-normal', [GheController::class, 'convertRowsToNormal'])
+            ->name('phongchieu.ghe.convertRowsToNormal');
+        Route::post('phongchieu/{id}/ghe/convert-double', [GheController::class, 'convertToDoubleSeats'])
+            ->name('phongchieu.ghe.convertToDoubleSeats');
 
         Route::resource('suatchieu', AdminSuatChieuController::class)->except(['show']);
 
@@ -200,6 +217,10 @@ Route::prefix('admin')
         // Cập nhật trạng thái từng suất
         Route::patch('suatchieu/{id}/trang-thai', [AdminSuatChieuController::class, 'updateTrangThai'])
             ->name('suatchieu.updateTrangThai');
+
+        // Cập nhật trạng thái ghế theo suất chiếu
+        Route::patch('suatchieu/{id}/ghe/update-trang-thai', [AdminSuatChieuController::class, 'updateGheTrangThai'])
+            ->name('suatchieu.ghe.updateTrangThai');
 
         // Cập nhật trạng thái hàng loạt
         Route::post('suatchieu/bulk-update', [AdminSuatChieuController::class, 'bulkUpdate'])
@@ -359,11 +380,11 @@ Route::prefix('staff')
         // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
         // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
 
-        Route::get('phongchieu/{id}/ghe', [StaffGheController::class, 'index'])->name('phongchieu.ghe');
-        Route::post('phongchieu/{id}/ghe', [StaffGheController::class, 'store'])->name('phongchieu.ghe.store');
-        Route::delete('ghe/{id}', [StaffGheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
-        Route::post('admin/phongchieu/{id}/ghe/update-map', [StaffGheController::class, 'updateMap'])
-            ->name('admin.phongchieu.ghe.updateMap');
+        Route::get('phongchieu/{id}/ghe', [StaffGheController::class, 'index'])->name('staff.phongchieu.ghe');
+        Route::post('phongchieu/{id}/ghe', [StaffGheController::class, 'store'])->name('staff.phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [StaffGheController::class, 'destroy'])->name('staff.phongchieu.ghe.destroy');
+        Route::post('phongchieu/{id}/ghe/update-map', [StaffGheController::class, 'updateMap'])
+            ->name('staff.staff.phongchieu.ghe.updateMap');
         // Quản lý suất chiếu
         Route::resource('suatchieu', StaffSuatChieuController::class)->names('suatchieu');
 

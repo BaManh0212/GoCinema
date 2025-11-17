@@ -17,17 +17,13 @@ class GheSuatChieu extends Model
         'trang_thai',
     ];
 
-public function ghe()
-{
-    return $this->belongsTo(Ghe::class, 'ghe_id', 'id');
-}
-
     public function suatChieu()
     {
-        return $this->belongsTo(SuatChieu::class);
+        return $this->belongsTo(SuatChieu::class, 'suat_chieu_id');
     }
-public function gheDaDat()
-{
-    return $this->hasMany(GheSuatChieu::class, 'don_dat_ve_id', 'id')->with('ghe');
-}
+
+    public function ghe()
+    {
+        return $this->belongsTo(Ghe::class, 'ghe_id');
+    }
 }
