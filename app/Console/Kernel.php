@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CleanupPendingBookings::class,
         \App\Console\Commands\UpdateBookingStatus::class,
         \App\Console\Commands\UpdateExpiredBookings::class,
+        \App\Console\Commands\CancelPendingBookings::class,
     ];
 
     /**
@@ -31,6 +32,9 @@ class Kernel extends ConsoleKernel
 
         // Cập nhật đơn đặt vé đã qua thời gian bắt đầu suất chiếu thành "qua_han"
         $schedule->command('bookings:update-expired')->everyMinute();
+
+        // Hủy tự động các đơn đặt vé chờ thanh toán quá 10 phút
+        $schedule->command('bookings:cancel-pending')->everyMinute();
     }
 
     /**
