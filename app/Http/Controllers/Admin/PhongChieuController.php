@@ -78,7 +78,7 @@ class PhongChieuController extends Controller
     {
     $validated = $request->validate([
         'ten' => 'required|string|max:255',
-        'dinh_dang_id' => 'nullable|exists:dinh_dang,id',
+        'dinh_dang_id' => 'required|exists:dinh_dang,id',
         'trang_thai' => 'required|in:hoat_dong,bao_tri,ngung_su_dung',
         'so_do' => 'nullable|string',
         'so_hang' => 'required|integer|min:1|max:50',
@@ -86,6 +86,7 @@ class PhongChieuController extends Controller
     ], [
         'ten.required' => 'Tên phòng chiếu không được để trống.',
         'ten.max' => 'Tên phòng không được vượt quá 255 ký tự.',
+        'dinh_dang_id.required' => 'Định dạng phòng chiếu là bắt buộc.',
         'dinh_dang_id.exists' => 'Định dạng không hợp lệ.',
         'trang_thai.required' => 'Trạng thái là bắt buộc.',
         'so_hang.required' => 'Số hàng là bắt buộc.',
@@ -133,7 +134,7 @@ class PhongChieuController extends Controller
     {
         $validated = $request->validate([
             'ten' => 'required|string|max:255',
-            'dinh_dang_id' => 'nullable|exists:dinh_dang,id',
+        'dinh_dang_id' => 'required|exists:dinh_dang,id',
             'trang_thai' => 'required|in:hoat_dong,bao_tri,ngung_su_dung',
             'so_do' => 'nullable|string',
             'so_hang' => 'required|integer|min:1|max:50',
@@ -141,6 +142,8 @@ class PhongChieuController extends Controller
         ], [
             'ten.required' => 'Tên phòng chiếu không được để trống.',
             'trang_thai.required' => 'Trạng thái là bắt buộc.',
+            'dinh_dang_id.required' => 'Định dạng phòng chiếu là bắt buộc.',
+            'dinh_dang_id.exists' => 'Định dạng không hợp lệ.',
             'so_hang.required' => 'Số hàng là bắt buộc.',
             'so_hang.integer' => 'Số hàng phải là số nguyên.',
             'so_hang.min' => 'Số hàng tối thiểu là 1.',

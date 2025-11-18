@@ -182,10 +182,9 @@ Route::prefix('admin')
         Route::get('/admin/sodoghe/{phong_id}', [SoDoGheController::class, 'show'])
         ->name('admin.sodoghe.show');
         // Xem sơ đồ ghế của suất chiếu
-      Route::prefix('suatchieu')->name('suatchieu.')->group(function () {
-        Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'gheIndex'])->name('show');
-        Route::get('/{suatChieu}/seat-status', [AdminSuatChieuController::class, 'seatStatus'])->name('seatStatus');
-    });
+    //   Route::prefix('suatchieu')->name('suatchieu.')->group(function () {
+    //     
+    // });
         Route::post('/admin/sodo/update-seat-status', [SoDoGheController::class, 'updateSeatStatus'])
         ->name('admin.sodo.updateSeatStatus');
         //  Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'show'])->name('show'); // chi tiết
@@ -205,27 +204,61 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
         Route::post('phongchieu/{id}/ghe/convert-double', [GheController::class, 'convertToDoubleSeats'])
             ->name('phongchieu.ghe.convertToDoubleSeats');
 
-        Route::resource('suatchieu', AdminSuatChieuController::class)->except(['show']);
+        // 🎬 Suất Chiếu CRUD
+    Route::get('/suatchieu', [AdminSuatChieuController::class, 'index'])
+        ->name('suatchieu.index');
 
-        // Danh sách ghế trong suất chiếu
-        Route::get('suatchieu/{id}/ghe', [AdminSuatChieuController::class, 'gheIndex'])
-            ->name('suatchieu.ghe');
+    Route::get('/suatchieu/create', [AdminSuatChieuController::class, 'create'])
+        ->name('suatchieu.create');
 
-        // Cập nhật trạng thái từng suất
-        Route::patch('suatchieu/{id}/trang-thai', [AdminSuatChieuController::class, 'updateTrangThai'])
-            ->name('suatchieu.updateTrangThai');
+    Route::post('/suatchieu', [AdminSuatChieuController::class, 'store'])
+        ->name('suatchieu.store');
 
-        // Cập nhật trạng thái ghế theo suất chiếu
-        Route::patch('suatchieu/{id}/ghe/update-trang-thai', [AdminSuatChieuController::class, 'updateGheTrangThai'])
-            ->name('suatchieu.ghe.updateTrangThai');
+    Route::get('/suatchieu/{id}/edit', [AdminSuatChieuController::class, 'edit'])
+        ->name('suatchieu.edit');
 
-        // Cập nhật trạng thái hàng loạt
-        Route::post('suatchieu/bulk-update', [AdminSuatChieuController::class, 'bulkUpdate'])
-            ->name('suatchieu.bulkUpdate');
+    Route::put('/suatchieu/{id}', [AdminSuatChieuController::class, 'update'])
+        ->name('suatchieu.update');
 
-        // Tự động tạo suất chiếu
-        Route::post('suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])->name('suatchieu.autoStore');
-        Route::post('suatchieu/store-preview', [AdminSuatChieuController::class, 'storePreview'])->name('suatchieu.storePreview');
+    Route::delete('/suatchieu/{id}', [AdminSuatChieuController::class, 'destroy'])
+        ->name('suatchieu.destroy');
+
+    // 🎟️ Xem sơ đồ ghế
+    Route::get('/suatchieu/{id}/show', [AdminSuatChieuController::class, 'gheIndex'])
+        ->name('suatchieu.show');
+
+    // 🔄 API cập nhật trạng thái ghế
+    Route::post('/suatchieu/{id}/ghe/update', [AdminSuatChieuController::class, 'updateGheTrangThai'])
+        ->name('suatchieu.ghe.update');
+
+    // 🟢 Lấy trạng thái ghế real-time
+    Route::get('/suatchieu/{id}/seat-status', [AdminSuatChieuController::class, 'seatStatus'])
+        ->name('suatchieu.seatStatus');
+
+    // ⚙️ Auto tạo suất chiếu
+    Route::post('/suatchieu/auto-store', [AdminSuatChieuController::class, 'autoStore'])
+        ->name('suatchieu.autoStore');
+
+    // 💾 Lưu preview
+    Route::post('/suatchieu/store-preview', [AdminSuatChieuController::class, 'storePreview'])
+        ->name('suatchieu.storePreview');
+
+    // 🔄 Cập nhật trạng thái suất chiếu
+    Route::post('/suatchieu/{id}/update-status', [AdminSuatChieuController::class, 'updateTrangThai'])
+        ->name('suatchieu.updateTrangThai');
+
+    // 🧩 Update trạng thái hàng loạt
+    Route::post('/suatchieu/bulk-update', [AdminSuatChieuController::class, 'bulkUpdate'])
+        ->name('suatchieu.bulkUpdate');
+
+    // 🔄 Cập nhật trạng thái ghế (cho route admin.suatchieu.ghe.updateTrangThai)
+    Route::patch('/suatchieu/{id}/ghe/update-trang-thai', [AdminSuatChieuController::class, 'updateGheTrangThai'])
+        ->name('suatchieu.ghe.updateTrangThai');
+
+    // =========================
+    // RESOURCE SUẤT CHIẾU
+    // =========================
+    
 
 
         // Quản lý danh mục
