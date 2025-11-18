@@ -35,14 +35,14 @@
                 <h2 class="text-2xl font-semibold mb-4 text-gray-700">Thông tin phim</h2>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <div class="flex flex-col md:flex-row gap-4">
-                        <img src="{{ asset('storage/' . $donDatVe->suatChieu->phim->poster) }}"
-                             alt="{{ $donDatVe->suatChieu->phim->ten_phim }}"
+                        <img src="{{ asset('storage/' . $donDatVe->suatChieu->phim->anh_poster) }}"
+                             alt="{{ $donDatVe->suatChieu->phim->tieu_de }}"
                              class="w-full md:w-32 h-48 object-cover rounded-lg">
                         <div class="flex-1">
-                            <h3 class="text-xl font-bold text-gray-800">{{ $donDatVe->suatChieu->phim->ten_phim }}</h3>
+                            <h3 class="text-xl font-bold text-gray-800">{{ $donDatVe->suatChieu->phim->tieu_de }}</h3>
                             <div class="mt-2 space-y-1 text-sm text-gray-600">
-                                <p><strong>Rạp:</strong> {{ $donDatVe->suatChieu->phong->rap->ten_rap }}</p>
-                                <p><strong>Phòng:</strong> {{ $donDatVe->suatChieu->phong->ten_phong }}</p>
+                                <p><strong>Rạp:</strong> {{ $donDatVe->suatChieu->phong->rap->ten }}</p>
+                                <p><strong>Phòng:</strong> {{ $donDatVe->suatChieu->phong->ten }}</p>
                                 <p><strong>Suất chiếu:</strong> {{ \Carbon\Carbon::parse($donDatVe->suatChieu->gio_bat_dau)->format('d/m/Y H:i') }}</p>
                                 <p><strong>Thời lượng:</strong> {{ $donDatVe->suatChieu->phim->thoi_luong }} phút</p>
                             </div>

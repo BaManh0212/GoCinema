@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\CleanupPendingBookings::class,
+        \App\Console\Commands\UpdateBookingStatus::class,
     ];
 
     /**
@@ -23,6 +24,9 @@ class Kernel extends ConsoleKernel
     {
         // Ch dọn dẹp đơn chờ thanh toán quá hạn và ghế giữ tạm hết hạn
         $schedule->command('booking:cleanup')->everyMinute();
+        
+        // Cập nhật trạng thái đơn đặt vé đã quá giờ chiếu
+        $schedule->command('bookings:update-status')->everyMinute();
     }
 
     /**

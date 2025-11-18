@@ -45,6 +45,10 @@ class VoucherNguoiDung extends Model
     // Kiểm tra voucher còn sử dụng được không
     public function conSuDungDuoc()
     {
+        if (!$this->voucher) {
+            return false;
+        }
+
         if ($this->trang_thai !== 'chua_su_dung') {
             return false;
         }

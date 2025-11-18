@@ -6,12 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MaGiamGia extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'ma_giam_gia';
+    
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Listen for all queries on the ma_giam_gia table
+        DB::listen(function ($query) {
+            if (str_contains($query->sql, 'ma_giam_gia')) {
+                \Log::info('MaGiamGia Query:', [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                    'time' => $query->time
+                ]);
+            }
+        });
+    }
 
     protected $fillable = [
         'ma', 'loai', 'gia_tri', 'giam_toi_da',

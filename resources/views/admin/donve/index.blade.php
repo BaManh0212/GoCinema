@@ -24,6 +24,7 @@
                         <option value="">-- Lọc theo trạng thái --</option>
                         <option value="cho_thanh_toan" {{ request('trang_thai') == 'cho_thanh_toan' ? 'selected' : '' }}>Chờ thanh toán</option>
                         <option value="da_thanh_toan" {{ request('trang_thai') == 'da_thanh_toan' ? 'selected' : '' }}>Đã thanh toán</option>
+                        <option value="qua_han" {{ request('trang_thai') == 'qua_han' ? 'selected' : '' }}>Quá hạn</option>
                         <option value="da_huy" {{ request('trang_thai') == 'da_huy' ? 'selected' : '' }}>Đã hủy</option>
                     </select>
                 </div>
@@ -71,6 +72,8 @@
                                 'cho_thanh_toan' => 'secondary',
                                 'da_thanh_toan' => 'success',
                                 'da_huy' => 'danger',
+                                'qua_han' => 'warning',
+                                'da_checkin' => 'info',
                                 default => 'dark'
                             };
                         @endphp
@@ -85,7 +88,11 @@
 
                             <td>
                                 <span class="badge-status bg-{{ $color }}">
-                                    {{ ucfirst(str_replace('_', ' ', $don->trang_thai)) }}
+                                    @if($don->trang_thai === 'qua_han')
+                                        Quá hạn
+                                    @else
+                                        {{ ucfirst(str_replace('_', ' ', $don->trang_thai)) }}
+                                    @endif
                                 </span>
                             </td>
 
@@ -174,17 +181,21 @@
 
 /* 🌈 Badge trạng thái */
 .badge-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    min-width: 100px;
     display: inline-block;
-    min-width: 110px;
     text-align: center;
-    font-weight: 600;
-    color: #fff !important;
-    border-radius: 50px;
-    padding: 6px 16px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-    font-size: 0.9rem;
-    letter-spacing: 0.3px;
 }
+
+.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
 .badge-status.bg-secondary {
     background: linear-gradient(135deg, #a0a4ab, #7a7e85);
 }

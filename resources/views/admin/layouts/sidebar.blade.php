@@ -28,38 +28,18 @@
 
     <!-- Phim -->
     <li class="nav-item {{ request()->is('admin/phim*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhim" aria-expanded="false" aria-controls="menuPhim">
+        <a class="nav-link collapsed" href="{{ route('admin.phim.index') }}">
             <i class="fas fa-fw fa-film"></i>
             <span>Phim</span>
         </a>
-        <div id="menuPhim" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('admin/phim') ? 'active' : '' }}" href="{{ route('admin.phim.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách phim
-                </a>
-                <a class="collapse-item {{ request()->is('admin/phim/create') ? 'active' : '' }}" href="{{ route('admin.phim.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phim mới
-                </a>
-            </div>
-        </div>
     </li>
 
     <!-- Danh mục -->
     <li class="nav-item {{ request()->is('admin/danhmuc*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDanhMuc" aria-expanded="false" aria-controls="menuDanhMuc">
+        <a class="nav-link collapsed" href="{{ route('admin.danhmuc.index') }}">
             <i class="fas fa-fw fa-tags"></i>
             <span>Danh mục</span>
         </a>
-        <div id="menuDanhMuc" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('admin/danhmuc') ? 'active' : '' }}" href="{{ route('admin.danhmuc.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách danh mục
-                </a>
-                <a class="collapse-item {{ request()->is('admin/danhmuc/create') ? 'active' : '' }}" href="{{ route('admin.danhmuc.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm danh mục
-                </a>
-            </div>
-        </div>
     </li>
 
     <!-- Banner -->
@@ -86,60 +66,19 @@
 
     <!-- Phòng chiếu -->
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuPhongChieu" aria-expanded="false" aria-controls="menuPhongChieu">
+        <a class="nav-link collapsed" href="{{ route('admin.phongchieu.index') }}">
             <i class="fas fa-fw fa-tv"></i>
             <span>Phòng chiếu</span>
         </a>
-        <div id="menuPhongChieu" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{ route('admin.phongchieu.index') }}">
-                    <i class="fas fa-list fa-sm mr-2"></i> Danh sách phòng chiếu
-                </a>
-                <a class="collapse-item" href="{{ route('admin.phongchieu.create') }}">
-                    <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm phòng chiếu
-                </a>
-            </div>
-        </div>
     </li>
 
     <!-- Suất chiếu -->
    <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSuatChieu"
-        aria-expanded="false" aria-controls="menuSuatChieu">
+    <a class="nav-link collapsed" href="{{ route('admin.suatchieu.index') }}">
         <i class="fas fa-fw fa-clock"></i>
         <span>Suất chiếu</span>
     </a>
-    <div id="menuSuatChieu" class="collapse" data-parent="#accordionSidebar">
-        <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{{ route('admin.suatchieu.index') }}">
-                <i class="fas fa-list fa-sm mr-2"></i> Danh sách suất chiếu
-            </a>
-            <a class="collapse-item" href="{{ route('admin.suatchieu.create') }}">
-                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm suất chiếu
-            </a>
-        </div>
-    </div>
 </li>
-{{-- <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuSodo"
-        aria-expanded="false" aria-controls="menuSodo">
-        <i class="fas fa-fw fa-chair"></i>
-        <span>Sơ đồ ghế</span>
-    </a>
-    <div id="menuSodo" class="collapse" data-parent="#accordionSidebar">
-        <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{{ route('admin.sodo.index') }}">
-                <i class="fas fa-list fa-sm mr-2"></i> Danh sách sơ đồ ghế
-            </a>
-            <a class="collapse-item" href="{{ route('admin.sodo.create') }}">
-                <i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm sơ đồ
-            </a>
-        </div>
-    </div>
-</li> --}}
-
-
-
     <!-- Divider -->
     <hr class="sidebar-divider">
 
@@ -168,9 +107,7 @@
         <div id="menuUuDai" class="collapse" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="{{ route('admin.ma_giam_gia.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Mã giảm giá</a>
-                <a class="collapse-item" href="{{ route('admin.ma_giam_gia.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm mã giảm giá</a>
                 <a class="collapse-item" href="{{ route('admin.voucher.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Ưu đãi đổi điểm</a>
-                <a class="collapse-item" href="{{ route('admin.voucher.create') }}"><i class="fas fa-plus-circle fa-sm mr-2"></i> Thêm ưu đãi đổi điểm</a>
             </div>
         </div>
     </li>
@@ -182,15 +119,10 @@
     <div class="sidebar-heading">👥 Quản lý hệ thống</div>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="/admin/nguoi-dung" data-toggle="collapse" data-target="#menuTaiKhoan" aria-expanded="false" aria-controls="menuTaiKhoan">
+        <a class="nav-link collapsed" href="{{ route('admin.nguoi-dung.index') }}">
             <i class="fas fa-fw fa-user"></i>
             <span>Tài khoản</span>
         </a>
-        <div id="menuTaiKhoan" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{ route('admin.nguoi-dung.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách tài khoản</a>
-            </div>
-        </div>
     </li>
 
     <li class="nav-item">

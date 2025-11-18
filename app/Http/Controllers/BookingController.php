@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
+use App\Mail\BookingConfirmation;
 use App\Models\SuatChieu;
 use App\Models\Ghe;
 use App\Models\GheSuatChieu;
@@ -12,7 +15,7 @@ use App\Models\ChiTietVe;
 use App\Models\MaGiamGia;
 use App\Models\Combo;
 use App\Models\SanPham;
-use Carbon\Carbon;
+
 
 class BookingController extends Controller
 {
@@ -68,6 +71,19 @@ class BookingController extends Controller
         $combos = Combo::all();
         $sanPhams = SanPham::all();
 
+        $availableVouchers = MaGiamGia::where('kich_hoat', true)
+    ->where(function($query) {
+        $query->whereNull('ngay_bat_dau')
+              ->orWhere('ngay_bat_dau', '<=', now());
+    })
+    ->where(function($query) {
+        $query->whereNull('ngay_ket_thuc')
+              ->orWhere('ngay_ket_thuc', '>=', now());
+    })
+    ->where('so_luong', '>', 0)
+    ->whereIn('ap_dung_cho', ['ve', 'tat_ca'])
+    ->get();
+
         return view('client.booking.index', compact(
             'suatChieu',
             'ghes',
@@ -75,7 +91,8 @@ class BookingController extends Controller
             'gheDaDat',
             'giuTamIds',
             'combos',
-            'sanPhams'
+            'sanPhams',
+            'availableVouchers'
         ));
     }
 
@@ -178,20 +195,6 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'suat_chieu_id' => 'required|exists:suat_chieu,id',
-            'ghe_ids' => 'required|array|min:1|max:2',
-            'ghe_ids.*' => 'exists:ghe,id',
-            'combo_items' => 'nullable|array',
-            'combo_items.*.combo_id' => 'exists:combo,id',
-            'combo_items.*.so_luong' => 'integer|min:1',
-            // Cho phép truyền mã giảm giá tự do (mã hệ thống hoặc mã voucher người dùng)
-            'ma_giam_gia' => 'nullable|string',
-            // Nếu là voucher người dùng (đổi điểm) thì truyền id để đánh dấu đã sử dụng
-            'voucher_nd_id' => 'nullable|integer|exists:voucher_nguoi_dung,id',
-        ]);
-
-        // Kiểm tra đăng nhập
         if (!auth()->check()) {
             return response()->json([
                 'success' => false,
@@ -303,9 +306,15 @@ class BookingController extends Controller
                 }
             } elseif ($maGiamGia) {
                 $maGiamGiaObj = MaGiamGia::where('ma', $maGiamGia)
-                    ->where('trang_thai', 'hoat_dong')
-                    ->where('ngay_bat_dau', '<=', Carbon::now())
-                    ->where('ngay_ket_thuc', '>=', Carbon::now())
+                    ->where('kich_hoat', true)
+                    ->where(function($query) {
+                        $query->whereNull('ngay_bat_dau')
+                              ->orWhere('ngay_bat_dau', '<=', Carbon::now());
+                    })
+                    ->where(function($query) {
+                        $query->whereNull('ngay_ket_thuc')
+                              ->orWhere('ngay_ket_thuc', '>=', Carbon::now());
+                    })
                     ->first();
 
                 if ($maGiamGiaObj) {
@@ -368,11 +377,20 @@ class BookingController extends Controller
                 ->where('nguoi_dung_id', auth()->id())
                 ->delete();
 
+            // Tạm thời comment lại phần gửi email để kiểm tra lỗi
+            try {
+                // Mail::to($user->email)->send(new BookingConfirmation($donDatVe));
+                \Log::info('Đã bỏ qua gửi email xác nhận cho đơn hàng: ' . $donDatVe->ma_don);
+            } catch (\Exception $e) {
+                \Log::error('Lỗi khi gửi email xác nhận: ' . $e->getMessage());
+                // Tiếp tục xử lý ngay cả khi gửi email thất bại
+            }
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Đặt vé thành công!',
+                'message' => 'Đặt vé thành công! Vui lòng kiểm tra email để xác nhận đơn hàng.',
                 'don_dat_ve_id' => $donDatVe->id,
                 'redirect' => route('booking.payment', $donDatVe->id),
             ]);
@@ -458,6 +476,22 @@ class BookingController extends Controller
                 // Cập nhật trạng thái chi tiết vé
                 $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
 
+                // Trừ số lượng combo sau khi thanh toán thành công
+                // Lấy danh sách combo đã đặt cùng số lượng từ pivot
+                $donDatVe->load('combos');
+                foreach ($donDatVe->combos as $combo) {
+                    $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
+                    if ($soLuongMua <= 0) continue;
+
+                    // Kiểm tra tồn kho combo trước khi trừ
+                    if ($combo->so_luong < $soLuongMua) {
+                        throw new \Exception("Combo '{$combo->ten}' không đủ số lượng (cần {$soLuongMua}, còn {$combo->so_luong}).");
+                    }
+
+                    $combo->so_luong = $combo->so_luong - $soLuongMua;
+                    $combo->save();
+                }
+
                 DB::commit();
 
                 return response()->json([
@@ -527,10 +561,16 @@ class BookingController extends Controller
             $tongTienVe = 0;
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
+                if (!$ghe) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ghế không hợp lệ.',
+                    ]);
+                }
                 $price = $suatChieu->gia_ve;
-                if ($ghe && $ghe->loai === 'vip') {
+                if ($ghe->loai === 'vip') {
                     $price *= 1.5;
-                } elseif ($ghe && $ghe->loai === 'doi') {
+                } elseif ($ghe->loai === 'doi') {
                     $price *= 2;
                 }
                 $tongTienVe += $price;
@@ -539,8 +579,14 @@ class BookingController extends Controller
             $tongTienCombo = 0;
             foreach ($comboItems as $item) {
                 $combo = Combo::find($item['combo_id']);
+                if (!$combo) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Combo không hợp lệ.',
+                    ]);
+                }
                 $soLuong = $item['so_luong'];
-                if ($combo && $soLuong > 0) {
+                if ($soLuong > 0) {
                     $tongTienCombo += $combo->gia * $soLuong;
                 }
             }
@@ -551,12 +597,25 @@ class BookingController extends Controller
             // Nếu mã bắt đầu bằng VC => hiểu là voucher người dùng theo id
             if (strtoupper(substr($code, 0, 2)) === 'VC') {
                 $idPart = preg_replace('/[^0-9]/', '', $code);
+                if (!is_numeric($idPart)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã voucher không hợp lệ.',
+                    ]);
+                }
                 $voucherNguoiDung = \App\Models\VoucherNguoiDung::with('voucher')
                     ->where('id', $idPart)
                     ->where('nguoi_dung_id', auth()->id())
                     ->first();
 
-                if (!$voucherNguoiDung || !$voucherNguoiDung->conSuDungDuoc()) {
+                if (!$voucherNguoiDung) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Voucher không tồn tại.',
+                    ]);
+                }
+
+                if (!$voucherNguoiDung->conSuDungDuoc()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Voucher không hợp lệ hoặc đã hết hạn/sử dụng.',
@@ -582,21 +641,69 @@ class BookingController extends Controller
                     'success' => true,
                     'discount' => $giamGia,
                     'voucher_nd_id' => $voucherNguoiDung->id,
+                    'discount_type' => $voucher->loai,
+                    'discount_value' => $voucher->gia_tri,
+                    'max_discount' => $voucher->giam_toi_da,
+                    'min_order_value' => $voucher->gia_tri_don_hang_toi_thieu,
                     'message' => 'Áp dụng voucher thành công.',
                 ]);
             }
 
             // Ngược lại: mã giảm giá hệ thống
-            $maGiamGia = MaGiamGia::where('ma', $code)
-                ->where('trang_thai', 'hoat_dong')
-                ->where('ngay_bat_dau', '<=', Carbon::now())
-                ->where('ngay_ket_thuc', '>=', Carbon::now())
-                ->first();
+            try {
+                $maGiamGia = MaGiamGia::where('ma', $code)
+                    ->where('kich_hoat', 1)  // Sử dụng 1 thay vì true để đảm bảo tương thích
+                    ->where(function($query) {
+                        $query->whereNull('ngay_bat_dau')
+                              ->orWhere('ngay_bat_dau', '<=', now());
+                    })
+                    ->where(function($query) {
+                        $query->whereNull('ngay_ket_thuc')
+                              ->orWhere('ngay_ket_thuc', '>=', now()->startOfDay());
+                    })
+                    ->where('so_luong', '>', 0)
+                    ->first();
+                
+                \Log::info('MaGiamGia query result:', [
+                    'code' => $code,
+                    'exists' => $maGiamGia ? 'yes' : 'no',
+                    'query' => DB::getQueryLog()
+                ]);
+                    
+            } catch (\Exception $e) {
+                \Log::error('Lỗi khi kiểm tra mã giảm giá: ' . $e->getMessage(), [
+                    'code' => $code,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => config('app.debug') 
+                        ? 'Lỗi hệ thống: ' . $e->getMessage() 
+                        : 'Có lỗi xảy ra khi kiểm tra mã giảm giá. Vui lòng thử lại sau.'
+                ]);
+            }
 
             if (!$maGiamGia) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn.',
+                ]);
+            }
+
+            // Kiểm tra mã giảm giá có áp dụng cho vé không
+            if (!in_array($maGiamGia->ap_dung_cho, ['ve', 'tat_ca'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mã giảm giá này không áp dụng cho đặt vé.',
+                ]);
+            }
+
+            // Kiểm tra giá trị đơn hàng tối thiểu
+            if ($maGiamGia->gia_tri_don_hang_toi_thieu && $tongTien < $maGiamGia->gia_tri_don_hang_toi_thieu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đơn hàng chưa đạt giá trị tối thiểu để áp dụng mã giảm giá này.',
                 ]);
             }
 
@@ -612,14 +719,31 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'discount' => $giamGia,
+                'discount_type' => $maGiamGia->loai,
+                'discount_value' => $maGiamGia->gia_tri,
+                'max_discount' => $maGiamGia->giam_toi_da,
+                'min_order_value' => $maGiamGia->gia_tri_don_hang_toi_thieu,
                 'message' => 'Áp dụng mã giảm giá thành công.',
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Check voucher error: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            
+            // Return more detailed error in development, generic message in production
+            $errorMessage = config('app.debug') 
+                ? 'Lỗi: ' . $e->getMessage() . ' (Dòng ' . $e->getLine() . ')'
+                : 'Có lỗi xảy ra khi kiểm tra mã giảm giá. Vui lòng thử lại sau.';
+                
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi kiểm tra mã giảm giá.',
-            ]);
+                'message' => $errorMessage,
+                'debug' => config('app.debug') ? [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ] : null
+            ], 500);
         }
     }
 

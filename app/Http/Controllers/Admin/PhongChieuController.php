@@ -8,6 +8,11 @@ use App\Models\PhongChieu;
 use App\Models\DinhDang;
 use App\Models\Rap; // 👈 nếu bạn có model Rap
 use App\Models\Ghe;
+use App\Models\SoDoGhe;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 
 class PhongChieuController extends Controller
 {
@@ -172,13 +177,72 @@ class PhongChieuController extends Controller
     {
         try {
             $phongchieu = PhongChieu::findOrFail($id);
-            $phongchieu->delete();
+
+            // Không cho xóa nếu đang có bất kỳ suất chiếu nào
+            $suatCount = $phongchieu->suatChieu()->count();
+            Log::info('PhongChieu destroy requested', array_filter([
+                'phong_id' => $id,
+                'suat_count' => $suatCount,
+                'ghe_count_before' => Schema::hasTable('ghe') ? DB::table('ghe')->where('phong_id', $id)->count() : null,
+                'sodo_count_before' => Schema::hasTable('so_do_ghe') ? DB::table('so_do_ghe')->where('phong_id', $id)->count() : null,
+            ], fn($v) => $v !== null));
+            if ($suatCount > 0) {
+                return redirect()->route('admin.phongchieu.index')
+                    ->with('error', 'Không thể xóa phòng chiếu: phòng còn ' . $suatCount . ' suất chiếu liên kết.');
+            }
+            DB::transaction(function () use ($phongchieu, $id) {
+                // Xóa sơ đồ ghế nếu có (nếu bảng tồn tại)
+                if (Schema::hasTable('so_do_ghe')) {
+                    SoDoGhe::where('phong_id', $phongchieu->id)->delete();
+                } else {
+                    Log::warning('Table so_do_ghe not found when deleting room', ['phong_id' => $id]);
+                }
+                // Xóa tất cả ghế thuộc phòng (hard delete để không bị FK chặn)
+                if (Schema::hasTable('ghe')) {
+                    DB::table('ghe')->where('phong_id', $phongchieu->id)->delete();
+                } else {
+                    Log::warning('Table ghe not found when deleting room', ['phong_id' => $id]);
+                }
+                // Xóa phòng
+                $phongchieu->delete();
+                Log::info('PhongChieu deleted in transaction', [
+                    'phong_id' => $id,
+                ]);
+            });
+
+            // Đảm bảo không còn ghế sót lại (phòng hờ đề phòng soft delete cấu hình khác)
+            if (Schema::hasTable('ghe')) {
+                $remainingGhe = DB::table('ghe')->where('phong_id', $id)->count();
+                if ($remainingGhe > 0) {
+                    DB::table('ghe')->where('phong_id', $id)->delete();
+                    Log::warning('Force-deleted remaining ghe after transaction', [
+                        'phong_id' => $id,
+                        'remaining_ghe_deleted' => $remainingGhe,
+                    ]);
+                }
+            }
+            Log::info('PhongChieu destroy completed', array_filter([
+                'phong_id' => $id,
+                'ghe_count_after' => Schema::hasTable('ghe') ? DB::table('ghe')->where('phong_id', $id)->count() : null,
+                'sodo_count_after' => Schema::hasTable('so_do_ghe') ? DB::table('so_do_ghe')->where('phong_id', $id)->count() : null,
+            ], fn($v) => $v !== null));
+
             return redirect()->route('admin.phongchieu.index')
                 ->with('success', 'Xóa phòng chiếu thành công');
-        } catch (\Exception $e) {
-            return back()->withErrors([
-                'error' => 'Có lỗi xảy ra: ' . $e->getMessage()
+        } catch (QueryException $e) {
+            Log::error('PhongChieu destroy failed (QueryException)', [
+                'phong_id' => $id,
+                'error' => $e->getMessage(),
             ]);
+            return redirect()->route('admin.phongchieu.index')
+                ->with('error', 'Không thể xóa phòng: ràng buộc dữ liệu đang ngăn xóa. Chi tiết: ' . $e->getCode());
+        } catch (\Exception $e) {
+            Log::error('PhongChieu destroy failed', [
+                'phong_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('admin.phongchieu.index')
+                ->with('error', 'Có lỗi xảy ra khi xóa phòng: ' . $e->getMessage());
         }
     }
 
@@ -199,8 +263,8 @@ class PhongChieuController extends Controller
                     'cot' => $cot,
                     'loai' => 'thuong', // Mặc định là ghế thường
                     'trang_thai' => 'hoat_dong',
-                    'ngay_tao' => now(),
-                    'ngay_cap_nhat' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
             }
         }
