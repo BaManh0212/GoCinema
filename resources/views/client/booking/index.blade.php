@@ -14,39 +14,57 @@
                         {{ $suatChieu->phim->tieu_de }}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
+                <div class="card-body bg-dark rounded-3">
+                    <div class="row align-items-center">
                         <div class="col-md-4">
                             @if($suatChieu->phim->anh_poster)
                                 <img src="{{ asset('storage/' . $suatChieu->phim->anh_poster) }}"
                                      alt="{{ $suatChieu->phim->tieu_de }}"
-                                     class="img-fluid rounded">
+                                     class="img-fluid rounded shadow"
+                                     style="border: 2px solid rgba(255,255,255,0.1);">
                             @else
-                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
-                                     style="height: 200px;">
-                                    <i class="bi bi-image text-white fs-1"></i>
+                                <div class="bg-dark bg-opacity-25 rounded d-flex align-items-center justify-content-center"
+                                     style="height: 200px; border: 2px dashed rgba(255,255,255,0.1);">
+                                    <i class="bi bi-image text-white-50 fs-1"></i>
                                 </div>
                             @endif
                         </div>
-                        <div class="col-md-8">
-                            <h6 class="text-muted mb-2">{{ $suatChieu->phong->rap->ten }}</h6>
-                            <p class="mb-1">
-                                <i class="bi bi-calendar-event me-2"></i>
-                                {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('l, d/m/Y') }}
-                            </p>
-                            <p class="mb-1">
-                                <i class="bi bi-clock me-2"></i>
-                                {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('H:i') }} -
-                                {{ \Carbon\Carbon::parse($suatChieu->gio_ket_thuc)->format('H:i') }}
-                            </p>
-                            <p class="mb-1">
-                                <i class="bi bi-geo-alt me-2"></i>
-                                {{ $suatChieu->phong->ten }}
-                            </p>
-                            <p class="mb-0">
-                                <i class="bi bi-tag me-2"></i>
-                                {{ number_format($suatChieu->gia_ve, 0, ',', '.') }}đ/vé
-                            </p>
+                        <div class="col-md-8 text-white">
+                            <h5 class="fw-bold text-white mb-3">{{ $suatChieu->phim->tieu_de }}</h5>
+                            
+                            <div class="movie-info-item mb-2">
+                                <i class="bi bi-building text-warning me-2"></i>
+                                <span class="text-white-75">Rạp:</span>
+                                <span class="ms-1 fw-medium">{{ $suatChieu->phong->rap->ten }}</span>
+                            </div>
+                            
+                            <div class="movie-info-item mb-2">
+                                <i class="bi bi-calendar-event text-info me-2"></i>
+                                <span class="text-white-75">Ngày chiếu:</span>
+                                <span class="ms-1 fw-medium">{{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('l, d/m/Y') }}</span>
+                            </div>
+                            
+                            <div class="movie-info-item mb-2">
+                                <i class="bi bi-clock text-success me-2"></i>
+                                <span class="text-white-75">Giờ chiếu:</span>
+                                <span class="ms-1 fw-medium">
+                                    {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('H:i') }} - 
+                                    {{ \Carbon\Carbon::parse($suatChieu->gio_ket_thuc)->format('H:i') }}
+                                </span>
+                            </div>
+                            
+                            <div class="movie-info-item mb-2">
+                                <i class="bi bi-geo-alt text-danger me-2"></i>
+                                <span class="text-white-75">Phòng:</span>
+                                <span class="ms-1 fw-medium">{{ $suatChieu->phong->ten }}</span>
+                            </div>
+                            
+                            <div class="movie-info-item">
+                                <i class="bi bi-ticket-perforated text-primary me-2"></i>
+                                <span class="text-white-75">Giá vé:</span>
+                                <span class="ms-1 fw-bold text-warning">{{ number_format($suatChieu->gia_ve, 0, ',', '.') }}đ</span>
+                                <small class="text-white-50">/vé</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -153,25 +171,48 @@
                         @if($combos->count() > 0)
                             <div class="mt-2">
                                 @foreach($combos as $combo)
-                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                                        <div class="flex-grow-1">
-                                            <strong>{{ $combo->ten }}</strong><br>
-                                            <small class="text-muted">{{ number_format($combo->gia, 0, ',', '.') }}đ</small>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <button class="btn btn-sm btn-outline-secondary minus-btn" data-combo-id="{{ $combo->id }}">
-                                                <i class="bi bi-dash"></i>
-                                            </button>
-                                            <span class="mx-2 combo-quantity fw-bold" data-combo-id="{{ $combo->id }}">0</span>
-                                            <button class="btn btn-sm btn-outline-secondary plus-btn" data-combo-id="{{ $combo->id }}">
-                                                <i class="bi bi-plus"></i>
-                                            </button>
+                                    @if($combo->so_luong > 0) {{-- Chỉ hiển thị combo còn hàng --}}
+                                    <div class="card mb-2" data-combo-id="{{ $combo->id }}">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0">{{ $combo->ten }}</h6>
+                                                    <small class="text-muted">{{ number_format($combo->gia, 0, ',', '.') }}đ</small>
+                                                    <div class="text-success">
+                                                        <small>Còn lại: {{ $combo->so_luong }} cái</small>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-decrease" 
+                                                            data-combo-id="{{ $combo->id }}" 
+                                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                                        <i class="bi bi-dash"></i>
+                                                    </button>
+                                                    <input type="number" 
+                                                           class="form-control form-control-sm text-center mx-1 hide-spinner" 
+                                                           id="combo-{{ $combo->id }}-qty" 
+                                                           value="0" 
+                                                           min="0" 
+                                                           max="{{ $combo->so_luong }}" 
+                                                           style="width: 50px; -moz-appearance: textfield;"
+                                                           onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                           data-combo-id="{{ $combo->id }}"
+                                                           {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-primary btn-increase" 
+                                                            data-combo-id="{{ $combo->id }}"
+                                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                    @endif
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-muted small mt-2">Không có combo nào khả dụng</p>
+                            <p class="text-muted">Hiện không có combo nào khả dụng.</p>
                         @endif
                         <div class="d-flex justify-content-between mt-2">
                             <span>Tổng combo:</span>
@@ -183,12 +224,58 @@
 
                     {{-- Mã giảm giá --}}
                     <div class="mb-3">
-                        <label for="voucher-code" class="form-label">Mã giảm giá</label>
+                        <h6>Mã giảm giá</h6>
+                        
+                        {{-- Danh sách voucher khả dụng --}}
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Chọn từ mã giảm giá có sẵn:</label>
+                            <select class="form-select mb-2" id="voucher-select">
+                                <option value="" selected>-- Chọn mã giảm giá --</option>
+                                @if(isset($availableVouchers) && count($availableVouchers) > 0)
+                                    @foreach($availableVouchers as $voucher)
+                                        <option 
+                                            value="{{ $voucher->ma }}" 
+                                            data-min="{{ $voucher->gia_tri_don_hang_toi_thieu }}"
+                                            data-type="{{ $voucher->loai }}"
+                                            data-value="{{ $voucher->gia_tri }}"
+                                            data-max="{{ $voucher->giam_toi_da }}">
+                                            {{ $voucher->ma }} - Giảm 
+                                            @if($voucher->loai == 'phan_tram')
+                                                {{ $voucher->gia_tri }}%
+                                                @if($voucher->giam_toi_da)
+                                                    (Tối đa {{ number_format($voucher->giam_toi_da, 0, ',', '.') }}đ)
+                                                @endif
+                                            @else
+                                                {{ number_format($voucher->gia_tri, 0, ',', '.') }}đ
+                                            @endif
+                                            @if($voucher->gia_tri_don_hang_toi_thieu)
+                                                (Đơn tối thiểu {{ number_format($voucher->gia_tri_don_hang_toi_thieu, 0, ',', '.') }}đ)
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2 small">hoặc</span>
+                            <hr class="flex-grow-1 my-0">
+                        </div>
+                        
                         <div class="input-group">
                             <input type="text" class="form-control" id="voucher-code" placeholder="Nhập mã giảm giá">
-                            <button class="btn btn-outline-secondary" type="button" id="apply-voucher">Áp dụng</button>
+                            <button class="btn btn-outline-primary" type="button" id="apply-voucher">Áp dụng</button>
                         </div>
-                        <div id="voucher-message" class="mt-1"></div>
+                        <div id="voucher-message"></div>
+                        
+                        {{-- Thông tin voucher đã áp dụng --}}
+                    <div id="applied-voucher-info" class="mt-2 d-none">
+                        <div class="alert alert-success p-2 mb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span id="applied-voucher-text"></span>
+                                <button type="button" class="btn-close" id="remove-voucher" aria-label="Xóa mã giảm giá"></button>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -199,8 +286,17 @@
                         <span id="grand-total">0đ</span>
                     </div>
 
-                    {{-- Nút đặt vé --}}
-                    <button class="btn btn-danger w-100 mt-3" id="book-btn" disabled>
+                    {{-- Form đặt vé --}}
+                    <form id="booking-form" method="POST" action="{{ route('booking.store') }}" class="mt-3">
+                        @csrf
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="suat_chieu_id" value="{{ $suatChieu->id }}">
+                        <input type="hidden" name="ghe_ids" id="selected-seats-input" value="">
+                        <input type="hidden" name="ma_giam_gia" id="ma-giam-gia-input" value="">
+                        <input type="hidden" name="voucher_nd_id" id="voucher-nd-id" value="">
+                        <input type="hidden" name="combos" id="combos-input" value="">
+                        
+                        <button type="button" id="book-btn" class="btn btn-danger w-100" disabled>
                         <i class="bi bi-ticket-perforated-fill me-2"></i>
                         Đặt vé
                     </button>
@@ -216,6 +312,20 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Ẩn mũi tên lên/xuống trong input number */
+.hide-spinner::-webkit-outer-spin-button,
+.hide-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+.hide-spinner {
+    -moz-appearance: textfield;
+}
+</style>
 
 {{-- Modal xác nhận --}}
 <div class="modal fade" id="confirmModal" tabindex="-1">
@@ -297,6 +407,60 @@
     border-radius: 4px;
     font-size: 12px;
 }
+p{
+    color: black;
+}
+h5{
+    color: black;
+}
+
+.voucher-option {
+    display: block;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #000;
+}
+
+/* Modal text colors */
+#confirmModal .modal-content {
+    color: #fbf6f6ff;
+}
+
+#confirmModal .modal-title,
+#confirmModal .modal-body,
+#confirmModal .modal-footer {
+    color: #000;
+}
+
+/* Voucher section text colors */
+#voucher-select,
+#voucher-code,
+#voucher-message,
+#applied-voucher-info,
+#applied-voucher-code,
+#applied-voucher-desc,
+#applied-voucher-info .alert,
+#applied-voucher-info .alert * {
+    color: #000 !important;
+}
+
+/* Form labels and text */
+.form-label,
+.small,
+.text-muted,
+.form-select,
+.form-control {
+    color: #f7f5f5ff !important;
+}
+
+/* Make sure dropdown options are also black */
+option {
+    color: #000;
+    background-color: #fff;
+}
 </style>
 @endpush
 
@@ -310,6 +474,171 @@ let appliedVoucherNdId = null; // id voucher_nguoi_dung nếu áp dụng VCxxxxx
 let appliedCode = null; // lưu lại mã đã áp dụng để gửi lên server
 let baseTicketPrice = {{ $suatChieu->gia_ve }};
 let combosData = @json($combos);
+
+// Initialize combo quantities
+combosData.forEach(combo => {
+    comboQuantities[combo.id] = 0;
+});
+
+// Handle plus button click
+$(document).on('click', '.btn-increase', function() {
+    const comboId = $(this).data('combo-id');
+    const input = $(`#combo-${comboId}-qty`);
+    const max = parseInt(input.attr('max'));
+    let value = parseInt(input.val()) || 0;
+    
+    if (value < max) {
+        value++;
+        input.val(value);
+        comboQuantities[comboId] = value;
+        updateComboSummary();
+    }
+    
+    // Enable/disable buttons
+    $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
+    $(this).prop('disabled', value >= max);
+});
+
+// Handle minus button click
+$(document).on('click', '.btn-decrease', function() {
+    const comboId = $(this).data('combo-id');
+    const input = $(`#combo-${comboId}-qty`);
+    const max = parseInt(input.attr('max'));
+    let value = parseInt(input.val()) || 0;
+    
+    if (value > 0) {
+        value--;
+        input.val(value);
+        comboQuantities[comboId] = value;
+        updateComboSummary();
+    }
+    
+    // Enable/disable buttons
+    $(this).prop('disabled', value <= 0);
+    $(`.btn-increase[data-combo-id="${comboId}"]`).prop('disabled', value >= max);
+});
+
+// Handle direct input
+$(document).on('change', 'input[type="number"].hide-spinner', function() {
+    const comboId = $(this).data('combo-id');
+    const max = parseInt($(this).attr('max'));
+    let value = parseInt($(this).val()) || 0;
+    
+    // Ensure value is within bounds
+    if (value < 0) value = 0;
+    if (value > max) value = max;
+    
+    $(this).val(value);
+    comboQuantities[comboId] = value;
+    updateComboSummary();
+    
+    // Enable/disable buttons
+    $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
+    $(`.btn-increase[data-combo-id="${comboId}"]`).prop('disabled', value >= max);
+});
+
+function showError(message) {
+    $('#voucher-message').html(`<div class="alert alert-danger p-2">${message}</div>`);
+    console.error('Lỗi mã giảm giá:', message);
+}
+
+function updateVoucherUI(response, code) {
+    $('#applied-voucher-code').text(code);
+    let discountText = '';
+    if (response.discount_type === 'phan_tram') {
+        discountText = `Giảm ${response.discount_value}%`;
+        if (response.max_discount) {
+            discountText += ` (Tối đa ${formatCurrency(response.max_discount)})`;
+        }
+    } else {
+        discountText = `Giảm ${formatCurrency(response.discount_value)}`;
+    }
+
+    let minOrderText = response.min_order_value ? ` • Đơn tối thiểu ${formatCurrency(response.min_order_value)}` : '';
+    $('#applied-voucher-desc').html(`<br><small>${discountText}${minOrderText}</small>`);
+    $('#applied-voucher-info').removeClass('d-none');
+    $('#voucher-message').html('');
+}
+
+// Cập nhật lại hàm applyVoucher
+function applyVoucher(code) {
+    if (!code) {
+        showError('Vui lòng nhập hoặc chọn mã giảm giá');
+        return;
+    }
+
+    // Hiển thị trạng thái đang xử lý
+    $('#voucher-message').html('<div class="alert alert-info p-2">Đang kiểm tra mã giảm giá...</div>');
+
+    // Gửi AJAX để kiểm tra mã giảm giá
+    $.ajax({
+        url: '{{ route("booking.check-voucher") }}',
+        type: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}',
+            code: code,
+            suat_chieu_id: {{ $suatChieu->id }},
+            ghe_ids: selectedSeats,
+            combo_items: getComboItems()
+        },
+        success: function(response) {
+            console.log('Phản hồi từ server:', response); // Thêm dòng này để debug
+            if (response.success) {
+                // Xử lý khi áp dụng mã thành công
+                voucherDiscount = response.discount;
+                appliedCode = code;
+                
+                // Cập nhật giao diện
+                updateVoucherUI(response, code);
+                updateTotals();
+            } else {
+                resetVoucher();
+                showError(response.message || 'Mã giảm giá không hợp lệ hoặc không áp dụng được');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Lỗi AJAX:', {xhr, status, error}); // Thêm log lỗi
+            let errorMessage = 'Có lỗi xảy ra khi kiểm tra mã giảm giá';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            showError(errorMessage);
+        }
+    });
+}
+
+function updateComboSummary() {
+    let total = 0;
+    let comboList = [];
+    
+    combosData.forEach(combo => {
+        const qty = comboQuantities[combo.id] || 0;
+        if (qty > 0) {
+            total += combo.gia * qty;
+            comboList.push({
+                id: combo.id,
+                name: combo.ten,
+                price: combo.gia,
+                quantity: qty,
+                total: combo.gia * qty
+            });
+        }
+    });
+    
+    // Update combo list display
+    let comboHtml = '';
+    comboList.forEach(combo => {
+        comboHtml += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>${combo.name} x${combo.quantity}</div>
+                <div>${combo.total.toLocaleString('vi-VN')}đ</div>
+            </div>`;
+    });
+    
+    $('#combo-list').html(comboList.length > 0 ? comboHtml : '<p class="text-muted small mb-0">Chưa chọn combo</p>');
+    $('#combo-total').text(total.toLocaleString('vi-VN') + 'đ');
+    updateTotals();
+}
 
 $(document).ready(function() {
     // Khởi tạo combo quantities
@@ -363,41 +692,30 @@ $(document).ready(function() {
         }
     });
 
-    // Áp dụng voucher
+    // Xử lý khi chọn mã giảm giá từ dropdown
+    $('#voucher-select').change(function() {
+        const selectedOption = $(this).find('option:selected');
+        if (selectedOption.val()) {
+            $('#voucher-code').val(selectedOption.val());
+            applyVoucher(selectedOption.val());
+        }
+    });
+
+    // Áp dụng mã giảm giá - removed duplicate function
+
+    // Xử lý nút áp dụng mã giảm giá
     $('#apply-voucher').click(function() {
         const code = $('#voucher-code').val().trim();
-        if (!code) {
-            $('#voucher-message').html('<small class="text-danger">Vui lòng nhập mã giảm giá</small>');
-            return;
-        }
-
-        // Gửi AJAX để kiểm tra voucher
-        $.post('{{ route("booking.check-voucher") }}', {
-            _token: '{{ csrf_token() }}',
-            code: code,
-            suat_chieu_id: {{ $suatChieu->id }},
-            ghe_ids: selectedSeats,
-            combo_items: getComboItems()
-        })
-        .done(function(response) {
-            if (response.success) {
-                voucherDiscount = response.discount;
-                appliedVoucherNdId = response.voucher_nd_id || null;
-                appliedCode = code;
-                $('#voucher-message').html('<small class="text-success">Áp dụng thành công: -' + formatCurrency(response.discount) + '</small>');
-                updateTotals();
-            } else {
-                voucherDiscount = 0;
-                appliedVoucherNdId = null;
-                appliedCode = null;
-                $('#voucher-message').html('<small class="text-danger">' + response.message + '</small>');
-                updateTotals();
-            }
-        })
-        .fail(function() {
-            $('#voucher-message').html('<small class="text-danger">Lỗi kết nối</small>');
-        });
+        applyVoucher(code);
     });
+
+    // Xóa mã giảm giá đã áp dụng
+    $('#remove-voucher').click(function(e) {
+        e.preventDefault();
+        resetVoucher();
+    });
+
+    // Reset mã giảm giá - removed duplicate function
 
     // Đặt vé
     $('#book-btn').click(function() {
@@ -600,6 +918,17 @@ function toggleBookButton() {
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+}
+
+// Reset mã giảm giá
+function resetVoucher() {
+    voucherDiscount = 0;
+    appliedVoucherNdId = null;
+    appliedCode = null;
+    $('#voucher-code').val('');
+    $('#voucher-select').val('');
+    $('#applied-voucher-info').addClass('d-none');
+    updateTotals();
 }
 </script>
 @endpush

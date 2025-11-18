@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\PhongChieu;
+use App\Models\SoDoGhe;
+use App\Models\Ghe;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\DinhDang;
 use App\Models\Rap; // 👈 nếu bạn có model Rap
 
@@ -148,7 +151,23 @@ class PhongChieuController extends Controller
     {
         try {
             $phongchieu = PhongChieu::findOrFail($id);
-            $phongchieu->delete();
+
+            // Không cho xóa nếu đang có suất chiếu
+            if ($phongchieu->suatChieu()->exists()) {
+                return back()
+                    ->withErrors([
+                        'error' => 'Không thể xóa phòng chiếu vì trong phòng đang có suất chiếu, không thể xóa.'
+                    ])
+                    ->with('error', 'Không thể xóa phòng chiếu vì trong phòng đang có suất chiếu, không thể xóa.');
+            }
+            DB::transaction(function () use ($phongchieu) {
+                // Xóa sơ đồ ghế nếu có
+                SoDoGhe::where('phong_id', $phongchieu->id)->delete();
+                // Xóa tất cả ghế thuộc phòng
+                Ghe::where('phong_id', $phongchieu->id)->delete();
+                // Xóa phòng
+                $phongchieu->delete();
+            });
             return redirect()->route('staff.phongchieu.index')
                 ->with('success', 'Xóa phòng chiếu thành công');
         } catch (\Exception $e) {

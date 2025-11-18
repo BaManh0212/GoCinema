@@ -344,47 +344,116 @@
 
     {{-- ================= CSS ================= --}}
     <style>
-        .banner-media {
-            max-height: 500px;
+        /* Movie Card Styling */
+        .movie-card {
+            transition: all 0.3s ease;
+            border: none;
+            overflow: hidden;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--card-bg, #fff);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border, rgba(0,0,0,0.1));
+            box-shadow: var(--shadow, 0 4px 20px rgba(0, 0, 0, 0.08));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 107, 107, 0.15);
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        /* Movie Poster Styling */
+        .poster-img {
+            width: 100%;
+            height: 380px;
             object-fit: cover;
-            border-radius: var(--border-radius);
+            border-radius: 16px 16px 0 0;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            filter: brightness(1);
+        }
+
+        .movie-card:hover .poster-img {
+            transform: scale(1.05);
+            filter: brightness(1.05);
+        }
+
+        /* Card Body */
+        .card-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            background: transparent;
+            z-index: 2;
+        }
+
+        /* Movie Title */
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary, #2d3748);
+            font-size: 1.1rem;
+            line-height: 1.3;
+            min-height: 2.6em;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Movie Info */
+        .movie-info {
+            color: var(--text-secondary, #718096);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Badge Styling */
+        .badge {
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        /* Action Buttons */
+        .btn-detail {
+            margin-top: auto;
+            background: var(--primary, #4f46e5);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            align-self: flex-start;
+        }
+
+        .btn-detail:hover {
+            background: var(--primary-dark, #4338ca);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .banner-media {
+            height: 500px;
+            object-fit: cover;
+            width: 100%;
         }
 
         #bannerCarousel {
             z-index: 1;
         }
 
-        .poster-img {
-            height: 280px;
-            object-fit: cover;
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: brightness(1);
-        }
-
-        .movie-card:hover .poster-img {
-            transform: scale(1.1) rotate(1deg);
-            filter: brightness(1.1) contrast(1.1);
-        }
-
-        .movie-card {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            cursor: pointer;
-            position: relative;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            box-shadow: var(--shadow);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .movie-card:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 107, 107, 0.3);
-            border-color: rgba(255, 107, 107, 0.5);
-        }
-
+        /* Overlay Effects */
         .movie-card .overlay {
             position: absolute;
             top: 0;
@@ -399,6 +468,8 @@
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(2px);
+            z-index: 3;
+            border-radius: 16px;
         }
 
         .movie-card:hover .overlay {
@@ -415,6 +486,7 @@
             background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.1) 100%);
             opacity: 0;
             transition: opacity 0.4s ease;
+            border-radius: 16px;
         }
 
         .movie-card:hover .overlay::before {
@@ -424,18 +496,20 @@
         .movie-card .overlay span {
             position: relative;
             z-index: 2;
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.1rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-            transform: translateY(20px);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-weight: 500;
+            margin: 0.5rem 0;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
         }
 
-        .movie-card:hover .overlay span {
-            transform: translateY(0);
-            opacity: 1;
+        .movie-card .overlay span:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
         .movie-card .overlay span::after {
