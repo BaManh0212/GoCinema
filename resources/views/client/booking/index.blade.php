@@ -313,6 +313,27 @@
     </div>
 </div>
 
+<!-- Modal thông báo lỗi -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">Thông báo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                    <p id="errorMessage" class="mb-0"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Ẩn mũi tên lên/xuống trong input number */
 .hide-spinner::-webkit-outer-spin-button,
@@ -767,32 +788,44 @@ $(document).ready(function() {
                     if (response.success) {
                         window.location.href = response.redirect;
                     } else {
-                        alert(response.message);
+                        showError(response.message);
                         if (response.redirect) {
-                            window.location.href = response.redirect;
+                            setTimeout(() => {
+                                window.location.href = response.redirect;
+                            }, 3000); // Chuyển hướng sau 3 giây
                         }
                     }
                 })
-                .fail(function() {
-                    alert('Có lỗi xảy ra khi đặt vé!');
+                .fail(function(xhr) {
+                    const errorMessage = xhr.responseJSON && xhr.responseJSON.message 
+                        ? xhr.responseJSON.message 
+                        : 'Có lỗi xảy ra khi đặt vé!';
+                    showError(errorMessage);
                 })
                 .always(function() {
                     $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
                     $('#confirmModal').modal('hide');
                 });
             } else {
-                alert(response.message);
+                showError(response.message);
                 $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
                 $('#confirmModal').modal('hide');
             }
         })
         .fail(function() {
-            alert('Có lỗi xảy ra khi giữ ghế!');
+            showError('Có lỗi xảy ra khi giữ ghế! Vui lòng thử lại.');
             $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
             $('#confirmModal').modal('hide');
         });
     });
 });
+
+// Hiển thị thông báo lỗi trong modal
+function showError(message) {
+    $('#errorMessage').text(message);
+    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
+}
 
 function updateSelectedSeatsDisplay() {
     const labels = getSelectedSeatsLabels();

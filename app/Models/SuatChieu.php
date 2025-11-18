@@ -21,6 +21,11 @@ class SuatChieu extends Model
         'ly_do_huy',
     ];
 
+    protected $casts = [
+        'gio_bat_dau' => 'datetime',
+        'gio_ket_thuc' => 'datetime',
+    ];
+
     public $timestamps = false; // bạn đang dùng cột thời gian riêng, nên không cần timestamps mặc định
 
     /*

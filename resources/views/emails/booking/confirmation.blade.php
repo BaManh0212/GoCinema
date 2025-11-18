@@ -1,82 +1,47 @@
-@component('mail::layout')
-{{-- Header --}}
-@slot('header')
-@component('mail::header', ['url' => config('app.url')])
-{{ config('app.name') }}
-@endcomponent
-@endslot
-
-# 🎉 Đặt vé thành công!
-
-Cảm ơn bạn đã đặt vé tại **{{ config('app.name') }}**! Dưới đây là thông tin chi tiết đơn hàng của bạn:
-
-## 🎬 Thông tin phim
-- **Phim:** {{ $donDatVe->suatChieu->phim->tieu_de }}
-- **Rạp:** {{ $donDatVe->suatChieu->phong->rap->ten }}
-- **Phòng chiếu:** {{ $donDatVe->suatChieu->phong->ten }}
-- **Suất chiếu:** {{ $donDatVe->suatChieu->gio_bat_dau->format('H:i d/m/Y') }}
-
-## 🎟️ Thông tin đơn hàng
-- **Mã đơn hàng:** {{ $donDatVe->ma_don }}
-- **Ngày đặt:** {{ $donDatVe->created_at->format('d/m/Y H:i') }}
-- **Trạng thái:** 
-    @if($donDatVe->trang_thai === 'da_thanh_toan')
-        <span style="color: #10B981; font-weight: 600;">Đã thanh toán</span>
-    @else
-        <span style="color: #F59E0B; font-weight: 600;">Chờ thanh toán</span>
-    @endif
-
-## 🪑 Ghế đã đặt
-@php $seatCount = 0; @endphp
-@foreach($donDatVe->chiTietVes as $ve)
-    @php
-        $seatType = '';
-        $seatPrice = $donDatVe->suatChieu->gia_ve;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xác nhận đặt vé thành công</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4a90e2; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; border: 1px solid #ddd; }
+        .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #777; }
+        .qr-code { text-align: center; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Xác nhận đặt vé thành công</h1>
+        </div>
         
-        if ($ve->ghe->loai === 'vip') {
-            $seatType = ' (VIP)';
-            $seatPrice *= 1.5;
-        } elseif ($ve->ghe->loai === 'doi') {
-            $seatType = ' (Đôi)';
-            $seatPrice *= 2;
-        }
-        $seatCount++;
-    @endphp
-    - Ghế {{ $ve->ghe->hang }}{{ $ve->ghe->cot }}{{ $seatType }} - {{ number_format($seatPrice, 0, ',', '.') }}đ
-@endforeach
-
-## 💰 Tổng tiền
-- **Tổng tiền vé ({{ $seatCount }} vé):** {{ number_format($totalTicketPrice, 0, ',', '.') }}đ
-
-@if($donDatVe->maGiamGia)
-- **Mã giảm giá:** {{ $donDatVe->maGiamGia->ma }} ({{ $donDatVe->maGiamGia->gia_tri_giam }}%)
-@endif
-
-- **Tổng thanh toán:** <span style="font-size: 1.2em; font-weight: bold; color: #3B82F6;">{{ number_format($donDatVe->tong_tien, 0, ',', '.') }}đ</span>
-
-## 🎫 Mã QR của bạn
-Vui lòng xuất trình mã QR này khi đến rạp để nhận vé:
-
-<div style="text-align: center; margin: 20px 0;">
-    <img src="data:image/png;base64,{{ $qrCode }}" alt="Mã QR đặt vé" style="max-width: 200px; border: 1px solid #e2e8f0; border-radius: 8px;">
-</div>
-
-## 📌 Lưu ý quan trọng
-- Vui lòng đến rạp trước ít nhất 15 phút trước giờ chiếu để làm thủ tục.
-- Mã QR này là duy nhất và chỉ sử dụng được một lần.
-- Vui lòng không chia sẻ mã QR này cho người khác.
-
-@component('mail::button', ['url' => route('client.booking.show', $donDatVe->ma_don), 'color' => 'primary'])
-Xem chi tiết đơn hàng
-@endcomponent
-
-Trân trọng,<br>
-**Đội ngũ {{ config('app.name') }}**
-
-{{-- Footer --}}
-@slot('footer')
-@component('mail::footer')
-© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-@endcomponent
-@endslot
-@endcomponent
+        <div class="content">
+            <p>Xin chào {{ $donDatVe->nguoiDung->ho_ten ?? 'Quý khách' }},</p>
+            <p>Cảm ơn bạn đã đặt vé xem phim tại {{ config('app.name') }}. Dưới đây là thông tin đặt vé của bạn:</p>
+            
+            <h3>Thông tin đơn hàng</h3>
+            <p><strong>Mã đơn hàng:</strong> {{ $donDatVe->ma_don }}</p>
+            <p><strong>Phim:</strong> {{ $donDatVe->suatChieu->phim->tieu_de }}</p>
+            <p><strong>Rạp:</strong> {{ $donDatVe->suatChieu->phong->rap->ten }}</p>
+            <p><strong>Phòng:</strong> {{ $donDatVe->suatChieu->phong->ten }}</p>
+            <p><strong>Ngày chiếu:</strong> {{ $donDatVe->suatChieu->gio_bat_dau->format('d/m/Y H:i') }}</p>
+            <p><strong>Tổng tiền:</strong> {{ number_format($donDatVe->tong_tien, 0, ',', '.') }} VNĐ</p>
+            <p><strong>Trạng thái:</strong> {{ $donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán' }}</p>
+            
+            <div class="qr-code">
+                <p><strong>Mã QR của bạn:</strong></p>
+                <img src="data:image/png;base64,{{ $qrCode }}" alt="Mã QR đặt vé">
+            </div>
+            
+            <p>Vui lòng xuất trình mã QR này khi đến rạp để nhận vé.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+            <p>© {{ date('Y') }} {{ config('app.name') }}. Tất cả các quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

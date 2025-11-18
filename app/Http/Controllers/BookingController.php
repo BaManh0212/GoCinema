@@ -195,6 +195,18 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate input data
+        $request->validate([
+            'suat_chieu_id' => 'required|exists:suat_chieu,id',
+            'ghe_ids' => 'required|array|min:1|max:2',
+            'ghe_ids.*' => 'exists:ghe,id',
+            'combo_items' => 'nullable|array',
+            'combo_items.*.combo_id' => 'exists:combo,id',
+            'combo_items.*.so_luong' => 'integer|min:1',
+            'ma_giam_gia' => 'nullable|string',
+            'voucher_nd_id' => 'nullable|integer|exists:voucher_nguoi_dung,id',
+        ]);
+
         if (!auth()->check()) {
             return response()->json([
                 'success' => false,
@@ -215,8 +227,16 @@ class BookingController extends Controller
             $suatChieu = SuatChieu::findOrFail($suatChieuId);
 
             // Kiểm tra thời gian
-            if (Carbon::now()->gte($suatChieu->gio_bat_dau)) {
+            $now = Carbon::now();
+            $thoiGianBatDau = Carbon::parse($suatChieu->gio_bat_dau);
+            $thoiGianToiThieu = $thoiGianBatDau->copy()->subMinutes(10);
+            
+            if ($now->gte($thoiGianBatDau)) {
                 throw new \Exception('Suất chiếu đã bắt đầu.');
+            }
+            
+            if ($now->gte($thoiGianToiThieu)) {
+                throw new \Exception('Không thể đặt vé trong vòng 10 phút trước khi chiếu. Vui lòng chọn suất chiếu khác.');
             }
 
             // Kiểm tra ghế
@@ -315,6 +335,7 @@ class BookingController extends Controller
                         $query->whereNull('ngay_ket_thuc')
                               ->orWhere('ngay_ket_thuc', '>=', Carbon::now());
                     })
+                    ->where('so_luong', '>', 0)
                     ->first();
 
                 if ($maGiamGiaObj) {
@@ -327,6 +348,8 @@ class BookingController extends Controller
                         $giamGia = $maGiamGiaObj->gia_tri;
                     }
                     $tongTien -= $giamGia;
+                    // Decrement quantity after successful application
+                    $maGiamGiaObj->decrement('so_luong');
                 }
             }
 
@@ -343,6 +366,9 @@ class BookingController extends Controller
             // Tạo chi tiết vé
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
+                if (!$ghe) {
+                    throw new \Exception('Ghế không tồn tại.');
+                }
                 try {
                     ChiTietVe::create([
                         'don_dat_ve_id' => $donDatVe->id,
@@ -354,7 +380,7 @@ class BookingController extends Controller
                     ]);
                 } catch (\Illuminate\Database\QueryException $e) {
                     if ($e->getCode() == 23000) {
-                        throw new \Exception('Ghế ' . ($ghe?->so_ghe_ngoi ?? ($ghe?->hang . $ghe?->cot)) . ' vừa được người khác đặt.');
+                        throw new \Exception('Ghế ' . ($ghe->so_ghe_ngoi ?? ($ghe->hang . $ghe->cot)) . ' vừa được người khác đặt.');
                     }
                     throw $e;
                 }
@@ -363,12 +389,21 @@ class BookingController extends Controller
             // Tạo chi tiết combo nếu có
             if (!empty($donDatVeCombos)) {
                 foreach ($donDatVeCombos as $comboData) {
+                    $combo = Combo::find($comboData['combo_id']);
+                    if (!$combo) {
+                        throw new \Exception('Combo không tồn tại.');
+                    }
+                    if ($combo->so_luong < $comboData['so_luong']) {
+                        throw new \Exception("Combo '{$combo->ten}' không đủ số lượng (cần {$comboData['so_luong']}, còn {$combo->so_luong}).");
+                    }
                     DB::table('don_dat_ve_combo')->insert([
                         'don_dat_ve_id' => $donDatVe->id,
                         'combo_id' => $comboData['combo_id'],
                         'so_luong' => $comboData['so_luong'],
                         'gia' => $comboData['gia'],
                     ]);
+                    // Decrement combo quantity
+                    $combo->decrement('so_luong', $comboData['so_luong']);
                 }
             }
 
@@ -376,15 +411,6 @@ class BookingController extends Controller
             DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
                 ->delete();
-
-            // Tạm thời comment lại phần gửi email để kiểm tra lỗi
-            try {
-                // Mail::to($user->email)->send(new BookingConfirmation($donDatVe));
-                \Log::info('Đã bỏ qua gửi email xác nhận cho đơn hàng: ' . $donDatVe->ma_don);
-            } catch (\Exception $e) {
-                \Log::error('Lỗi khi gửi email xác nhận: ' . $e->getMessage());
-                // Tiếp tục xử lý ngay cả khi gửi email thất bại
-            }
 
             DB::commit();
 
@@ -476,20 +502,26 @@ class BookingController extends Controller
                 // Cập nhật trạng thái chi tiết vé
                 $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
 
-                // Trừ số lượng combo sau khi thanh toán thành công
-                // Lấy danh sách combo đã đặt cùng số lượng từ pivot
-                $donDatVe->load('combos');
-                foreach ($donDatVe->combos as $combo) {
-                    $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
-                    if ($soLuongMua <= 0) continue;
-
-                    // Kiểm tra tồn kho combo trước khi trừ
-                    if ($combo->so_luong < $soLuongMua) {
-                        throw new \Exception("Combo '{$combo->ten}' không đủ số lượng (cần {$soLuongMua}, còn {$combo->so_luong}).");
+                // Gửi email xác nhận thanh toán thành công
+                try {
+                    \Log::info('Bắt đầu gửi email xác nhận thanh toán cho đơn hàng: ' . $donDatVe->ma_don);
+                    
+                    // Gửi email đồng bộ
+                    \Mail::to($donDatVe->nguoiDung->email)->sendNow(new \App\Mail\BookingConfirmation($donDatVe));
+                    
+                    \Log::info('✅ Đã gửi thành công email xác nhận thanh toán cho đơn hàng: ' . $donDatVe->ma_don);
+                    \Log::info('Người nhận: ' . $donDatVe->nguoiDung->email);
+                } catch (\Exception $e) {
+                    \Log::error('❌ Lỗi khi gửi email xác nhận thanh toán đơn hàng ' . $donDatVe->ma_don . ': ' . $e->getMessage());
+                    \Log::error('Chi tiết lỗi: ' . $e->getTraceAsString());
+                    
+                    // Thử gửi lại lần nữa nếu lỗi
+                    try {
+                        \Mail::to($donDatVe->nguoiDung->email)->sendNow(new \App\Mail\BookingConfirmation($donDatVe));
+                        \Log::info('✅ Đã gửi lại thành công email xác nhận thanh toán sau lỗi: ' . $donDatVe->ma_don);
+                    } catch (\Exception $retryException) {
+                        \Log::error('❌ Lỗi khi gửi lại email xác nhận thanh toán: ' . $retryException->getMessage());
                     }
-
-                    $combo->so_luong = $combo->so_luong - $soLuongMua;
-                    $combo->save();
                 }
 
                 DB::commit();
@@ -664,11 +696,11 @@ class BookingController extends Controller
                     ->where('so_luong', '>', 0)
                     ->first();
                 
-                \Log::info('MaGiamGia query result:', [
-                    'code' => $code,
-                    'exists' => $maGiamGia ? 'yes' : 'no',
-                    'query' => DB::getQueryLog()
-                ]);
+                // \Log::info('MaGiamGia query result:', [
+                //     'code' => $code,
+                //     'exists' => $maGiamGia ? 'yes' : 'no',
+                //     'query' => DB::getQueryLog()
+                // ]);
                     
             } catch (\Exception $e) {
                 \Log::error('Lỗi khi kiểm tra mã giảm giá: ' . $e->getMessage(), [

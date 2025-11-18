@@ -3,10 +3,13 @@
 namespace App\Mail;
 
 use App\Models\DonDatVe;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class BookingConfirmation extends Mailable
 {
@@ -49,10 +52,19 @@ class BookingConfirmation extends Mailable
             'tong_tien' => number_format($this->donDatVe->tong_tien, 0, ',', '.') . ' VNĐ',
             'trang_thai' => $this->donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán'
         ];
+
+        // Tạo mã QR sử dụng endroid/qr-code
+        $qrCode = QrCode::create(json_encode($data))
+            ->setEncoding(new Encoding('UTF-8'))
+            ->setSize(300)
+            ->setMargin(10)
+            ->setErrorCorrectionLevel(ErrorCorrectionLevel::High);
+
+        $writer = new PngWriter();
+        $result = $writer->write($qrCode);
         
-        $this->qrCode = base64_encode(QrCode::format('png')
-            ->size(300)
-            ->generate(json_encode($data)));
+        // Lấy dữ liệu base64 của ảnh
+        $this->qrCode = base64_encode($result->getString());
     }
 
     public function build()

@@ -37,8 +37,8 @@
 
                     {{-- Định dạng --}}
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Định dạng</label>
-                        <select name="dinh_dang_id" class="form-select">
+                        <label class="form-label fw-bold">Định dạng <span class="text-danger">*</span></label>
+                        <select name="dinh_dang_id" class="form-select @error('dinh_dang_id') is-invalid @enderror">
                             <option value="">-- Chọn định dạng --</option>
                             @foreach($dinhdangs as $dd)
                                 <option value="{{ $dd->id }}" {{ old('dinh_dang_id') == $dd->id ? 'selected' : '' }}>
@@ -46,6 +46,9 @@
                                 </option>
                             @endforeach
                         </select>
+                        @error('dinh_dang_id')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     {{-- Sơ đồ --}}
