@@ -37,7 +37,7 @@ class GheController extends Controller
             'cot' => $request->cot,
             'loai' => $request->loai,
             'trang_thai' => 'hoat_dong',
-            'ngay_tao' => now(),
+            'created_at' => now(),
         ]);
 
         return back()->with('success', 'Đã thêm ghế mới thành công!');

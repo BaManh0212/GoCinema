@@ -136,11 +136,98 @@
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
 <style>
+/* Movie Card Styling */
+.movie-card {
+    transition: all 0.3s ease;
+    border: none;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Movie Poster Styling */
+.poster-img {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    border-radius: 16px 16px 0 0;
+    transition: transform 0.5s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.movie-card:hover .poster-img {
+    transform: scale(1.05);
+}
+
+/* Card Body */
+.card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Movie Title */
+.card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    min-height: 2.6em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Movie Info */
+.movie-info {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Badge Styling */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+/* Action Buttons */
+.btn-detail {
+    margin-top: auto;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-detail:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+}
+
 /* Bộ lọc */
 form.bg-dark {
     background-color: #141a2a !important;
     border-radius: 16px;
 }
+
 .form-control, .form-select,
 .select2-container--bootstrap-5 .select2-selection--single {
     background-color: #1b2333 !important;

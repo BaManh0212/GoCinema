@@ -267,25 +267,50 @@
      Allows middle-click / ctrl/cmd-click to open in new tab normally. This is a lightweight guard against
      accidentally preserving current query string when navigating from pages that have filter params. --}}
 <script>
-    (function () {
-        document.addEventListener('click', function (ev) {
-            // Only handle anchors with data-no-preserve
-            var a = ev.target.closest && ev.target.closest('a[data-no-preserve="1"]');
-            if (!a) return;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove any existing click handlers that might be causing the issue
+        document.querySelectorAll('a').forEach(link => {
+            link.removeEventListener('click', preventDefaultHandler, true);
+        });
 
-            // Allow middle-click or cmd/ctrl/meta to open in new tab/window
-            if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+        // Add new click handler for navigation
+        document.addEventListener('click', function(ev) {
+            const target = ev.target.closest('a');
+            if (!target) return;
+            
+            // Skip if it's a dropdown toggle or has a target attribute
+            if (target.getAttribute('data-bs-toggle') || target.getAttribute('target')) {
+                return;
+            }
+            
+            // Skip if it's a dropdown item (handled by Bootstrap)
+            if (target.closest('.dropdown-menu') || target.classList.contains('dropdown-toggle')) {
+                return;
+            }
+            
+            // If it's a regular navigation link, let it work normally
+            if (target.href && !target.hasAttribute('data-no-preserve')) {
+                return;
+            }
+            
+            // Handle data-no-preserve links
+            if (target.hasAttribute('data-no-preserve')) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                window.location.href = target.href;
+            }
+        }, true);
+    });
+    
+    // Function to remove existing handlers
+    function preventDefaultHandler(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+</script>
 
-            // Prevent default and navigate to the href without any query string
-            ev.preventDefault();
-            var href = a.getAttribute('href') || '';
-            // Remove query string and hash from current href, but preserve hash on target if present
-            var parts = href.split('?');
-            var clean = parts[0];
-            window.location.href = clean;
-        }, false);
-    })();
-
+{{-- Script to make navbar solid on scroll --}}
+<script>
     // Script to make navbar solid on scroll
     document.addEventListener('DOMContentLoaded', function() {
         const navbar = document.getElementById('mainNavbar');

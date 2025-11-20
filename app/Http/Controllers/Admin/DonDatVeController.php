@@ -109,6 +109,17 @@ class DonDatVeController extends Controller
                     $ct->trang_thai = 'da_thanh_toan';
                     $ct->save();
                 }
+                // Trừ tồn kho combo khi đơn chuyển sang đã thanh toán
+                $donVe->load('combos');
+                foreach ($donVe->combos as $combo) {
+                    $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
+                    if ($soLuongMua <= 0) continue;
+                    if ($combo->so_luong < $soLuongMua) {
+                        throw new \Exception("Combo '{$combo->ten}' không đủ số lượng (cần {$soLuongMua}, còn {$combo->so_luong}).");
+                    }
+                    $combo->so_luong = $combo->so_luong - $soLuongMua;
+                    $combo->save();
+                }
             } elseif ($target === 'da_checkin') {
                 foreach ($donVe->chiTietVes as $ct) {
                     $ct->trang_thai = 'da_su_dung';
@@ -118,6 +129,16 @@ class DonDatVeController extends Controller
                 foreach ($donVe->chiTietVes as $ct) {
                     $ct->trang_thai = 'da_huy';
                     $ct->save();
+                }
+                // Hoàn kho combo nếu hủy từ trạng thái đã thanh toán
+                if ($current === 'da_thanh_toan') {
+                    $donVe->load('combos');
+                    foreach ($donVe->combos as $combo) {
+                        $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
+                        if ($soLuongMua <= 0) continue;
+                        $combo->so_luong = $combo->so_luong + $soLuongMua;
+                        $combo->save();
+                    }
                 }
             }
 
@@ -152,11 +173,63 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
     }
 
+    // Kiểm tra trạng thái thanh toán
     if ($don->trang_thai !== 'da_thanh_toan') {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);
         }
         return back()->withErrors(['ma_don' => 'Đơn chưa được thanh toán nên không thể check-in.']);
+    }
+
+    // Kiểm tra thời gian suất chiếu
+    $now = now();
+    $suatChieu = $don->suatChieu;
+    
+    if (!$suatChieu) {
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Không tìm thấy thông tin suất chiếu.'], 404);
+        }
+        return back()->withErrors(['ma_don' => 'Không tìm thấy thông tin suất chiếu.']);
+    }
+
+    $thoiGianBatDau = \Carbon\Carbon::parse($suatChieu->gio_bat_dau);
+    $thoiGianBatDauCheckin = $thoiGianBatDau->copy()->subMinutes(45);  // Được phép check-in từ 45 phút trước
+    $thoiGianKetThucCheckin = $thoiGianBatDau->copy()->subMinutes(10);  // Đến 10 phút trước khi phim bắt đầu
+    
+    // Kiểm tra thời gian check-in hợp lệ (từ 45p đến 10p trước khi phim bắt đầu)
+    if ($now->lt($thoiGianBatDauCheckin)) {
+        // Nếu còn sớm hơn thời gian bắt đầu cho phép check-in
+        $thoiGianConLai = $now->diffForHumans($thoiGianBatDauCheckin, [
+            'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW,
+            'options' => \Carbon\CarbonInterface::JUST_NOW | \Carbon\CarbonInterface::ONE_DAY_WORDS | \Carbon\CarbonInterface::TWO_DAY_WORDS
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai."
+        ], 400);
+    } elseif ($now->gt($thoiGianKetThucCheckin)) {
+        // Nếu đã quá thời gian cho phép check-in (ít hơn 10 phút trước khi phim bắt đầu)
+        return response()->json([
+            'success' => false,
+            'message' => 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.'
+        ], 400);
+        
+        $message = "Chỉ được phép check-in trước 10 phút khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
+        
+        if ($request->wantsJson()) {
+            return response()->json(['message' => $message], 422);
+        }
+        return back()->withErrors(['ma_don' => $message]);
+    }
+    
+    // Nếu đã quá thời gian bắt đầu phim
+    if ($now->gt($thoiGianBatDau)) {
+        $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ quầy vé để được hỗ trợ.';
+        
+        if ($request->wantsJson()) {
+            return response()->json(['message' => $message], 422);
+        }
+        return back()->withErrors(['ma_don' => $message]);
     }
 
     DB::beginTransaction();

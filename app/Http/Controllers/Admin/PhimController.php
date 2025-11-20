@@ -328,11 +328,59 @@ class PhimController extends Controller
         return view('admin.phim.show', compact('phim'));
     }
 
+    /**
+     * Kiểm tra xem phim đã bán vé chưa
+     */
+    private function hasSoldTickets($phimId)
+    {
+        $phim = Phim::with(['suatChieus.chiTietVe'])->findOrFail($phimId);
+        
+        foreach ($phim->suatChieus as $suatChieu) {
+            if ($suatChieu->chiTietVe->count() > 0) {
+                return [
+                    'hasTickets' => true,
+                    'ticketCount' => $suatChieu->chiTietVe->count()
+                ];
+            }
+        }
+        
+        return ['hasTickets' => false, 'ticketCount' => 0];
+    }
+    
+    /**
+     * Xóa mềm phim (chỉ xóa khi chưa có vé bán)
+     */
     public function destroy($id)
     {
+        // Kiểm tra xem có vé bán chưa
+        $checkTickets = $this->hasSoldTickets($id);
+        
+        if ($checkTickets['hasTickets']) {
+            return redirect()->back()
+                ->with('error', 'Không thể xóa phim vì đã có ' . $checkTickets['ticketCount'] . ' vé được bán. Vui lòng hủy các suất chiếu trước khi xóa phim.');
+        }
+        
+        // Nếu chưa có vé bán, thực hiện xóa mềm
         $phim = Phim::findOrFail($id);
+        
+        // Xóa ảnh poster nếu có
+        if ($phim->anh_poster) {
+            Storage::disk('public')->delete($phim->anh_poster);
+        }
+        
+        // Xóa ảnh banner nếu có
+        if ($phim->banner) {
+            Storage::disk('public')->delete($phim->banner);
+        }
+        
+        // Xóa các mối quan hệ trước khi xóa phim
+        $phim->danhMucs()->detach();
+        
+        // Xóa mềm phim
         $phim->delete();
-        return redirect()->route('admin.phim.index')->with('success', 'Đã xóa phim!');
+        
+        return redirect()->route('admin.phim.index')
+            ->with('success', 'Đã xóa phim thành công!');
     }
 
     public function restore($id)
@@ -342,9 +390,22 @@ class PhimController extends Controller
         return redirect()->route('admin.phim.index')->with('success', 'Khôi phục phim thành công!');
     }
 
+    /**
+     * Xóa cứng phim (chỉ xóa khi chưa có vé bán)
+     */
     public function forceDelete($id)
     {
+        // Kiểm tra xem có vé bán chưa
+        $checkTickets = $this->hasSoldTickets($id);
+        
+        if ($checkTickets['hasTickets']) {
+            return redirect()->back()
+                ->with('error', 'Không thể xóa vĩnh viễn phim vì đã có ' . $checkTickets['ticketCount'] . ' vé được bán. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.');
+        }
+        
         $phim = Phim::withTrashed()->findOrFail($id);
+        
+        // Xóa ảnh poster nếu có
         if ($phim->anh_poster && Storage::disk('public')->exists($phim->anh_poster)) {
             Storage::disk('public')->delete($phim->anh_poster);
         }

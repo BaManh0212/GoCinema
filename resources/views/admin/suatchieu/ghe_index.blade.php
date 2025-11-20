@@ -64,6 +64,11 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- Nút lưu --}}
+            <div class="d-flex justify-content-end mt-3">
+                <button id="save-changes" class="btn btn-success" disabled>Lưu thay đổi</button>
+            </div>
         </div>
     </div>
 </div>
@@ -123,6 +128,8 @@
 
 @push('scripts')
 <script>
+let changes = {}; // Lưu trữ các thay đổi
+
 // Toggle trạng thái ghế
 document.querySelectorAll('.seat').forEach(seat => {
     seat.addEventListener('click', () => {
@@ -149,14 +156,17 @@ document.querySelectorAll('.seat').forEach(seat => {
         seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-vo-hieu-hoa');
         seat.classList.add(newClass);
 
-        // Gửi AJAX để lưu
-        updateSeatStatus(seat.dataset.gheId, newStatus);
+        // Lưu thay đổi vào object
+        changes[seat.dataset.gheId] = newStatus;
+
+        // Kích hoạt nút lưu
+        document.getElementById('save-changes').disabled = false;
     });
 });
 
 // Hàm cập nhật trạng thái ghế qua AJAX
-function updateSeatStatus(gheId, trangThai) {
-    fetch(`{{ route('admin.suatchieu.ghe.updateTrangThai', $suatchieu->id) }}`, {
+function updateSeatStatus(gheId, trangThai, url) {
+    fetch(url, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -180,6 +190,26 @@ function updateSeatStatus(gheId, trangThai) {
         location.reload();
     });
 }
+
+// Xử lý nút lưu
+document.getElementById('save-changes').addEventListener('click', () => {
+    const url = '{{ route("admin.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}';
+    const promises = [];
+
+    for (const [gheId, trangThai] of Object.entries(changes)) {
+        promises.push(updateSeatStatus(gheId, trangThai, url));
+    }
+
+    Promise.all(promises).then(() => {
+        alert('✅ Lưu thay đổi thành công!');
+        changes = {}; // Reset changes
+        document.getElementById('save-changes').disabled = true;
+        // Quay lại trang index
+        window.location.href = '{{ route("admin.suatchieu.index") }}';
+    }).catch(() => {
+        alert('❌ Có lỗi xảy ra khi lưu!');
+    });
+});
 
 // ================== Đồng bộ theo thời gian thực ==================
 function applyLiveStatus(payload) {
