@@ -60,6 +60,12 @@ class BookingController extends Controller
             ->pluck('ghe_id')
             ->toArray();
 
+        // Lấy ghế đang chờ thanh toán
+        $gheChoThanhToan = ChiTietVe::where('suat_chieu_id', $suatChieuId)
+            ->where('trang_thai', 'cho_thanh_toan')
+            ->pluck('ghe_id')
+            ->toArray();
+
         // Lấy ghế giữ tạm (trong 10 phút)
         $giuTamIds = DB::table('ghe_giu_tam')
             ->where('suat_chieu_id', $suatChieuId)
@@ -89,6 +95,7 @@ class BookingController extends Controller
             'ghes',
             'gheStatuses',
             'gheDaDat',
+            'gheChoThanhToan',
             'giuTamIds',
             'combos',
             'sanPhams',
@@ -103,7 +110,7 @@ class BookingController extends Controller
     {
         $request->validate([
             'suat_chieu_id' => 'required|exists:suat_chieu,id',
-            'ghe_ids' => 'required|array|min:1|max:2',
+            'ghe_ids' => 'required|array|min:1|max:8',
             'ghe_ids.*' => 'exists:ghe,id',
         ]);
 
@@ -119,7 +126,7 @@ class BookingController extends Controller
                 // Kiểm tra ghế đã đặt
                 $daDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
                     ->exists();
 
                 if ($daDat) {
@@ -198,7 +205,7 @@ class BookingController extends Controller
         // Validate input data
         $request->validate([
             'suat_chieu_id' => 'required|exists:suat_chieu,id',
-            'ghe_ids' => 'required|array|min:1|max:2',
+            'ghe_ids' => 'required|array|min:1|max:8',
             'ghe_ids.*' => 'exists:ghe,id',
             'combo_items' => 'nullable|array',
             'combo_items.*.combo_id' => 'exists:combo,id',
@@ -218,6 +225,30 @@ class BookingController extends Controller
         $user = auth()->user();
         $suatChieuId = $request->suat_chieu_id;
         $gheIds = $request->ghe_ids;
+
+        // Kiểm tra số ghế tối đa cho tài khoản này
+        $existingSeats = ChiTietVe::where('suat_chieu_id', $suatChieuId)
+            ->whereHas('donDatVe', function($query) {
+                $query->where('nguoi_dung_id', auth()->id())
+                      ->whereIn('trang_thai', ['cho_thanh_toan', 'da_thanh_toan', 'da_checkin']);
+            })
+            ->count();
+
+        $totalSeats = $existingSeats + count($gheIds);
+        if ($totalSeats > 8) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn chỉ được đặt tối đa 8 ghế cho suất chiếu này.',
+            ]);
+        }
+
+        // Kiểm tra ghế liên tiếp
+        if (!$this->areSeatsConsecutive($gheIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ghế phải được chọn liên tiếp nhau trong cùng một hàng.',
+            ]);
+        }
         $comboItems = $request->combo_items ?? [];
         $maGiamGia = $request->ma_giam_gia; // có thể là mã hệ thống hoặc mã VCxxxxxx
         $voucherNguoiDungId = $request->voucher_nd_id; // id voucher_nguoi_dung nếu có
@@ -266,17 +297,12 @@ class BookingController extends Controller
                 }
             }
 
-            // Tính tổng tiền vé theo loại ghế
+            // Tính tổng tiền vé theo loại ghế, ngày và khung giờ
             $tongTienVe = 0;
             $ghePrices = [];
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
-                $price = $suatChieu->gia_ve;
-                if ($ghe->loai === 'vip') {
-                    $price *= 1.5;
-                } elseif ($ghe->loai === 'doi') {
-                    $price *= 2;
-                }
+                $price = $this->calculateSeatPrice($suatChieu, $ghe);
                 $ghePrices[$gheId] = $price;
                 $tongTienVe += $price;
             }
@@ -363,7 +389,7 @@ class BookingController extends Controller
                 'trang_thai' => 'cho_thanh_toan',
             ]);
 
-            // Tạo chi tiết vé
+            // Tạo chi tiết vé với trạng thái chờ thanh toán (không phải đã đặt)
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
                 if (!$ghe) {
@@ -376,7 +402,7 @@ class BookingController extends Controller
                         'ghe_id' => $gheId,
                         'gia' => $ghePrices[$gheId],
                         'loai_ghe' => $ghe->loai,
-                        'trang_thai' => 'da_dat',
+                        'trang_thai' => 'cho_thanh_toan', // Chờ thanh toán, không phải đã đặt
                     ]);
                 } catch (\Illuminate\Database\QueryException $e) {
                     if ($e->getCode() == 23000) {
@@ -407,7 +433,7 @@ class BookingController extends Controller
                 }
             }
 
-            // Xóa ghế giữ tạm
+            // Xóa ghế giữ tạm sau khi tạo đơn đặt vé
             DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
                 ->delete();
@@ -460,7 +486,7 @@ class BookingController extends Controller
     public function processPayment(Request $request, $id)
     {
         $request->validate([
-            'payment_method' => 'required|in:momo,zalopay,bank,counter',
+            'payment_method' => 'required|in:momo,zalopay,bank',
         ]);
 
         $donDatVe = DonDatVe::where('id', $id)
@@ -473,34 +499,18 @@ class BookingController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($paymentMethod === 'counter') {
-                // Thanh toán tại quầy - không cập nhật trạng thái thanh toán
-                // Ghế sẽ được giữ trong 10 phút
-                $donDatVe->update([
-                    'thoi_gian_dat' => Carbon::now(),
-                    'phuong_thuc_thanh_toan' => 'counter',
-                ]);
+            // Thanh toán online
+            // Giả lập xử lý thanh toán (thực tế sẽ tích hợp với cổng thanh toán)
 
-                DB::commit();
+            // Cập nhật trạng thái đơn hàng
+            $donDatVe->update([
+                'trang_thai' => 'da_thanh_toan',
+                'thoi_gian_thanh_toan' => Carbon::now(),
+                'phuong_thuc_thanh_toan' => $paymentMethod,
+            ]);
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Đặt vé thành công! Vui lòng thanh toán tại quầy trong vòng 10 phút.',
-                    'redirect' => route('booking.confirm', $donDatVe->id),
-                ]);
-            } else {
-                // Thanh toán online
-                // Giả lập xử lý thanh toán (thực tế sẽ tích hợp với cổng thanh toán)
-
-                // Cập nhật trạng thái đơn hàng
-                $donDatVe->update([
-                    'trang_thai' => 'da_thanh_toan',
-                    'thoi_gian_thanh_toan' => Carbon::now(),
-                    'phuong_thuc_thanh_toan' => $paymentMethod,
-                ]);
-
-                // Cập nhật trạng thái chi tiết vé
-                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+            // Cập nhật trạng thái chi tiết vé thành đã thanh toán
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
 
                 // Gửi email xác nhận thanh toán thành công
                 try {
@@ -526,12 +536,11 @@ class BookingController extends Controller
 
                 DB::commit();
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Thanh toán thành công!',
-                    'redirect' => route('booking.confirm', $donDatVe->id),
-                ]);
-            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Thanh toán thành công!',
+                'redirect' => route('booking.confirm', $donDatVe->id),
+            ]);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -575,7 +584,7 @@ class BookingController extends Controller
             'code' => 'required|string',
             'suat_chieu_id' => 'required|exists:suat_chieu,id',
             // Cho phép áp dụng trước khi chọn ghế
-            'ghe_ids' => 'nullable|array|max:2',
+            'ghe_ids' => 'nullable|array|max:8',
             'ghe_ids.*' => 'exists:ghe,id',
             'combo_items' => 'nullable|array',
             'combo_items.*.combo_id' => 'exists:combo,id',
@@ -599,12 +608,7 @@ class BookingController extends Controller
                         'message' => 'Ghế không hợp lệ.',
                     ]);
                 }
-                $price = $suatChieu->gia_ve;
-                if ($ghe->loai === 'vip') {
-                    $price *= 1.5;
-                } elseif ($ghe->loai === 'doi') {
-                    $price *= 2;
-                }
+                $price = $this->calculateSeatPrice($suatChieu, $ghe);
                 $tongTienVe += $price;
             }
 
@@ -777,6 +781,69 @@ class BookingController extends Controller
                 ] : null
             ], 500);
         }
+    }
+
+    /**
+     * Tính giá ghế dựa trên loại ghế, ngày và khung giờ
+     */
+    private function calculateSeatPrice($suatChieu, $ghe)
+    {
+        $basePrice = $suatChieu->gia_ve;
+
+        // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
+        if ($suatChieu->gio_bat_dau->isWeekend()) {
+            $basePrice *= 1.2;
+        }
+
+        // Tăng giá buổi tối từ 18h trở đi: +15%
+        if ($suatChieu->gio_bat_dau->hour >= 18) {
+            $basePrice *= 1.15;
+        }
+
+        // Áp dụng loại ghế
+        if ($ghe->loai === 'vip') {
+            $basePrice *= 1.5;
+        } elseif ($ghe->loai === 'doi') {
+            $basePrice *= 2;
+        }
+
+        return $basePrice;
+    }
+
+    /**
+     * Kiểm tra ghế có liên tiếp không
+     */
+    private function areSeatsConsecutive($gheIds)
+    {
+        if (count($gheIds) <= 1) {
+            return true;
+        }
+
+        $ghes = Ghe::whereIn('id', $gheIds)->get()->keyBy('id');
+
+        // Nhóm ghế theo hàng
+        $seatsByRow = [];
+        foreach ($ghes as $ghe) {
+            $seatsByRow[$ghe->hang][] = $ghe->cot;
+        }
+
+        // Nếu có nhiều hơn 1 hàng thì không liên tiếp
+        if (count($seatsByRow) > 1) {
+            return false;
+        }
+
+        // Lấy danh sách cột trong hàng duy nhất
+        $columns = array_values($seatsByRow)[0];
+        sort($columns);
+
+        // Kiểm tra cột có liên tiếp không
+        for ($i = 0; $i < count($columns) - 1; $i++) {
+            if ($columns[$i + 1] - $columns[$i] !== 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

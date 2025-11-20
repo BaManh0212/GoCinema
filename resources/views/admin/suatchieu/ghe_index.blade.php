@@ -91,7 +91,7 @@
     user-select: none;
 }
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #98FB98; }
+.seat-doi { background-color: #98FB98; width: 94px; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
 .seat-vo-hieu-hoa { background-color: #6B7280 !important; }
