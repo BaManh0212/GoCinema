@@ -77,9 +77,9 @@ public function show1(Request $request)
     foreach ($matrix as &$seat) {
         if (!isset($seat['id'])) $seat['id'] = $nextId++;
         $seat['gia'] = match($seat['loai'] ?? 'thuong') {
-            'vip' => $suatChieu->gia_ve * 1.5,
-            'doi' => $suatChieu->gia_ve * 2,
-            default => $suatChieu->gia_ve,
+            'vip' => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'vip']),
+            'doi' => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'doi']),
+            default => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'thuong']),
         };
     }
 

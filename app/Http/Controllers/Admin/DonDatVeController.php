@@ -184,7 +184,7 @@ public function checkInByCode(Request $request)
     // Kiểm tra thời gian suất chiếu
     $now = now();
     $suatChieu = $don->suatChieu;
-    
+
     if (!$suatChieu) {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Không tìm thấy thông tin suất chiếu.'], 404);
@@ -195,7 +195,7 @@ public function checkInByCode(Request $request)
     $thoiGianBatDau = \Carbon\Carbon::parse($suatChieu->gio_bat_dau);
     $thoiGianBatDauCheckin = $thoiGianBatDau->copy()->subMinutes(45);  // Được phép check-in từ 45 phút trước
     $thoiGianKetThucCheckin = $thoiGianBatDau->copy()->subMinutes(10);  // Đến 10 phút trước khi phim bắt đầu
-    
+
     // Kiểm tra thời gian check-in hợp lệ (từ 45p đến 10p trước khi phim bắt đầu)
     if ($now->lt($thoiGianBatDauCheckin)) {
         // Nếu còn sớm hơn thời gian bắt đầu cho phép check-in
@@ -203,29 +203,24 @@ public function checkInByCode(Request $request)
             'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW,
             'options' => \Carbon\CarbonInterface::JUST_NOW | \Carbon\CarbonInterface::ONE_DAY_WORDS | \Carbon\CarbonInterface::TWO_DAY_WORDS
         ]);
-        return response()->json([
-            'success' => false,
-            'message' => "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai."
-        ], 400);
+        $message = "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 400);
+        }
+        return back()->withErrors(['ma_don' => $message]);
     } elseif ($now->gt($thoiGianKetThucCheckin)) {
         // Nếu đã quá thời gian cho phép check-in (ít hơn 10 phút trước khi phim bắt đầu)
-        return response()->json([
-            'success' => false,
-            'message' => 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.'
-        ], 400);
-        
-        $message = "Chỉ được phép check-in trước 10 phút khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
-        
+        $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.';
         if ($request->wantsJson()) {
-            return response()->json(['message' => $message], 422);
+            return response()->json(['success' => false, 'message' => $message], 400);
         }
         return back()->withErrors(['ma_don' => $message]);
     }
-    
+
     // Nếu đã quá thời gian bắt đầu phim
     if ($now->gt($thoiGianBatDau)) {
         $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ quầy vé để được hỗ trợ.';
-        
+
         if ($request->wantsJson()) {
             return response()->json(['message' => $message], 422);
         }

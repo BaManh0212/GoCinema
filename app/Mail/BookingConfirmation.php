@@ -30,13 +30,7 @@ class BookingConfirmation extends Mailable
     {
         $this->totalTicketPrice = 0;
         foreach ($this->donDatVe->chiTietVes as $ve) {
-            $seatPrice = $this->donDatVe->suatChieu->gia_ve;
-            if ($ve->ghe->loai === 'vip') {
-                $seatPrice *= 1.5;
-            } elseif ($ve->ghe->loai === 'doi') {
-                $seatPrice *= 2;
-            }
-            $this->totalTicketPrice += $seatPrice;
+            $this->totalTicketPrice += $ve->calculated_price;
         }
     }
 

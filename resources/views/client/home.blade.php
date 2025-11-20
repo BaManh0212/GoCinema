@@ -50,6 +50,29 @@
         </div>
     @endif
 
+    {{-- ================= THANH TÌM KIẾM ================= --}}
+    <section class="py-4" style="background: var(--primary-bg);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <form action="{{ route('movies.index') }}" method="GET" class="search-form">
+                        <div class="input-group input-group-lg shadow-lg" style="border-radius: 50px; overflow: hidden; background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border);">
+                            <span class="input-group-text bg-transparent border-0 text-muted">
+                                <i class="bi bi-search" style="font-size: 1.2rem;"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-0 bg-transparent text-light"
+                                   placeholder="Tìm kiếm phim, đạo diễn, diễn viên..." value="{{ request('search') }}"
+                                   style="font-size: 1.1rem; color: var(--text-light) !important;">
+                            <button class="btn btn-danger px-4 py-2" type="submit" style="border-radius: 0 50px 50px 0; font-weight: 600;">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- ================= PHIM NỔI BẬT ================= --}}
     <section class="py-5 section-gradient-red">
         <div class="container">
@@ -594,6 +617,24 @@
             .feature-icon {
                 font-size: 2.5rem;
             }
+
+            .search-form .input-group {
+                flex-direction: column;
+                border-radius: 20px !important;
+            }
+
+            .search-form .input-group .input-group-text {
+                border-radius: 20px 20px 0 0 !important;
+                border-bottom: none;
+            }
+
+            .search-form .input-group .form-control {
+                border-radius: 0 !important;
+            }
+
+            .search-form .input-group .btn {
+                border-radius: 0 0 20px 20px !important;
+            }
         }
     </style>
     @push('scripts')
@@ -606,6 +647,34 @@
                         const toast = new bootstrap.Toast(toastEl);
                         toast.show();
                     });
+                }
+
+                // Search form enhancement
+                const searchForm = document.querySelector('.search-form');
+                if (searchForm) {
+                    const searchInput = searchForm.querySelector('input[name="search"]');
+                    if (searchInput) {
+                        searchInput.addEventListener('focus', function() {
+                            this.parentElement.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+                        });
+                        searchInput.addEventListener('blur', function() {
+                            this.parentElement.style.boxShadow = '';
+                        });
+
+                        // Auto-search functionality
+                        let searchTimeout;
+                        searchInput.addEventListener('input', function() {
+                            clearTimeout(searchTimeout);
+                            const query = this.value.trim();
+
+                            // Only search if query is at least 2 characters or empty (to clear search)
+                            if (query.length >= 2 || query.length === 0) {
+                                searchTimeout = setTimeout(() => {
+                                    searchForm.submit();
+                                }, 500); // 500ms debounce
+                            }
+                        });
+                    }
                 }
             });
         </script>

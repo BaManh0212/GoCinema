@@ -38,11 +38,6 @@ class DonDatVeController extends Controller
             'chiTietVes.ghe'
         ])->findOrFail($id);
 
-        // Nếu đơn đã hủy thì không cho xem chi tiết
-        if ($donVe->trang_thai === 'da_huy') {
-            return redirect()->route('staff.donve.index')->withErrors(['error' => 'Đơn đã hủy, không thể xem chi tiết.']);
-        }
-
         return view('staff.donve.show', compact('donVe'));
     }
 
@@ -114,6 +109,7 @@ class DonDatVeController extends Controller
                     $ct->trang_thai = 'da_thanh_toan';
                     $ct->save();
                 }
+                // Trừ tồn kho combo khi đơn chuyển sang đã thanh toán
                 $donVe->load('combos');
                 foreach ($donVe->combos as $combo) {
                     $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
@@ -134,6 +130,7 @@ class DonDatVeController extends Controller
                     $ct->trang_thai = 'da_huy';
                     $ct->save();
                 }
+                // Hoàn kho combo nếu hủy từ trạng thái đã thanh toán
                 if ($current === 'da_thanh_toan') {
                     $donVe->load('combos');
                     foreach ($donVe->combos as $combo) {
@@ -187,7 +184,7 @@ public function checkInByCode(Request $request)
     // Kiểm tra thời gian suất chiếu
     $now = now();
     $suatChieu = $don->suatChieu;
-    
+
     if (!$suatChieu) {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Không tìm thấy thông tin suất chiếu.'], 404);
@@ -196,27 +193,34 @@ public function checkInByCode(Request $request)
     }
 
     $thoiGianBatDau = \Carbon\Carbon::parse($suatChieu->gio_bat_dau);
-    $thoiGianChoPhepCheckin = $thoiGianBatDau->copy()->subMinutes(10);
-    
-    // Chỉ cho phép check-in từ 10 phút trước khi phim bắt đầu
-    if ($now->lt($thoiGianChoPhepCheckin)) {
-        $thoiGianConLai = $now->diffForHumans($thoiGianChoPhepCheckin, [
+    $thoiGianBatDauCheckin = $thoiGianBatDau->copy()->subMinutes(45);  // Được phép check-in từ 45 phút trước
+    $thoiGianKetThucCheckin = $thoiGianBatDau->copy()->subMinutes(10);  // Đến 10 phút trước khi phim bắt đầu
+
+    // Kiểm tra thời gian check-in hợp lệ (từ 45p đến 10p trước khi phim bắt đầu)
+    if ($now->lt($thoiGianBatDauCheckin)) {
+        // Nếu còn sớm hơn thời gian bắt đầu cho phép check-in
+        $thoiGianConLai = $now->diffForHumans($thoiGianBatDauCheckin, [
             'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW,
             'options' => \Carbon\CarbonInterface::JUST_NOW | \Carbon\CarbonInterface::ONE_DAY_WORDS | \Carbon\CarbonInterface::TWO_DAY_WORDS
         ]);
-        
-        $message = "Chỉ được phép check-in trước 10 phút khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
-        
+        $message = "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
         if ($request->wantsJson()) {
-            return response()->json(['message' => $message], 422);
+            return response()->json(['success' => false, 'message' => $message], 400);
+        }
+        return back()->withErrors(['ma_don' => $message]);
+    } elseif ($now->gt($thoiGianKetThucCheckin)) {
+        // Nếu đã quá thời gian cho phép check-in (ít hơn 10 phút trước khi phim bắt đầu)
+        $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.';
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 400);
         }
         return back()->withErrors(['ma_don' => $message]);
     }
-    
+
     // Nếu đã quá thời gian bắt đầu phim
     if ($now->gt($thoiGianBatDau)) {
         $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ quầy vé để được hỗ trợ.';
-        
+
         if ($request->wantsJson()) {
             return response()->json(['message' => $message], 422);
         }

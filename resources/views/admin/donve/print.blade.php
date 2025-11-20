@@ -116,65 +116,22 @@
     @php
         // Tính tổng tiền vé
         $ticketTotal = $donVe->chiTietVes->sum('gia');
-        
+
         // Tính tổng tiền combo
         $comboTotal = $donVe->combos->sum(function($combo) {
             return $combo->pivot->gia * $combo->pivot->so_luong;
         });
     @endphp
-    
-    <div class="ticket-container">
+
+    <!-- Vé cho từng ghế -->
+    @foreach($donVe->chiTietVes as $index => $ct)
+    <div class="ticket-container" style="page-break-after: always;">
         <!-- Header Section -->
         <div class="header">
             <h2>🎟️ VÉ XEM PHIM</h2>
-            <div class="barcode">{{ $donVe->ma_don }}</div>
+            <div class="barcode">{{ $donVe->ma_don }}-{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</div>
         </div>
 
-        <!-- QR Code Section -->
-        <div class="qr-section" style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 8px;">
-            <h3 style="margin-top: 0; color: #2c3e50;">MÃ VÉ ĐIỆN TỬ</h3>
-            @php
-                // Tạo dữ liệu cho QR code
-                $qrData = [
-                    'ma_don' => $donVe->ma_don,
-                    'phim' => $donVe->suatChieu->phim->tieu_de ?? 'N/A',
-                    'ngay_chieu' => \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('d/m/Y H:i'),
-                    'phong' => $donVe->suatChieu->phongChieu->ten ?? 'N/A',
-                    'rap' => $donVe->suatChieu->phongChieu->rap->ten ?? 'N/A',
-                    'ghe' => $donVe->chiTietVes->map(fn($ve) => $ve->ghe->hang . $ve->ghe->cot)->implode(', '),
-                    'khach_hang' => $donVe->nguoiDung->ho_ten ?? 'N/A',
-                    'tong_tien' => number_format($donVe->tong_tien, 0, ',', '.') . ' VNĐ',
-                    'ngay_tao' => now()->format('d/m/Y H:i:s')
-                ];
-                $qrContent = json_encode($qrData, JSON_UNESCAPED_UNICODE);
-            @endphp
-            
-            <!-- Mã QR code sử dụng Google Charts API -->
-            <div class="text-center mb-4">
-                <div class="d-inline-block p-3 bg-white rounded-3">
-                    <?php
-                    $qrText = urlencode($donVe->ma_don);
-                    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=$qrText";
-                    ?>
-                    <img src="<?php echo $qrUrl; ?>" 
-                         alt="Mã QR vé xem phim" 
-                         style="width: 150px; height: 150px; display: block; margin: 0 auto;">
-                    <p class="mt-2 mb-0 text-muted small">Mã đơn: {{ $donVe->ma_don }}</p>
-                    <p class="text-muted small">Quét mã QR để check-in</p>
-                </div>
-            </div>
-            
-            <!-- Hiển thị mã vạch -->
-            <div style="font-family: 'Libre Barcode 128', cursive; font-size: 36px; margin: 10px 0;">
-                {{ $donVe->ma_don }}
-            </div>
-            
-            <!-- Hướng dẫn -->
-            <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
-                <div>Quét mã QR để xác thực vé</div>
-                <div>Mã đơn: <strong>{{ $donVe->ma_don }}</strong></div>
-            </div>
-        </div>
 
         <!-- Movie Information -->
         <div class="section">
@@ -196,131 +153,35 @@
                 <div>{{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('l, d/m/Y') }}</div>
             </div>
             <div class="info-row">
-    <div class="info-label">Giờ chiếu:</div>
-    <div>
-        {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('H:i') }} - 
-        {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_ket_thuc)->format('H:i') }}
-        ({{ $donVe->suatChieu->phim->thoi_luong ?? 'N/A' }} phút)
-    </div>
-</div>
+                <div class="info-label">Giờ chiếu:</div>
+                <div>
+                    {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('H:i') }} -
+                    {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_ket_thuc)->format('H:i') }}
+                    ({{ $donVe->suatChieu->phim->thoi_luong ?? 'N/A' }} phút)
+                </div>
             </div>
         </div>
 
         <!-- Seat Information -->
         <div class="section">
             <h3>THÔNG TIN GHẾ NGỒI</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Ghế</th>
-                        <th>Loại ghế</th>
-                        <th>Đơn giá</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($donVe->chiTietVes as $index => $ct)
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td class="text-center">{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</td>
-                        <td>{{ ucfirst($ct->loai_ghe) }}</td>
-                        <td class="text-right">{{ number_format($ct->gia, 0, ',', '.') }} đ</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="info-row">
+                <div class="info-label">Ghế:</div>
+                <div>{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }} - {{ ucfirst($ct->loai_ghe) }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Đơn giá:</div>
+                <div>{{ number_format($ct->gia, 0, ',', '.') }} đ</div>
+            </div>
         </div>
-
-        @if($donVe->combos->count() > 0)
-        <!-- Combo Information -->
-        <div class="section">
-            <h3>COMBO & ĐỒ ĂN</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên combo</th>
-                        <th>Đơn giá</th>
-                        <th>Số lượng</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($donVe->combos as $index => $combo)
-                    @php 
-                        $comboAmount = $combo->pivot->gia * $combo->pivot->so_luong;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $combo->ten }}</td>
-                        <td class="text-right">{{ number_format($combo->pivot->gia, 0, ',', '.') }} đ</td>
-                        <td class="text-center">{{ $combo->pivot->so_luong }}</td>
-                        <td class="text-right">{{ number_format($comboAmount, 0, ',', '.') }} đ</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @endif
 
         <!-- Payment Information -->
         <div class="section">
             <h3>THANH TOÁN</h3>
-            <table>
-                <tr>
-                    <td style="border: none; padding: 5px 0;">
-                        @if($donVe->maGiamGia)
-                            <div class="info-row">
-                                <div class="info-label">Mã giảm giá:</div>
-                                <div>{{ $donVe->maGiamGia->ma }}</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Giảm giá:</div>
-                                <div>
-                                    @if($donVe->maGiamGia->loai_giam_gia === 'tien_mat')
-                                        {{ number_format($donVe->maGiamGia->gia_tri, 0, ',', '.') }} đ
-                                    @else
-                                        {{ $donVe->maGiamGia->gia_tri }}%
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    </td>
-                    <td style="border: none; padding: 5px 0; text-align: right;">
-                        <div class="info-row" style="justify-content: flex-end;">
-                            <div style="min-width: 100px; text-align: right;">
-                                <strong>Tổng tiền:</strong>
-                            </div>
-                            <div style="width: 120px; text-align: right;">
-                                {{ number_format($ticketTotal + $comboTotal, 0, ',', '.') }} đ
-                            </div>
-                        </div>
-                        @if($donVe->maGiamGia)
-                        @php
-                            $discount = $donVe->maGiamGia->loai_giam_gia === 'tien_mat' 
-                                ? $donVe->maGiamGia->gia_tri 
-                                : (($ticketTotal + $comboTotal) * $donVe->maGiamGia->gia_tri / 100);
-                        @endphp
-                        <div class="info-row" style="justify-content: flex-end;">
-                            <div style="min-width: 100px; text-align: right;">
-                                <strong>Giảm giá:</strong>
-                            </div>
-                            <div style="width: 120px; text-align: right; color: #e74c3c;">
-                                -{{ number_format($discount, 0, ',', '.') }} đ
-                            </div>
-                        </div>
-                        @endif
-                        <div class="info-row" style="justify-content: flex-end; margin-top: 5px; padding-top: 5px; border-top: 1px solid #eee;">
-                            <div style="min-width: 100px; text-align: right;">
-                                <strong>Thành tiền:</strong>
-                            </div>
-                            <div style="width: 120px; text-align: right; font-weight: bold; color: #e74c3c; font-size: 14px;">
-                                {{ number_format($donVe->tong_tien, 0, ',', '.') }} đ
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
+            <div class="info-row">
+                <div class="info-label">Giá vé:</div>
+                <div><strong>{{ number_format($ct->gia, 0, ',', '.') }} đ</strong></div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -337,5 +198,64 @@
             </div>
         </div>
     </div>
+    @endforeach
+
+    <!-- Vé cho từng combo -->
+    @php $firstCombo = true; @endphp
+    @foreach($donVe->combos as $combo)
+        @for($i = 0; $i < $combo->pivot->so_luong; $i++)
+        @if(!$firstCombo)
+        <div style="page-break-before: always;"></div>
+        @endif
+        <div class="ticket-container" style="page-break-inside: avoid;">
+        @php $firstCombo = false; @endphp
+            <!-- Header Section -->
+            <div class="header">
+                <h2>🍿 VÉ COMBO</h2>
+                <div class="barcode">{{ $donVe->ma_don }}-C{{ $combo->id }}-{{ $i + 1 }}</div>
+            </div>
+
+            <!-- Combo Information -->
+            <div class="section">
+                <h3>THÔNG TIN COMBO</h3>
+                <div class="info-row">
+                    <div class="info-label">Tên combo:</div>
+                    <div><strong>{{ $combo->ten }}</strong></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Mô tả:</div>
+                    <div>{{ $combo->mo_ta }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Đơn giá:</div>
+                    <div>{{ number_format($combo->pivot->gia, 0, ',', '.') }} đ</div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="section">
+                <h3>THANH TOÁN</h3>
+                <div class="info-row">
+                    <div class="info-label">Giá combo:</div>
+                    <div><strong>{{ number_format($combo->pivot->gia, 0, ',', '.') }} đ</strong></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div>-----------------------------------</div>
+                <div><strong class="cinema-name">GO CINEMA - RẠP CHIẾU PHIM CAO CẤP</strong></div>
+                <div>Địa chỉ: Số 13, Trịnh Văn Bô, Hà Nội</div>
+                <div>Hotline: 0359445669 - Website: gocinema.vn</div>
+                <div style="margin-top: 10px; color: #e74c3c; font-weight: bold;">
+                    Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!
+                </div>
+                <div style="font-size: 10px; margin-top: 5px; color: #777;">
+                    Vui lòng giữ vé để được nhận combo
+                </div>
+            </div>
+        </div>
+        @endfor
+    @endforeach
 </body>
 </html>

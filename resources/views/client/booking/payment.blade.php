@@ -165,21 +165,6 @@
                             </div>
                         </label>
                     </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment_method" value="counter" class="mr-3">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-white font-bold text-sm">Q</span>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Thanh toán tại quầy</p>
-                                    <p class="text-sm text-gray-600">Thanh toán trực tiếp tại quầy khi nhận vé</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
                 </div>
             </div>
 
