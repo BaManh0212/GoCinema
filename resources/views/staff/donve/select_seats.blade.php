@@ -9,21 +9,7 @@
         border-radius: 10px;
         overflow: hidden;
     }
-    
-    .screen {
-        background: linear-gradient(to right, #d4d4d4, #f8f9fa, #d4d4d4);
-        text-align: center;
-        padding: 10px;
-        margin-bottom: 20px;
-        font-weight: bold;
-        color: #333;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
+
     .seat {
         width: 36px;
         height: 36px;
@@ -79,9 +65,17 @@
         box-shadow: none;
     }
     
-    .seat-dat { 
+    .seat-dat {
         background: #6c757d !important;
         opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none;
+    }
+
+    .seat-bao-tri {
+        background: #ffc107 !important;
+        opacity: 0.7;
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none;
@@ -91,16 +85,6 @@
         cursor: not-allowed !important; 
         pointer-events: none;
         opacity: 0.5;
-    }
-
-    .legend-box {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        margin-right: 8px;
-        border-radius: 3px;
-        vertical-align: middle;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
     .screen {
@@ -137,30 +121,6 @@
         z-index: 1;
     }
 
-    .selected-seat-badge {
-        background-color: #28a745;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-        margin: 2px;
-        display: inline-flex;
-        align-items: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .selected-seat-badge .remove-seat {
-        margin-left: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        opacity: 0.8;
-    }
-    
-    .selected-seat-badge .remove-seat:hover {
-        opacity: 1;
-    }
-    
     /* Seat map container */
     .seat-map {
         position: relative;
@@ -423,6 +383,10 @@
                             <span>Ghế giữ tạm</span>
                         </div>
                         <div class="legend-item">
+                            <span class="legend-box seat-bao-tri"></span>
+                            <span>Ghế bảo trì</span>
+                        </div>
+                        <div class="legend-item">
                             <span class="legend-box seat-chon"></span>
                             <span>Ghế đã chọn</span>
                         </div>
@@ -440,6 +404,26 @@
                                             $classes = 'seat seat-' . $ghe->loai;
                                             $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
                                             $disabled = false;
+                                            $basePrice = $suatChieu->gia_ve;
+
+                                            // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
+                                            if ($suatChieu->gio_bat_dau->isWeekend()) {
+                                                $basePrice *= 1.2;
+                                            }
+
+                                            // Tăng giá buổi tối từ 18h trở đi: +15%
+                                            if ($suatChieu->gio_bat_dau->hour >= 18) {
+                                                $basePrice *= 1.15;
+                                            }
+
+                                            // Áp dụng loại ghế
+                                            if ($ghe->loai === 'vip') {
+                                                $basePrice *= 1.5;
+                                            } elseif ($ghe->loai === 'doi') {
+                                                $basePrice *= 2;
+                                            }
+
+                                            $gia = $basePrice;
 
                                             if(in_array($ghe->id, $gheDaDat)){
                                                 $classes = 'seat seat-da-thanh-toan disabled';
@@ -449,8 +433,14 @@
                                                 $classes = 'seat seat-giu-tam disabled';
                                                 $trangthai = 'giu_tam';
                                                 $disabled = true;
-                                            } elseif(isset($gheStatuses[$ghe->id]) && ($gheStatuses[$ghe->id] === 'bao_tri' || $gheStatuses[$ghe->id] === 'vo_hieu_hoa')){
-                                                $classes = 'seat seat-dat disabled';
+                                            } elseif(isset($gheStatuses[$ghe->id]) && $gheStatuses[$ghe->id] === 'bao_tri') {
+                                                $classes = 'seat seat-bao-tri disabled';
+                                                $trangthai = 'bao_tri';
+                                                $disabled = true;
+
+                                            } elseif(isset($gheStatuses[$ghe->id]) && $gheStatuses[$ghe->id] === 'vo_hieu_hoa') {
+                                                $classes = 'seat seat-vo-hieu-hoa disabled';
+                                                $trangthai = 'vo_hieu_hoa';
                                                 $disabled = true;
                                             }
                                         @endphp
@@ -460,6 +450,7 @@
                                                 data-hang="{{ $hang }}"
                                                 data-cot="{{ $ghe->cot }}"
                                                 data-loai="{{ $ghe->loai }}"
+                                                data-gia="{{ $gia }}"
                                                 data-trangthai="{{ $trangthai }}"
                                                 {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}>
                                             {{ $hang }}{{ $ghe->cot }}
@@ -483,12 +474,10 @@
                     {{-- Thông tin đặt chỗ --}}
                     <div class="booking-summary">
                         <h5 class="mb-3">Thông tin đặt chỗ</h5>
-                        <div id="selected-seats" class="mb-3">
-                            <p class="text-muted mb-0">Chưa chọn ghế</p>
-                        </div>
                         <div id="ticket-summary" class="mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span>Vé phim (0 x {{ number_format($suatChieu->gia_ve, 0, ',', '.') }}đ):</span>
+                            <div id="ticket-details"></div>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Tổng vé:</span>
                                 <span id="ticket-amount">0đ</span>
                             </div>
                         </div>
@@ -794,8 +783,10 @@ $(document).ready(function() {
         const gheId = $(this).data('ghe-id');
         const hang = $(this).data('hang');
         const cot = $(this).data('cot');
+        const loai = $(this).data('loai');
+        const gia = $(this).data('gia');
         const seatLabel = hang + cot;
-        
+
         // Nếu ghế đã được chọn thì bỏ chọn
         if ($(this).hasClass('seat-chon')) {
             $(this).removeClass('seat-chon');
@@ -806,11 +797,11 @@ $(document).ready(function() {
                 showMessage('Thông báo', 'Chỉ được chọn tối đa 8 ghế cho mỗi lần đặt!');
                 return;
             }
-            
+
             $(this).addClass('seat-chon');
             selectedSeats.push(gheId);
         }
-        
+
         updateSelectedSeatsDisplay();
         updateTotals();
         updatePaymentSummary();
@@ -929,81 +920,96 @@ $(document).ready(function() {
             $('#selected-seats').html('<p class="text-muted mb-0">Chưa chọn ghế</p>');
         }
     }
-    
-    // Cập nhật tổng tiền
-    function updateTotals() {
-        // Tính tổng tiền ghế
-        const ticketTotal = selectedSeats.length * baseTicketPrice;
-        
-        // Tính tổng tiền combo
-        let comboTotal = 0;
-        Object.keys(comboQuantities).forEach(comboId => {
+    // Lấy tổng tiền vé theo ghế đã chọn
+function getTicketTotal() {
+    let total = 0;
+    $('.seat-chon').each(function() {
+        const price = parseFloat($(this).data('gia')) || 0;
+        total += price;
+    });
+    return total;
+}
+
+// Cập nhật tổng tiền vé và combo
+function updateTotals() {
+    const ticketTotal = getTicketTotal();
+
+    // Tính tổng tiền combo
+    let comboTotal = 0;
+    Object.keys(comboQuantities).forEach(comboId => {
+        const combo = combosData.find(c => c.id == comboId);
+        if (combo) {
+            comboTotal += combo.gia * comboQuantities[comboId];
+        }
+    });
+
+    // Cập nhật giao diện tổng tiền vé
+    $('#ticket-summary').html(`
+        <div class="d-flex justify-content-between">
+            <span>Vé phim (${$('.seat-chon').length} ghế):</span>
+            <span>${formatCurrency(ticketTotal)}</span>
+        </div>
+    `);
+
+    // Cập nhật tổng tiền combo
+    $('#combo-total').text(formatCurrency(comboTotal));
+
+    // Tổng thanh toán
+    const totalAmount = ticketTotal + comboTotal;
+    $('#total-amount').text(formatCurrency(totalAmount));
+
+    // Cập nhật tổng tiền trong modal xác nhận
+    $('#confirm-total').text(formatCurrency(totalAmount));
+}
+
+// Cập nhật thanh toán bên phải
+function updatePaymentSummary() {
+    const ticketTotal = getTicketTotal();
+
+    // Tính tổng tiền combo và tạo HTML hiển thị
+    let comboTotal = 0;
+    let hasCombos = false;
+    let comboHtml = '';
+
+    Object.keys(comboQuantities).forEach(comboId => {
+        const qty = comboQuantities[comboId];
+        if (qty > 0) {
             const combo = combosData.find(c => c.id == comboId);
             if (combo) {
-                comboTotal += combo.gia * comboQuantities[comboId];
+                const comboAmount = combo.gia * qty;
+                comboTotal += comboAmount;
+                hasCombos = true;
+
+                comboHtml += `
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${combo.ten} x${qty}</span>
+                        <span>${formatCurrency(comboAmount)}</span>
+                    </div>
+                `;
             }
-        });
-        
-        // Cập nhật giao diện
-        $('#ticket-summary').html(`
-            <div class="d-flex justify-content-between">
-                <span>Vé phim (${selectedSeats.length} x {{ number_format($suatChieu->gia_ve, 0, ',', '.') }}):</span>
-                <span>${formatCurrency(ticketTotal)}</span>
-            </div>
-        `);
-        
-        $('#combo-total').text(formatCurrency(comboTotal));
-        
-        const totalAmount = ticketTotal + comboTotal;
-        $('#total-amount').text(formatCurrency(totalAmount));
-        
-        // Cập nhật tổng tiền trong modal xác nhận
-        $('#confirm-total').text(formatCurrency(totalAmount));
-    }
-    
-    // Cập nhật thanh toán bên phải
-    function updatePaymentSummary() {
-        // Tính tổng tiền ghế
-        const ticketTotal = selectedSeats.length * baseTicketPrice;
-        
-        // Tính tổng tiền combo
-        let comboTotal = 0;
-        let hasCombos = false;
-        let comboHtml = '';
-        
-        Object.keys(comboQuantities).forEach(comboId => {
-            const qty = comboQuantities[comboId];
-            if (qty > 0) {
-                const combo = combosData.find(c => c.id == comboId);
-                if (combo) {
-                    const comboAmount = combo.gia * qty;
-                    comboTotal += comboAmount;
-                    hasCombos = true;
-                    
-                    comboHtml += `
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>${combo.ten} x${qty}</span>
-                            <span>${formatCurrency(comboAmount)}</span>
-                        </div>
-                    `;
-                }
-            }
-        });
-        
-        // Cập nhật giao diện
-        $('#payment-ticket-amount').text(formatCurrency(ticketTotal));
-        $('#payment-combo-amount').text(formatCurrency(comboTotal));
-        
-        const totalAmount = ticketTotal + comboTotal;
-        $('#payment-total-amount').text(formatCurrency(totalAmount));
-        
-        // Cập nhật danh sách combo đã chọn
-        if (hasCombos) {
-            $('#selected-combos').html(comboHtml);
-        } else {
-            $('#selected-combos').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
         }
+    });
+
+    // Cập nhật giao diện thanh toán
+    $('#payment-ticket-amount').text(formatCurrency(ticketTotal));
+    $('#payment-combo-amount').text(formatCurrency(comboTotal));
+
+    const totalAmount = ticketTotal + comboTotal;
+    $('#payment-total-amount').text(formatCurrency(totalAmount));
+
+    if (hasCombos) {
+        $('#selected-combos').html(comboHtml);
+    } else {
+        $('#selected-combos').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
     }
+}
+
+// Khi click ghế hoặc thay đổi combo, gọi lại hai hàm trên
+$('.seat, .combo-input').on('click change', function() {
+    updateTotals();
+    updatePaymentSummary();
+});
+
     
     // Cập nhật danh sách combo đã chọn
     function updateSelectedCombos() {
