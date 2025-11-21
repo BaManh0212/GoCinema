@@ -69,6 +69,7 @@
                         <th>Mã phòng</th>
                         <th>Định dạng</th>
                         <th>Trạng thái</th>
+                        <th width="200px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,6 +87,11 @@
                                 @else
                                     <span class="badge bg-danger">Ngừng sử dụng</span>
                                 @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('staff.phongchieu.ghe', $p->id) }}" class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bi bi-ui-checks"></i> Quản lý ghế
+                                </a>
                             </td>
                         </tr>
                     @empty
