@@ -354,6 +354,13 @@ public function checkInByCode(Request $request)
             ->pluck('ghe_id')
             ->toArray();
 
+        // Tính giá cho từng ghế
+        foreach ($ghes as $hang => $danhSachGhe) {
+            foreach ($danhSachGhe as $ghe) {
+                $ghe->gia = $this->calculateSeatPrice($suatChieu, $ghe);
+            }
+        }
+
         // Lấy combo và sản phẩm
         $combos = Combo::where('so_luong', '>', 0)->get();
 
