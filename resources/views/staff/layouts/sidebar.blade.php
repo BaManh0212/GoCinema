@@ -100,6 +100,12 @@
             <span>Check-in vé</span>
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('staff.donve.create') }}">
+            <i class="fas fa-fw fa-check-circle"></i>
+            <span>Tạo đơn vé</span>
+        </a>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">

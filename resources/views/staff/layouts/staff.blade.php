@@ -17,13 +17,91 @@
     <link href="{{ asset('assets/admins/css/sb-admin-2.min.css') }}" rel="stylesheet">
 
     <style>
-        .chart-area,
-        .chart-pie {
+        /* Giữ nguyên layout chính */
+        .chart-area, .chart-pie {
             position: relative;
             height: 300px;
             width: 100%;
         }
+
+        /* Tùy chỉnh cho sơ đồ ghế */
+        .seat-map {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .seat {
+            width: 45px; height: 45px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin: 4px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 40px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .seat:hover { transform: scale(1.1); }
+
+        .seat-thuong { background-color: #87CEFA; } /* Xanh dương nhạt */
+        .seat-vip { background-color: #FFD700; }     /* Vàng */
+        .seat-doi { background-color: #98FB98; }     /* Xanh lá nhạt */
+        .seat-empty { background-color: #f1f2f6; }
+
+        .screen {
+            background-color: #222;
+            color: #fff;
+            text-align: center;
+            font-weight: 600;
+            padding: 8px 0;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            width: 60%;
+        }
+
+        /* Flash message */
+        .alert {
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        /* Fix sidebar position */
+        .sidebar {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        /* Hide scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        #content-wrapper {
+            margin-left: 250px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static !important;
+                height: auto;
+            }
+            #content-wrapper {
+                margin-left: 0;
+            }
+        }
     </style>
+
+    @stack('styles')
 </head>
 
 <body id="page-top">

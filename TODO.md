@@ -1,26 +1,16 @@
-# TODO: Implement Seat Management Per Showtime
+# TODO: Bổ sung chức năng Staff Đặt Vé Tại Quầy
 
-## 1. Create migration for ghe_suat_chieu table
-- [x] Create migration file for ghe_suat_chieu table (suat_chieu_id, ghe_id, trang_thai)
+## 1. Thêm phương thức thanh toán quét mã
+- [x] Cập nhật DonDatVeController.php: Thêm 'quet_ma' vào store() method
+- [x] Cập nhật select_seats.blade.php: Thêm option chọn phương thức thanh toán (tiền mặt hoặc quét mã)
 
-## 2. Create GheSuatChieu model
-- [x] Create app/Models/GheSuatChieu.php with relationships
+## 2. Giới hạn hủy vé chỉ trước 2 tiếng giờ chiếu
+- [x] Cập nhật DonDatVeController.php: Thêm kiểm tra thời gian trong changeStatus() method
 
-## 3. Update SuatChieuController::gheIndex
-- [x] Load seat statuses per showtime from ghe_suat_chieu table
-- [x] Pass seat data to view
+## 3. Thêm link vào sidebar staff
+- [x] Cập nhật resources/views/admin/layouts/sidebar.blade.php: Thêm menu item "Đặt Vé Tại Quầy" dẫn đến route staff.donve.create
 
-## 4. Update view resources/views/admin/suatchieu/ghe_index.blade.php
-- [x] Display seats with per-showtime status
-- [x] Allow toggling seat availability per showtime
-- [x] Add JavaScript for AJAX updates
-
-## 5. Add method in SuatChieuController to update seat status
-- [x] Add updateGheTrangThai method to toggle seat status per showtime
-
-## 6. Update routes
-- [x] Add route for updating seat status per showtime
-
-## 7. Testing
-- [x] Run php artisan migrate
-- [ ] Test seat toggling per showtime
+## 4. Test các thay đổi
+- [x] Kiểm tra luồng đặt vé với cả hai phương thức thanh toán
+- [x] Kiểm tra logic hủy vé với thời gian
+- [x] Kiểm tra link sidebar hoạt động

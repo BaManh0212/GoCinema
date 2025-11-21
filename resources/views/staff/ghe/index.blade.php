@@ -8,45 +8,89 @@
 
     {{-- Chú thích màu --}}
     <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
-        <div><span class="legend-box seat-vip"></span> Ghế VIP</div>
-        <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
+        <div><span class="legend-box seat-vip"></span> Ghế VIP (vàng)</div>
+        <div><span class="legend-box seat-doi"></span> Ghế đôi (hồng)</div>
         <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
         <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
     </div>
 
+    {{-- Công cụ quản lý ghế --}}
+    <div class="mb-4 d-flex flex-wrap gap-3 align-items-center">
+        <div class="d-flex gap-2">
+            <button id="btnConvertVip" class="btn btn-warning" disabled>⭐ Chuyển thành VIP</button>
+            <button id="btnConvertNormal" class="btn btn-secondary" disabled>🪑 Chuyển thành Thường</button>
+            <button id="btnConvertDouble" class="btn btn-info" disabled>💑 Chuyển thành Đôi</button>
+        </div>
+        <small class="text-muted">Chọn hàng để chuyển đổi loại ghế. Double-click ghế để chuyển đổi loại hoặc trạng thái</small>
+    </div>
+
     {{-- Sơ đồ ghế --}}
     <div class="seat-map p-4 border rounded bg-white shadow-sm">
-        <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
+        {{-- Màn hình --}}
+        <div class="screen mb-4" style="width: {{ $phong->so_cot * 45 + 40 }}px;">🎥 MÀN HÌNH CHIẾU</div>
+
+        {{-- Lối vào --}}
+        <div class="d-flex justify-content-start mb-3" style="padding-left: 50px;">
+            <div class="seat-preview seat-entrance">VÀO</div>
+        </div>
 
         <div class="d-flex flex-column align-items-center">
             @php
-                $hangs = range('A', 'K'); // 11 hàng
-                $soCot = 13;
+                $hangLetters = range('A', chr(ord('A') + $phong->so_hang - 1));
             @endphp
 
-            @foreach ($hangs as $index => $hang)
-                @php
-                    if ($index < 3) $loai = 'vip';
-                    elseif ($index < 6) $loai = 'doi';
-                    else $loai = 'thuong';
-                @endphp
+            @foreach ($hangLetters as $index => $hang)
+                <div class="d-flex mb-2 align-items-center">
+                    {{-- Checkbox chọn hàng --}}
+                    <div class="me-3">
+                        <input type="checkbox" class="row-checkbox" value="{{ $hang }}" id="row-{{ $hang }}">
+                        <label for="row-{{ $hang }}" class="ms-1 fw-bold">{{ $hang }}</label>
+                    </div>
 
-                <div class="d-flex mb-2">
-                    @for ($cot = 1; $cot <= $soCot; $cot++)
-                        <div class="seat seat-{{ $loai }}"
+                    {{-- Ghế trong hàng --}}
+                    @php
+                        $cot = 1;
+                    @endphp
+                    @while ($cot <= $phong->so_cot)
+                        @php
+                            $key = $hang . '-' . $cot;
+                            $ghe = $ghes->get($key);
+                            $currentLoai = $ghe ? $ghe->loai : 'thuong';
+                            $currentTrangThai = $ghe ? $ghe->trang_thai : 'hoat_dong';
+                            $isDouble = $currentLoai == 'doi';
+                        @endphp
+
+                        <div class="seat seat-{{ $currentLoai }} {{ $currentTrangThai == 'bao_tri' ? 'seat-bao-tri' : '' }} {{ $isDouble ? 'double-seat' : '' }}"
                              data-hang="{{ $hang }}"
                              data-cot="{{ $cot }}"
-                             data-loai="{{ $loai }}"
-                             data-trangthai="hoat_dong">
-                            {{ $hang }}{{ $cot }}
+                             data-loai="{{ $currentLoai }}"
+                             data-trangthai="{{ $currentTrangThai }}">
+                            @if($isDouble)
+                                💑
+                                @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
+                            @else
+                                {{ $hang }}{{ $cot }}
+                            @endif
                         </div>
-                    @endfor
+
+                        {{-- Lối đi giữa mỗi 8 ghế --}}
+                        @if($cot % 8 == 0 && $cot < $phong->so_cot)
+                            <div class="seat-preview seat-aisle">LỐI ĐI</div>
+                        @endif
+
+                        @php $cot++; @endphp
+                    @endwhile
                 </div>
 
-                @if ($hang == 'F')
+                @if ($hang == chr(ord('A') + ceil($phong->so_hang / 2) - 1))
                     <div style="height: 20px;"></div>
                 @endif
             @endforeach
+        </div>
+
+        {{-- Lối ra --}}
+        <div class="d-flex justify-content-end mt-3" style="padding-right: 50px;">
+            <div class="seat-preview seat-exit">RA</div>
         </div>
     </div>
 
@@ -73,8 +117,11 @@
     color: #222;
     user-select: none;
 }
+.double-seat {
+    width: 94px !important; /* 45px * 2 + margin */
+}
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #98FB98; }
+.seat-doi { background-color: #FFB6C1; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
 
@@ -101,6 +148,39 @@
     transform: scale(1.08);
     transition: 0.15s;
 }
+.seat-preview {
+    width: 35px;
+    height: 35px;
+    margin: 3px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    text-align: center;
+    line-height: 35px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    display: inline-block;
+}
+.seat-aisle {
+    width: 60px !important;
+    background: #efefef;
+    color: #666;
+    font-size: 9px;
+    font-weight: bold;
+    border: 2px dashed #bbb;
+    line-height: 12px;
+    padding-top: 10px;
+}
+.seat-entrance {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+}
+.seat-exit {
+    background: #4ecdc4;
+    color: white;
+    border-color: #4ecdc4;
+}
 </style>
 @endpush
 
@@ -121,6 +201,161 @@ document.querySelectorAll('.seat').forEach(seat => {
             seat.classList.add('seat-bao-tri');
         }
     });
+
+    // Double-click để chuyển đổi loại ghế
+    seat.addEventListener('dblclick', () => {
+        const currentLoai = seat.dataset.loai;
+        const currentTrangThai = seat.dataset.trangthai;
+
+        if (currentTrangThai === 'bao_tri') {
+            // Nếu đang bảo trì, chuyển về hoạt động với loại cũ
+            seat.dataset.trangthai = 'hoat_dong';
+            seat.classList.remove('seat-bao-tri');
+            seat.classList.add('seat-' + currentLoai);
+
+            // Cập nhật text hiển thị
+            if (currentLoai === 'doi') {
+                seat.textContent = '💑';
+            } else {
+                seat.textContent = seat.dataset.hang + seat.dataset.cot;
+            }
+        } else {
+            // Nếu đang hoạt động, chuyển đổi loại ghế
+            let newLoai;
+            if (currentLoai === 'thuong') {
+                newLoai = 'vip';
+            } else if (currentLoai === 'vip') {
+                newLoai = 'thuong';
+            } else if (currentLoai === 'doi') {
+                // Ghế đôi chỉ chuyển sang bảo trì
+                seat.dataset.trangthai = 'bao_tri';
+                seat.classList.remove('seat-doi');
+                seat.classList.add('seat-bao-tri');
+                seat.textContent = '🔧';
+                return;
+            }
+
+            // Cập nhật UI cho ghế thường/VIP
+            if (newLoai) {
+                seat.dataset.loai = newLoai;
+                seat.classList.remove('seat-thuong', 'seat-vip');
+                seat.classList.add('seat-' + newLoai);
+                seat.textContent = seat.dataset.hang + seat.dataset.cot;
+            }
+        }
+    });
+});
+
+// Cập nhật trạng thái nút chuyển đổi
+function updateConvertButtons() {
+    const checkedRows = document.querySelectorAll('.row-checkbox:checked');
+    const btnVip = document.getElementById('btnConvertVip');
+    const btnNormal = document.getElementById('btnConvertNormal');
+    const btnDouble = document.getElementById('btnConvertDouble');
+
+    const hasSelection = checkedRows.length > 0;
+    btnVip.disabled = !hasSelection;
+    btnNormal.disabled = !hasSelection;
+    btnDouble.disabled = !hasSelection;
+}
+
+// Lắng nghe sự kiện checkbox
+document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateConvertButtons);
+});
+
+// Chuyển đổi hàng thành VIP
+document.getElementById('btnConvertVip').addEventListener('click', () => {
+    const selectedRows = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedRows.length === 0) {
+        alert('Vui lòng chọn ít nhất một hàng!');
+        return;
+    }
+
+    fetch(`{{ route('staff.phongchieu.ghe.convertRowsToVip', $phong->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ rows: selectedRows })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            // Reload để cập nhật sơ đồ ghế
+            location.reload();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(() => alert('❌ Lỗi kết nối!'));
+});
+
+// Chuyển đổi thành ghế thường
+document.getElementById('btnConvertNormal').addEventListener('click', () => {
+    const selectedRows = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedRows.length === 0) {
+        alert('Vui lòng chọn ít nhất một hàng!');
+        return;
+    }
+
+    fetch(`{{ route('staff.phongchieu.ghe.convertRowsToNormal', $phong->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ rows: selectedRows })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            // Reload để cập nhật sơ đồ ghế
+            location.reload();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(() => alert('❌ Lỗi kết nối!'));
+});
+
+// Chuyển đổi thành ghế đôi
+document.getElementById('btnConvertDouble').addEventListener('click', () => {
+    const selectedRows = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedRows.length === 0) {
+        alert('Vui lòng chọn ít nhất một hàng!');
+        return;
+    }
+
+    if (!confirm('Bạn có chắc muốn chuyển đổi các hàng đã chọn thành ghế đôi? Hành động này sẽ gộp 2 ghế thành 1.')) {
+        return;
+    }
+
+    fetch(`{{ route('staff.phongchieu.ghe.convertToDoubleSeats', $phong->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ rows: selectedRows })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            // Reload để cập nhật sơ đồ ghế (vì ghế đôi gộp ô và xóa ghế thừa)
+            location.reload();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(() => alert('❌ Lỗi kết nối!'));
 });
 
 // Gửi dữ liệu lên server
@@ -132,7 +367,7 @@ document.getElementById('btnSaveLayout').addEventListener('click', () => {
         trang_thai: seat.dataset.trangthai
     }));
 
-    fetch(`{{ route('staff.staff.phongchieu.ghe.updateMap', $phong->id ?? 21) }}`, {
+    fetch(`{{ route('staff.phongchieu.ghe.updateMap', $phong->id) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -142,8 +377,14 @@ document.getElementById('btnSaveLayout').addEventListener('click', () => {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success) alert('✅ Đã lưu trạng thái ghế thành công!');
-        else alert('❌ Lưu thất bại!');
+        if (data.success) {
+            alert('✅ Đã lưu trạng thái ghế thành công!');
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        } else {
+            alert('❌ Lưu thất bại!');
+        }
     })
     .catch(() => alert('❌ Lỗi kết nối!'));
 });

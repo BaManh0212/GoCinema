@@ -86,6 +86,8 @@
                         <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
                         <div><span class="legend-box seat-da-thanh-toan"></span> Ghế đã đặt</div>
                         <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
+                        <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
+                        <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
                         <div><span class="legend-box seat-chon"></span> Ghế đã chọn</div>
                     </div>
 
@@ -114,8 +116,11 @@
                                                 $classes = 'seat seat-giu-tam disabled';
                                                 $trangthai = 'giu_tam';
                                                 $disabled = true;
-                                            } elseif($trangthai === 'bao_tri' || $trangthai === 'vo_hieu_hoa'){
-                                                $classes = 'seat seat-dat disabled';
+                                            } elseif($trangthai === 'bao_tri'){
+                                                $classes = 'seat seat-bao-tri disabled';
+                                                $disabled = true;
+                                            } elseif($trangthai === 'vo_hieu_hoa'){
+                                                $classes = 'seat seat-vo-hieu-hoa disabled';
                                                 $disabled = true;
                                             }
                                         @endphp
@@ -396,6 +401,8 @@
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-da-thanh-toan { background-color: #DC3545 !important; cursor: not-allowed; pointer-events: none; }
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; pointer-events: none; }
+.seat-bao-tri { background-color: #d1d5db !important; cursor: not-allowed; pointer-events: none; }
+.seat-vo-hieu-hoa { background-color: #6B7280 !important; cursor: not-allowed; pointer-events: none; }
 .seat-chon { background-color: #28a745 !important; color: white; }
 .seat.disabled { cursor: not-allowed !important; pointer-events: none; }
 
