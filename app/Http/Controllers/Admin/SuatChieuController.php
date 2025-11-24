@@ -276,7 +276,17 @@ class SuatChieuController extends Controller
 
         $giuTamIds = DB::table('ghe_giu_tam')
             ->where('suat_chieu_id', $id)
+            ->where('het_han', '>', \Carbon\Carbon::now())
             ->pluck('ghe_id')->toArray();
+
+        // Lấy ghế chờ thanh toán là giữ tạm
+        $giuTamChoThanhToan = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->where('trang_thai', 'cho_thanh_toan')
+            ->pluck('ghe_id')
+            ->toArray();
+
+        $giuTamIds = array_unique(array_merge($giuTamIds, $giuTamChoThanhToan));
 
         // Lấy ghế đã đặt
         $gheDaDat = DB::table('chi_tiet_ve')
@@ -303,6 +313,15 @@ class SuatChieuController extends Controller
             ->where('het_han', '>', now())
             ->pluck('ghe_id')
             ->toArray();
+
+        // Lấy ghế chờ thanh toán là giữ tạm
+        $giuTamChoThanhToan = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->where('trang_thai', 'cho_thanh_toan')
+            ->pluck('ghe_id')
+            ->toArray();
+
+        $giuTamIds = array_unique(array_merge($giuTamIds, $giuTamChoThanhToan));
 
         $gheDaDat = DB::table('chi_tiet_ve')
             ->where('suat_chieu_id', $id)
@@ -567,6 +586,37 @@ class SuatChieuController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
+    }
+
+    /**
+     * 🔄 Cập nhật trạng thái giữ tạm ghế (add/remove giữ tạm)
+     */
+    public function updateGheGiuTam(Request $request, $id)
+    {
+        $request->validate([
+            'ghe_id' => 'required|exists:ghe,id',
+            'action' => 'required|in:add,remove',
+        ]);
+
+        $suatChieu = SuatChieu::findOrFail($id);
+        $gheId = $request->ghe_id;
+        $action = $request->action;
+
+        if ($action === 'add') {
+            // Thêm bản ghi giữ tạm với thời hạn 10 phút
+            \DB::table('ghe_giu_tam')->updateOrInsert(
+                ['suat_chieu_id' => $id, 'ghe_id' => $gheId],
+                ['het_han' => now()->addMinutes(10), 'created_at' => now(), 'updated_at' => now()]
+            );
+        } else if ($action === 'remove') {
+            // Xóa giữ tạm
+            \DB::table('ghe_giu_tam')
+                ->where('suat_chieu_id', $id)
+                ->where('ghe_id', $gheId)
+                ->delete();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái giữ tạm ghế thành công']);
     }
 
 }

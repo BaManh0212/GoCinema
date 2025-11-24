@@ -231,6 +231,10 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
     Route::post('/suatchieu/{id}/ghe/update', [AdminSuatChieuController::class, 'updateGheTrangThai'])
         ->name('suatchieu.ghe.update');
 
+    // 🔄 API cập nhật trạng thái giữ tạm ghế (thêm/xóa giữ tạm)
+    Route::post('/suatchieu/{id}/ghe/update-giu-tam', [AdminSuatChieuController::class, 'updateGheGiuTam'])
+        ->name('suatchieu.ghe.updateGiuTam');
+
     // 🟢 Lấy trạng thái ghế real-time
     Route::get('/suatchieu/{id}/seat-status', [AdminSuatChieuController::class, 'seatStatus'])
         ->name('suatchieu.seatStatus');

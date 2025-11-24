@@ -21,7 +21,6 @@
                 <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
                 <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
                 <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
-                <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
                 <div><span class="legend-box seat-dat"></span> Ghế đã đặt</div>
                 <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
             </div>
@@ -38,16 +37,18 @@
                                     $classes = 'seat seat-' . $ghe->loai;
                                     $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
 
-                                    if(in_array($ghe->id, $gheDaDat)){
-                                        $classes = 'seat seat-dat';
-                                        $trangthai = 'da_dat';
-                                    } elseif(in_array($ghe->id, $giuTamIds)){
+                                    // Ghế đã đặt (da_dat, da_thanh_toan, da_checkin) -> seat-dat
+                                    // Ghế giữ tạm (giu_tam - bao gồm chi_tiet_ve with trang_thai=cho_thanh_toan) -> seat-giu-tam
+                                    if(in_array($ghe->id, $giuTamIds)){
                                         $classes = 'seat seat-giu-tam';
                                         $trangthai = 'giu_tam';
+                                    } elseif(in_array($ghe->id, $gheDaDat)){
+                                        $classes = 'seat seat-dat';
+                                        $trangthai = 'da_dat';
                                     } elseif($trangthai === 'bao_tri'){
                                         $classes = 'seat seat-bao-tri';
                                     } elseif($trangthai === 'vo_hieu_hoa'){
-                                        $classes = 'seat seat-vo-hieu-hoa';
+                                        // removed vo_hieu_hoa state fallback
                                     }
                                 @endphp
 
@@ -94,7 +95,7 @@
 .seat-doi { background-color: #98FB98; width: 94px; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
-.seat-vo-hieu-hoa { background-color: #6B7280 !important; }
+/* .seat-vo-hieu-hoa { background-color: #6B7280 !important; } removed */
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; }
 
@@ -132,28 +133,73 @@ let changes = {}; // Lưu trữ các thay đổi
 
 // Toggle trạng thái ghế
 document.querySelectorAll('.seat').forEach(seat => {
-    seat.addEventListener('click', () => {
-        // Nếu ghế đã đặt hoặc giữ tạm => không đổi trạng thái
-        if(seat.dataset.trangthai === 'da_dat' || seat.dataset.trangthai === 'giu_tam') return;
+    seat.addEventListener('click', async () => {
+        // Nếu ghế đã đặt => không đổi trạng thái
+        if(seat.dataset.trangthai === 'da_dat') return;
 
         const currentStatus = seat.dataset.trangthai;
         let newStatus, newClass;
 
-        // Chu kỳ: hoat_dong -> bao_tri -> vo_hieu_hoa -> hoat_dong
+        // Chu kỳ: hoat_dong -> bao_tri -> giu_tam -> hoat_dong
         if (currentStatus === 'hoat_dong') {
             newStatus = 'bao_tri';
             newClass = 'seat-bao-tri';
+            // Call API to update normal seat status
+            await updateSeatStatus(seat.dataset.gheId, newStatus, '{{ route("admin.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}');
         } else if (currentStatus === 'bao_tri') {
-            newStatus = 'vo_hieu_hoa';
-            newClass = 'seat-vo-hieu-hoa';
-        } else if (currentStatus === 'vo_hieu_hoa') {
+            newStatus = 'giu_tam';
+            newClass = 'seat-giu-tam';
+            // Call API to add giữ tạm
+            await fetch('{{ route("admin.suatchieu.ghe.updateGiuTam", $suatchieu->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    ghe_id: seat.dataset.gheId,
+                    action: 'add'
+                })
+            }).then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('❌ Cập nhật giữ tạm thất bại: ' + (data.message || 'Lỗi không xác định'));
+                }
+            })
+            .catch(() => {
+                alert('❌ Lỗi kết nối khi giữ tạm!');
+            });
+        } else if (currentStatus === 'giu_tam') {
             newStatus = 'hoat_dong';
             newClass = 'seat-' + seat.dataset.loai;
+            // Call API to remove giữ tạm
+            await fetch('{{ route("admin.suatchieu.ghe.updateGiuTam", $suatchieu->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    ghe_id: seat.dataset.gheId,
+                    action: 'remove'
+                })
+            }).then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('❌ Cập nhật hủy giữ tạm thất bại: ' + (data.message || 'Lỗi không xác định'));
+                }
+            })
+            .catch(() => {
+                alert('❌ Lỗi kết nối khi hủy giữ tạm!');
+            });
+        } else {
+            // fallback: nếu trạng thái không hợp lệ
+            return;
         }
 
         // Cập nhật UI
         seat.dataset.trangthai = newStatus;
-        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-vo-hieu-hoa');
+        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-giu-tam' /* 'seat-vo-hieu-hoa' removed */);
         seat.classList.add(newClass);
 
         // Lưu thay đổi vào object
@@ -227,7 +273,7 @@ function applyLiveStatus(payload) {
 
         // Cập nhật dataset + class
         seat.dataset.trangthai = status;
-        seat.classList.remove('seat-vip','seat-doi','seat-thuong','seat-bao-tri','seat-vo_hieu_hoa','seat-vo-hieu-hoa','seat-dat','seat-giu-tam');
+        seat.classList.remove('seat-vip','seat-doi','seat-thuong','seat-bao-tri' /* 'seat-vo_hieu_hoa','seat-vo-hieu-hoa' removed */, 'seat-dat','seat-giu-tam');
 
         if (status === 'da_dat') {
             seat.classList.add('seat-dat');
@@ -235,9 +281,9 @@ function applyLiveStatus(payload) {
             seat.classList.add('seat-giu-tam');
         } else if (status === 'bao_tri') {
             seat.classList.add('seat-bao-tri');
-        } else if (status === 'vo_hieu_hoa') {
+        } /* else if (status === 'vo_hieu_hoa') {
             seat.classList.add('seat-vo-hieu-hoa');
-        } else {
+        } */ else {
             // hoạt động -> theo loại ghế
             seat.classList.add('seat-' + loai);
         }
