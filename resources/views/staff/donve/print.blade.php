@@ -44,6 +44,9 @@
             background: #f9f9f9;
             border-radius: 5px;
             border: 1px dashed #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .qr-code {
             display: inline-block;
@@ -129,7 +132,19 @@
         <!-- Header Section -->
         <div class="header">
             <h2>🎟️ VÉ XEM PHIM</h2>
-            <div class="barcode">{{ $donVe->ma_don }}-{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</div>
+            {{-- <div class="barcode">{{ $donVe->ma_don }}-{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</div> --}}
+        </div>
+
+        @php
+            $qrData = [
+                'ma_don' => $donVe->ma_don,
+                'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
+                'ngay_dat' => now()->format('Y-m-d H:i:s'),
+            ];
+            $qrCode = QrCode::size(150)->generate(json_encode($qrData));
+        @endphp
+        <div class="qr-section" style="text-align:center;">
+            {!! $qrCode !!}
         </div>
 
 

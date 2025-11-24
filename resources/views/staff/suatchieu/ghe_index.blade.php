@@ -46,9 +46,9 @@
                                         $trangthai = 'giu_tam';
                                     } elseif($trangthai === 'bao_tri'){
                                         $classes = 'seat seat-bao-tri';
-                                    } elseif($trangthai === 'vo_hieu_hoa'){
-                                        $classes = 'seat seat-vo-hieu-hoa';
-                                    }
+                                        } elseif($trangthai === 'vo_hieu_hoa'){
+                                        // removed vo_hieu_hoa state fallback
+                                        }
                                 @endphp
 
                                 <div class="{{ $classes }}"
@@ -94,7 +94,7 @@
 .seat-doi { background-color: #98FB98; width: 94px; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
-.seat-vo-hieu-hoa { background-color: #6B7280 !important; }
+/* .seat-vo-hieu-hoa { background-color: #6B7280 !important; } removed */
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; }
 
@@ -139,21 +139,18 @@ document.querySelectorAll('.seat').forEach(seat => {
         const currentStatus = seat.dataset.trangthai;
         let newStatus, newClass;
 
-        // Chu kỳ: hoat_dong -> bao_tri -> vo_hieu_hoa -> hoat_dong
+        // Chu kỳ: hoat_dong -> bao_tri -> hoat_dong (vo_hieu_hoa removed)
         if (currentStatus === 'hoat_dong') {
             newStatus = 'bao_tri';
             newClass = 'seat-bao-tri';
         } else if (currentStatus === 'bao_tri') {
-            newStatus = 'vo_hieu_hoa';
-            newClass = 'seat-vo-hieu-hoa';
-        } else if (currentStatus === 'vo_hieu_hoa') {
             newStatus = 'hoat_dong';
             newClass = 'seat-' + seat.dataset.loai;
         }
 
         // Cập nhật UI
         seat.dataset.trangthai = newStatus;
-        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-vo-hieu-hoa');
+        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri' /* 'seat-vo-hieu-hoa' removed */);
         seat.classList.add(newClass);
 
         // Lưu thay đổi vào object
@@ -227,7 +224,7 @@ function applyLiveStatus(payload) {
 
         // Cập nhật dataset + class
         seat.dataset.trangthai = status;
-        seat.classList.remove('seat-vip','seat-doi','seat-thuong','seat-bao-tri','seat-vo_hieu_hoa','seat-vo-hieu-hoa','seat-dat','seat-giu-tam');
+        seat.classList.remove('seat-vip','seat-doi','seat-thuong','seat-bao-tri' /* 'seat-vo_hieu_hoa','seat-vo-hieu-hoa' removed */, 'seat-dat','seat-giu-tam');
 
         if (status === 'da_dat') {
             seat.classList.add('seat-dat');
@@ -235,9 +232,9 @@ function applyLiveStatus(payload) {
             seat.classList.add('seat-giu-tam');
         } else if (status === 'bao_tri') {
             seat.classList.add('seat-bao-tri');
-        } else if (status === 'vo_hieu_hoa') {
+        } /* else if (status === 'vo_hieu_hoa') {
             seat.classList.add('seat-vo-hieu-hoa');
-        } else {
+        } */ else {
             // hoạt động -> theo loại ghế
             seat.classList.add('seat-' + loai);
         }

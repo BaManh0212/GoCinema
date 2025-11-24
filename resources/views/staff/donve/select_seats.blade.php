@@ -30,7 +30,8 @@
     
     /* Seat types */
     .seat-thuong { 
-        background: linear-gradient(135deg, #6c757d, #495057);
+        background: linear-gradient(135deg, #87CEFA, #87CEFA);
+        color: #000;
     }
     
     .seat-vip { 
@@ -39,22 +40,25 @@
     }
     
     .seat-doi { 
-        background: linear-gradient(135deg, #fd7e14, #e76f10);
+        background: linear-gradient(135deg, #98FB98, #98FB98);
         width: 75px;
+        color: #000;
     }
     
     .seat-chon { 
         background: #28a745 !important;
         transform: scale(1.05);
         box-shadow: 0 0 0 2px #fff, 0 0 0 4px #28a745;
+        color: #000;
     }
     
     .seat-da-thanh-toan { 
-        background: #dc3545 !important;
+        background: #DC3545 !important;
         opacity: 0.7;
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none;
+        color: #000;
     }
     
     .seat-giu-tam { 
@@ -63,14 +67,16 @@
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none;
+        color: #000;
     }
     
     .seat-dat {
-        background: #6c757d !important;
+        background: #FF6347 !important;
         opacity: 0.5;
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none;
+        color: #000;
     }
 
     .seat-bao-tri {
@@ -79,6 +85,7 @@
         cursor: not-allowed;
         pointer-events: none;
         box-shadow: none;
+        color: #000;
     }
     
     .seat.disabled { 
@@ -166,7 +173,7 @@
     }
     
     .seat-da-thanh-toan .legend-box {
-        background-color: #dc3545;
+        background-color: #DC3545;
     }
     
     .seat-giu-tam .legend-box {
@@ -465,36 +472,6 @@
                         </div>
                     </div>
                     
-                    {{-- Ghế đã chọn --}}
-                    <div class="mt-4">
-                        <h6>Ghế đã chọn: <span id="selected-seats">Chưa chọn ghế nào</span></h6>
-                        <div id="selected-seats-list" class="d-flex flex-wrap gap-2"></div>
-                    </div>
-
-                    {{-- Thông tin đặt chỗ --}}
-                    <div class="booking-summary">
-                        <h5 class="mb-3">Thông tin đặt chỗ</h5>
-                        <div id="ticket-summary" class="mb-3">
-                            <div id="ticket-details"></div>
-                            <div class="d-flex justify-content-between fw-bold">
-                                <span>Tổng vé:</span>
-                                <span id="ticket-amount">0đ</span>
-                            </div>
-                        </div>
-                        <div id="combo-summary" class="mb-3">
-                            <div id="combo-list">
-                                <p class="text-muted small mb-0">Chưa chọn combo</p>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <span>Combo:</span>
-                                <span id="combo-total">0đ</span>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold fs-5 mt-3 pt-2 border-top">
-                            <span>Tổng cộng:</span>
-                            <span id="total-amount">0đ</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -527,12 +504,14 @@
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0">Combo & Đồ ăn</h6>
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#comboSection">
+                            {{-- Remove the add button --}}
+                            {{-- <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#comboSection">
                                 <i class="bi bi-plus-lg"></i> Thêm
-                            </button>
+                            </button> --}}
                         </div>
                         
-                        <div class="collapse" id="comboSection">
+                        {{-- Make combo section visible by default --}}
+                        <div id="comboSection">
                             <div class="card card-body bg-light mb-3">
                                 @if($combos->count() > 0)
                                     @foreach($combos as $combo)
@@ -580,12 +559,6 @@
                                 <input class="form-check-input" type="radio" name="payment_method" id="tien_mat" value="tien_mat" checked>
                                 <label class="form-check-label" for="tien_mat">
                                     <i class="bi bi-cash-coin me-1"></i> Tiền mặt
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="chuyen_khoan" value="chuyen_khoan">
-                                <label class="form-check-label" for="chuyen_khoan">
-                                    <i class="bi bi-bank me-1"></i> Chuyển khoản
                                 </label>
                             </div>
                         </div>
@@ -695,6 +668,7 @@
                 <!-- Nội dung thông báo sẽ được điền vào đây -->
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="detailsBtn" style="display:none;">Chi tiết</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
@@ -726,9 +700,8 @@ $(document).ready(function() {
             value++;
             input.val(value);
             comboQuantities[comboId] = value;
-            updateComboSummary();
-            updatePaymentSummary();
             updateSelectedCombos();
+            updatePaymentSummary();
         }
         
         // Bật/tắt nút giảm/tăng
@@ -747,9 +720,8 @@ $(document).ready(function() {
             value--;
             input.val(value);
             comboQuantities[comboId] = value;
-            updateComboSummary();
-            updatePaymentSummary();
             updateSelectedCombos();
+            updatePaymentSummary();
         }
         
         // Bật/tắt nút giảm/tăng
@@ -769,9 +741,8 @@ $(document).ready(function() {
         
         $(this).val(value);
         comboQuantities[comboId] = value;
-        updateComboSummary();
-        updatePaymentSummary();
         updateSelectedCombos();
+        updatePaymentSummary();
         
         // Bật/tắt nút giảm/tăng
         $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
@@ -822,7 +793,6 @@ $(document).ready(function() {
         
         // Cập nhật giao diện
         updateSelectedSeatsDisplay();
-        updateComboSummary();
         updateSelectedCombos();
         updateTotals();
         updatePaymentSummary();
@@ -840,70 +810,69 @@ $(document).ready(function() {
         showConfirmModal();
     });
     
-    // Xác nhận đặt vé
-    $('#confirm-booking-btn').click(function() {
-        const paymentMethod = $('input[name="payment_method"]:checked').val();
-        const customerPhone = $('#customer_phone').val();
-        const customerName = $('#customer_name').val();
-        const staffNote = $('#staff_note').val();
-        
-        // Lấy danh sách combo đã chọn
-        const selectedCombos = [];
-        Object.keys(comboQuantities).forEach(comboId => {
-            const qty = comboQuantities[comboId];
-            if (qty > 0) {
-                selectedCombos.push({
-                    id: comboId,
-                    quantity: qty
-                });
-            }
-        });
-        
-        // Gửi yêu cầu đặt vé
-        $.ajax({
-            url: '{{ route("staff.donve.store") }}',
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                suat_chieu_id: {{ $suatChieu->id }},
-                ghe_ids: selectedSeats,
-                combos: selectedCombos,
-                payment_method: paymentMethod,
-                customer_phone: customerPhone,
-                customer_name: customerName,
-                staff_note: staffNote
-            },
-            beforeSend: function() {
-                $('#confirm-booking-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Hiển thị thông báo thành công
-                    showMessage('Thành công', 'Đặt vé thành công!', function() {
-                        // Tải lại trang sau khi đóng thông báo
-                        window.location.href = response.redirect_url || '{{ route("staff.donve.index") }}';
+        // Xác nhận đặt vé
+        $('#confirm-booking-btn').click(function() {
+            const paymentMethod = $('input[name="payment_method"]:checked').val();
+            const customerPhone = $('#customer_phone').val();
+            const customerName = $('#customer_name').val();
+            const staffNote = $('#staff_note').val();
+            
+            // Lấy danh sách combo đã chọn
+            const selectedCombos = [];
+            Object.keys(comboQuantities).forEach(comboId => {
+                const qty = comboQuantities[comboId];
+                if (qty > 0) {
+                    selectedCombos.push({
+                        combo_id: comboId,
+                        so_luong: qty
                     });
-                } else {
-                    showMessage('Lỗi', response.message || 'Có lỗi xảy ra khi đặt vé!');
-                    $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
                 }
-            },
-            error: function(xhr) {
-                let errorMessage = 'Có lỗi xảy ra khi đặt vé!';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                showMessage('Lỗi', errorMessage);
+            });
+            
+$.ajax({
+    url: '{{ route("staff.donve.store") }}',
+    type: 'POST',
+    data: {
+        _token: '{{ csrf_token() }}',
+        suat_chieu_id: {{ $suatChieu->id }},
+        ghe_ids: selectedSeats,
+        combo_items: selectedCombos,
+        payment_method: paymentMethod,
+        customer_phone: customerPhone,
+        customer_name: customerName,
+        staff_note: staffNote
+    },
+    beforeSend: function() {
+        $('#confirm-booking-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+    },
+    success: function(response) {
+        if (response.success) {
+            // Hiển thị thông báo thành công, show details button
+            showMessage('Thành công', 'Đặt vé thành công!', true, response.redirect, function() {
+                // Optionally enable confirm button if needed
                 $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-            }
+            });
+        } else {
+            showMessage('Lỗi', response.message || 'Có lỗi xảy ra khi đặt vé!');
+            $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
+        }
+    },
+    error: function(xhr) {
+        let errorMessage = 'Có lỗi xảy ra khi đặt vé!';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+        }
+        showMessage('Lỗi', errorMessage);
+        $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
+    }
+});
         });
-    });
     
     // Cập nhật hiển thị ghế đã chọn
     function updateSelectedSeatsDisplay() {
         const selectedSeatsList = $('.seat-chon').map(function() {
-            const hang = $(this).data('hang');
-            const cot = $(this).data('cot');
+            const hang = $(this).data('hang') || '';
+            const cot = $(this).data('cot') || '';
             const loai = $(this).data('loai');
             const loaiText = loai === 'vip' ? 'VIP' : (loai === 'doi' ? 'Đôi' : 'Thường');
             return `${hang}${cot} (${loaiText})`;
@@ -1033,9 +1002,9 @@ $('.seat, .combo-input').on('click change', function() {
         });
         
         if (hasCombos) {
-            $('#combo-list').html(comboListHtml);
+            $('#selected-combos').html(comboListHtml);
         } else {
-            $('#combo-list').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
+            $('#selected-combos').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
         }
         
         updateTotals();
@@ -1044,10 +1013,14 @@ $('.seat, .combo-input').on('click change', function() {
     
     // Hiển thị modal xác nhận
     function showConfirmModal() {
+        console.log('Selected seats for confirm modal:');
+        $('.seat-chon').each(function(index) {
+            console.log(`Seat ${index + 1}: hang=${$(this).data('hang')}, cot=${$(this).data('cot')}, loai=${$(this).data('loai')}`);
+        });
         // Cập nhật thông tin ghế đã chọn
         const selectedSeatsList = $('.seat-chon').map(function() {
-            const hang = $(this).data('hang');
-            const cot = $(this).data('cot');
+            const hang = $(this).data('hang') || '';
+            const cot = $(this).data('cot') || '';
             const loai = $(this).data('loai');
             const loaiText = loai === 'vip' ? 'VIP' : (loai === 'doi' ? 'Đôi' : 'Thường');
             return `${hang}${cot} (${loaiText})`;
@@ -1100,21 +1073,31 @@ $('.seat, .combo-input').on('click change', function() {
         $('#confirm-booking').prop('disabled', !hasSelectedSeats);
     }
     
-    // Hiển thị thông báo
-    function showMessage(title, message, callback = null) {
-        $('#messageModalTitle').text(title);
-        $('#messageModalBody').html(message);
-        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
-        
-        if (callback && typeof callback === 'function') {
-            $('#messageModal').on('hidden.bs.modal', function() {
-                callback();
-                $(this).off('hidden.bs.modal');
-            });
-        }
-        
-        modal.show();
+function showMessage(title, message, showDetailsBtn = false, detailsUrl = null, callback = null) {
+    $('#messageModalTitle').text(title);
+    $('#messageModalBody').html(message);
+
+    if(showDetailsBtn && detailsUrl){
+        $('#detailsBtn').show();
+        $('#detailsBtn').off('click').on('click', function(){
+            window.location.href = detailsUrl;
+        });
+    } else {
+        $('#detailsBtn').hide();
+        $('#detailsBtn').off('click');
     }
+
+    const modal = new bootstrap.Modal(document.getElementById('messageModal'));
+
+    if (callback && typeof callback === 'function') {
+        $('#messageModal').on('hidden.bs.modal', function() {
+            callback();
+            $(this).off('hidden.bs.modal');
+        });
+    }
+
+    modal.show();
+}
     
     // Định dạng tiền tệ
     function formatCurrency(amount) {
@@ -1126,6 +1109,21 @@ $('.seat, .combo-input').on('click change', function() {
     updateTotals();
     updatePaymentSummary();
     toggleBookButton();
+
+    // Add explicit click handlers for cancel and close buttons to fix data-bs-dismiss issue
+    var confirmModalEl = document.getElementById('confirmModal');
+    var confirmModalInstance = new bootstrap.Modal(confirmModalEl);
+    $('#confirmModal .btn-secondary').click(function() {
+        confirmModalInstance.hide();
+        window.location.href = window.location.href;
+    });
+
+    var messageModalEl = document.getElementById('messageModal');
+    var messageModalInstance = new bootstrap.Modal(messageModalEl);
+    $('#messageModal .btn-secondary').click(function() {
+        messageModalInstance.hide();
+        window.location.href = window.location.href;
+    });
 });
 </script>
 @endpush

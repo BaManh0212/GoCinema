@@ -13,6 +13,7 @@ use App\Models\Combo;
 use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class DonDatVeController extends Controller
@@ -314,65 +315,74 @@ public function checkInByCode(Request $request)
     /**
      * Hiển thị sơ đồ ghế để chọn ghế
      */
-    public function selectSeats($suat_chieu_id)
-    {
-        $suatChieu = SuatChieu::with(['phim', 'phong.rap'])->findOrFail($suat_chieu_id);
+public function selectSeats($suat_chieu_id)
+{
+    $suatChieu = SuatChieu::with(['phim', 'phong.rap'])->findOrFail($suat_chieu_id);
 
-        // Kiểm tra suất chiếu có hoạt động không
-        if ($suatChieu->trang_thai !== 'hoat_dong') {
-            return redirect()->back()->with('error', 'Suất chiếu này không khả dụng.');
-        }
-
-        // Kiểm tra thời gian chiếu
-        $now = Carbon::now();
-        if ($now->gte($suatChieu->gio_bat_dau)) {
-            return redirect()->back()->with('error', 'Suất chiếu đã bắt đầu hoặc đã kết thúc.');
-        }
-
-        // Lấy sơ đồ ghế
-        $ghes = $suatChieu->phong->ghes()
-            ->orderBy('hang')
-            ->orderBy('cot')
-            ->get()
-            ->groupBy('hang');
-
-        // Lấy trạng thái ghế theo suất chiếu
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $suat_chieu_id)
-            ->pluck('trang_thai', 'ghe_id')
-            ->toArray();
-
-        // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
-        $gheDaDat = ChiTietVe::where('suat_chieu_id', $suat_chieu_id)
-            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
-            ->pluck('ghe_id')
-            ->toArray();
-
-        // Lấy ghế giữ tạm (trong 10 phút)
-        $giuTamIds = DB::table('ghe_giu_tam')
-            ->where('suat_chieu_id', $suat_chieu_id)
-            ->where('het_han', '>', Carbon::now())
-            ->pluck('ghe_id')
-            ->toArray();
-
-        // Tính giá cho từng ghế
-        foreach ($ghes as $hang => $danhSachGhe) {
-            foreach ($danhSachGhe as $ghe) {
-                $ghe->gia = $this->calculateSeatPrice($suatChieu, $ghe);
-            }
-        }
-
-        // Lấy combo và sản phẩm
-        $combos = Combo::where('so_luong', '>', 0)->get();
-
-        return view('staff.donve.select_seats', compact(
-            'suatChieu',
-            'ghes',
-            'gheStatuses',
-            'gheDaDat',
-            'giuTamIds',
-            'combos'
-        ));
+    // Kiểm tra suất chiếu có hoạt động không
+    if ($suatChieu->trang_thai !== 'hoat_dong') {
+        return redirect()->back()->with('error', 'Suất chiếu này không khả dụng.');
     }
+
+    // Kiểm tra thời gian chiếu
+    $now = Carbon::now();
+    if ($now->gte($suatChieu->gio_bat_dau)) {
+        return redirect()->back()->with('error', 'Suất chiếu đã bắt đầu hoặc đã kết thúc.');
+    }
+
+    // Lấy sơ đồ ghế
+    $ghes = $suatChieu->phong->ghes()
+        ->orderBy('hang')
+        ->orderBy('cot')
+        ->get()
+        ->groupBy('hang');
+
+    // Lấy trạng thái ghế theo suất chiếu
+    $gheStatuses = GheSuatChieu::where('suat_chieu_id', $suat_chieu_id)
+        ->pluck('trang_thai', 'ghe_id')
+        ->toArray();
+
+    // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
+    $gheDaDat = ChiTietVe::where('suat_chieu_id', $suat_chieu_id)
+        ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+        ->pluck('ghe_id')
+        ->toArray();
+
+    // Lấy ghế giữ tạm (trong 10 phút) từ bảng ghe_giu_tam
+    $giuTamFromTable = DB::table('ghe_giu_tam')
+        ->where('suat_chieu_id', $suat_chieu_id)
+        ->where('het_han', '>', Carbon::now())
+        ->pluck('ghe_id')
+        ->toArray();
+
+    // Lấy ghế đang chờ thanh toán trong chi tiết vé (client holds)
+    $giuTamFromClientOrders = ChiTietVe::where('suat_chieu_id', $suat_chieu_id)
+        ->where('trang_thai', 'cho_thanh_toan')
+        ->pluck('ghe_id')
+        ->toArray();
+
+    // Kết hợp ghế giữ tạm từ bảng và đơn chờ thanh toán
+    $giuTamIds = array_unique(array_merge($giuTamFromTable, $giuTamFromClientOrders));
+
+    // Tính giá cho từng ghế
+    foreach ($ghes as $hang => $danhSachGhe) {
+        foreach ($danhSachGhe as $ghe) {
+            $ghe->gia = $this->calculateSeatPrice($suatChieu, $ghe);
+        }
+    }
+
+    // Lấy combo và sản phẩm
+    $combos = Combo::where('so_luong', '>', 0)->get();
+
+    return view('staff.donve.select_seats', compact(
+        'suatChieu',
+        'ghes',
+        'gheStatuses',
+        'gheDaDat',
+        'giuTamIds',
+        'combos'
+    ));
+}
 
     /**
      * Xử lý đặt vé tại quầy (thanh toán tiền mặt)
@@ -479,7 +489,7 @@ public function checkInByCode(Request $request)
             // Tạo đơn đặt vé với trạng thái đã thanh toán (thanh toán tại quầy)
             $donDatVe = DonDatVe::create([
                 'ma_don' => 'DV' . time() . rand(100, 999),
-                'nguoi_dung_id' => null, // Không có user đăng nhập cho đặt vé tại quầy
+                'nguoi_dung_id' => Auth::id() ?? 1, // Use logged-in user ID or fallback to 1 (system user)
                 'suat_chieu_id' => $suatChieuId,
                 'ma_giam_gia_id' => null, // Không áp dụng mã giảm giá cho đặt vé tại quầy
                 'tong_tien' => $tongTien,

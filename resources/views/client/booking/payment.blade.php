@@ -179,6 +179,18 @@
     </div>
 </div>
 
+<!-- Modal thông báo thanh toán không thành công -->
+<div id="paymentFailedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full">
+        <h2 class="text-xl font-semibold mb-4 text-red-600">Thanh toán không thành công</h2>
+        <p class="mb-6 text-gray-700">Thanh toán thất bại do bạn đã rời khỏi trang thanh toán. Đơn vé sẽ không được lưu và ghế giữ sẽ bị hủy.</p>
+        <div class="flex justify-end space-x-4">
+            <button id="modalCancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Đóng</button>
+            <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.getElementById('payButton').addEventListener('click', function() {
     const selectedPayment = document.querySelector('input[name="payment_method"]:checked').value;
@@ -222,6 +234,86 @@ document.getElementById('payButton').addEventListener('click', function() {
         document.getElementById('payButton').innerHTML = 'Thanh toán {{ number_format($donDatVe->tong_tien) }}đ';
         document.getElementById('payButton').disabled = false;
     });
+});
+
+// Modal handling and cancel order if user navigates away
+
+const modal = document.getElementById('paymentFailedModal');
+const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+let navigationCanceled = false; // flag to prevent multiple cancels
+let pendingNavigationUrl = null;
+
+function showModalAndCancelOrder(urlToNavigate) {
+    if (navigationCanceled) return;
+    navigationCanceled = true;
+    pendingNavigationUrl = urlToNavigate;
+    modal.classList.remove('hidden');
+}
+
+modalConfirmBtn.addEventListener('click', function() {
+    // Call cancel API
+    fetch('/booking/ajax-cancel/{{ $donDatVe->id }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            modal.classList.add('hidden');
+            if (pendingNavigationUrl) {
+                window.location.href = pendingNavigationUrl;
+            }
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi hủy đơn.');
+            modal.classList.add('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Cancel order error:', error);
+        alert('Có lỗi xảy ra khi hủy đơn.');
+        modal.classList.add('hidden');
+    });
+});
+
+modalCancelBtn.addEventListener('click', function() {
+    modal.classList.add('hidden');
+    navigationCanceled = false;
+    pendingNavigationUrl = null;
+});
+
+// Intercept all link clicks
+document.querySelectorAll('a[href]').forEach(function(link) {
+    link.addEventListener('click', function(event) {
+        const href = link.getAttribute('href');
+
+        // If link is external or no href, ignore
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+            return;
+        }
+
+        // Prevent navigation and show modal
+        event.preventDefault();
+        showModalAndCancelOrder(href);
+    });
+});
+
+// Listen to beforeunload event for browser back or tab close
+window.addEventListener('beforeunload', function(event) {
+    // Send async cancel request (may not complete before unload)
+    navigator.sendBeacon('/booking/ajax-cancel/{{ $donDatVe->id }}', new Blob([JSON.stringify({})], {type: 'application/json'}));
+
+    // Show default browser message (some browsers ignore custom text)
+    const message = 'Bạn có chắc chắn muốn rời khỏi trang thanh toán? Thanh toán sẽ không thành công.';
+    (event || window.event).returnValue = message;
+    return message;
 });
 </script>
 @endsection

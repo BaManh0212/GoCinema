@@ -882,4 +882,80 @@ class BookingController extends Controller
             return back()->with('error', 'Có lỗi xảy ra khi hủy đơn.');
         }
     }
+
+    /**
+     * API hủy đơn đặt vé qua AJAX (dùng khi huỷ do thoát trang thanh toán)
+     */
+    public function ajaxCancel(Request $request, $id)
+    {
+        if (!$request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Yêu cầu không hợp lệ.',
+            ], 400);
+        }
+
+        $donDatVe = DonDatVe::where('id', $id)
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereIn('trang_thai', ['cho_thanh_toan', 'da_thanh_toan'])
+            ->first();
+
+        if (!$donDatVe) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn đặt vé không tồn tại hoặc đã được xử lý.',
+            ], 404);
+        }
+
+        // Kiểm tra thời gian hủy (trước 2 giờ chiếu)
+        $suatChieu = $donDatVe->suatChieu;
+        if (Carbon::now()->addHours(2)->gte($suatChieu->gio_bat_dau)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể hủy vé trong vòng 2 giờ trước khi chiếu.',
+            ], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Cập nhật trạng thái vé chi tiết thành đã hủy
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_huy']);
+
+            // Cập nhật trạng thái đơn thành đã hủy
+            $donDatVe->trang_thai = 'da_huy';
+            $donDatVe->save();
+
+            // Xóa các bản ghi giữ tạm ghế của người dùng cho suất chiếu này
+            DB::table('ghe_giu_tam')
+                ->where('nguoi_dung_id', auth()->id())
+                ->where('suat_chieu_id', $suatChieu->id)
+                ->delete();
+
+            // Cập nhật trạng thái ghế trong GheSuatChieu về trạng thái 'hoat_dong'
+            $chiTietVes = $donDatVe->chiTietVes()->get();
+            foreach ($chiTietVes as $chiTietVe) {
+                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $suatChieu->id)
+                    ->where('ghe_id', $chiTietVe->ghe_id)
+                    ->first();
+                if ($gheSuatChieu) {
+                    $gheSuatChieu->trang_thai = 'hoat_dong';
+                    $gheSuatChieu->save();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã hủy đơn và trả ghế thành công.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi hủy đơn.',
+            ], 500);
+        }
+    }
 }

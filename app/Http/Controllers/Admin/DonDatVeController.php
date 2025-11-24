@@ -7,6 +7,7 @@ use App\Models\DonDatVe;
 use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DonDatVeController extends Controller
 {
@@ -59,7 +60,17 @@ class DonDatVeController extends Controller
             return redirect()->route('admin.donve.index')->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
         }
 
-        $pdf = Pdf::loadView('admin.donve.print', compact('donVe'));
+        $qrCodes = [];
+        foreach ($donVe->chiTietVes as $ct) {
+            $qrData = [
+                'ma_don' => $donVe->ma_don,
+                'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
+                'ngay_dat' => now()->format('Y-m-d H:i:s'),
+            ];
+            $qrCodes[$ct->id] = QrCode::size(150)->generate(json_encode($qrData));
+        }
+
+        $pdf = Pdf::loadView('admin.donve.print', compact('donVe', 'qrCodes'));
         return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
     }
 

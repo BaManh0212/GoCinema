@@ -87,7 +87,6 @@
                         <div><span class="legend-box seat-da-thanh-toan"></span> Ghế đã đặt</div>
                         <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
                         <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
-                        <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
                         <div><span class="legend-box seat-chon"></span> Ghế đã chọn</div>
                     </div>
 
