@@ -668,6 +668,7 @@
                 <!-- Nội dung thông báo sẽ được điền vào đây -->
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="detailsBtn" style="display:none;">Chi tiết</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
@@ -828,44 +829,43 @@ $(document).ready(function() {
                 }
             });
             
-            // Gửi yêu cầu đặt vé
-            $.ajax({
-                url: '{{ route("staff.donve.store") }}',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    suat_chieu_id: {{ $suatChieu->id }},
-                    ghe_ids: selectedSeats,
-                    combo_items: selectedCombos,
-                    payment_method: paymentMethod,
-                    customer_phone: customerPhone,
-                    customer_name: customerName,
-                    staff_note: staffNote
-                },
-                beforeSend: function() {
-                    $('#confirm-booking-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Hiển thị thông báo thành công
-                        showMessage('Thành công', 'Đặt vé thành công!', function() {
-                            // Tải lại trang sau khi đóng thông báo
-                            window.location.href = response.redirect_url || '{{ route("staff.donve.index") }}';
-                        });
-                    } else {
-                        showMessage('Lỗi', response.message || 'Có lỗi xảy ra khi đặt vé!');
-                        $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-                    }
-                },
-                error: function(xhr) {
-                    let errorMessage = 'Có lỗi xảy ra khi đặt vé!';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    showMessage('Lỗi', errorMessage);
-                    $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-                }
+$.ajax({
+    url: '{{ route("staff.donve.store") }}',
+    type: 'POST',
+    data: {
+        _token: '{{ csrf_token() }}',
+        suat_chieu_id: {{ $suatChieu->id }},
+        ghe_ids: selectedSeats,
+        combo_items: selectedCombos,
+        payment_method: paymentMethod,
+        customer_phone: customerPhone,
+        customer_name: customerName,
+        staff_note: staffNote
+    },
+    beforeSend: function() {
+        $('#confirm-booking-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+    },
+    success: function(response) {
+        if (response.success) {
+            // Hiển thị thông báo thành công, show details button
+            showMessage('Thành công', 'Đặt vé thành công!', true, response.redirect, function() {
+                // Optionally enable confirm button if needed
+                $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
             });
+        } else {
+            showMessage('Lỗi', response.message || 'Có lỗi xảy ra khi đặt vé!');
+            $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
+        }
+    },
+    error: function(xhr) {
+        let errorMessage = 'Có lỗi xảy ra khi đặt vé!';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+        }
+        showMessage('Lỗi', errorMessage);
+        $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
+    }
+});
         });
     
     // Cập nhật hiển thị ghế đã chọn
@@ -1073,21 +1073,31 @@ $('.seat, .combo-input').on('click change', function() {
         $('#confirm-booking').prop('disabled', !hasSelectedSeats);
     }
     
-    // Hiển thị thông báo
-    function showMessage(title, message, callback = null) {
-        $('#messageModalTitle').text(title);
-        $('#messageModalBody').html(message);
-        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
-        
-        if (callback && typeof callback === 'function') {
-            $('#messageModal').on('hidden.bs.modal', function() {
-                callback();
-                $(this).off('hidden.bs.modal');
-            });
-        }
-        
-        modal.show();
+function showMessage(title, message, showDetailsBtn = false, detailsUrl = null, callback = null) {
+    $('#messageModalTitle').text(title);
+    $('#messageModalBody').html(message);
+
+    if(showDetailsBtn && detailsUrl){
+        $('#detailsBtn').show();
+        $('#detailsBtn').off('click').on('click', function(){
+            window.location.href = detailsUrl;
+        });
+    } else {
+        $('#detailsBtn').hide();
+        $('#detailsBtn').off('click');
     }
+
+    const modal = new bootstrap.Modal(document.getElementById('messageModal'));
+
+    if (callback && typeof callback === 'function') {
+        $('#messageModal').on('hidden.bs.modal', function() {
+            callback();
+            $(this).off('hidden.bs.modal');
+        });
+    }
+
+    modal.show();
+}
     
     // Định dạng tiền tệ
     function formatCurrency(amount) {
