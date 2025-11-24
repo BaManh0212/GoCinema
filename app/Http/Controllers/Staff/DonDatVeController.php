@@ -15,6 +15,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Writer;
 
 class DonDatVeController extends Controller
 {
@@ -53,23 +57,42 @@ class DonDatVeController extends Controller
      * In vé (PDF)
      */
     public function print($id)
-    {
-        $donVe = DonDatVe::with([
-            'nguoiDung',
-            'suatChieu.phim',
-            'suatChieu.phongChieu',
-            'chiTietVes.ghe'
-        ])->findOrFail($id);
+{
+    $donVe = DonDatVe::with([
+        'nguoiDung',
+        'suatChieu.phim',
+        'suatChieu.phongChieu',
+        'chiTietVes.ghe'
+    ])->findOrFail($id);
 
-        // Chỉ cho in nếu đơn đã thanh toán hoặc đã check-in
-        $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
-        if (! in_array($donVe->trang_thai, $allowedToPrint)) {
-            return redirect()->route('staff.donve.index')->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
-        }
-
-        $pdf = Pdf::loadView('staff.donve.print', compact('donVe'));
-        return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
+    $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
+    if (!in_array($donVe->trang_thai, $allowedToPrint)) {
+        return redirect()->route('staff.donve.index')
+            ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
+
+    // Tạo writer dùng SVG backend
+    $renderer = new ImageRenderer(
+        new RendererStyle(200, 1), // size=200, margin=1
+        new SvgImageBackEnd()
+    );
+    $writer = new Writer($renderer);
+
+    $qrCodes = [];
+    foreach ($donVe->chiTietVes as $ct) {
+        $qrData = [
+            'ma_don' => $donVe->ma_don,
+            'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
+            'ngay_dat' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $qrSvg = $writer->writeString(json_encode($qrData));
+        $qrCodes[$ct->id] = $qrSvg;
+    }
+
+    $pdf = Pdf::loadView('staff.donve.print', compact('donVe', 'qrCodes'));
+    return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
+}
 
     /**
      * Thay đổi trạng thái đơn với logic chuyển trạng thái hợp lệ.
