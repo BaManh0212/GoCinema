@@ -113,6 +113,12 @@
             color: #e74c3c;
             font-weight: bold;
         }
+    .qr-section svg {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 200px;
+        max-height: 200px;
+    }
     </style>
 </head>
 <body>
@@ -135,9 +141,21 @@
             {{-- <div class="barcode">{{ $donVe->ma_don }}-{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</div> --}}
         </div>
 
-        <div class="qr-section" style="text-align:center;">
-            {!! $qrCodes[$ct->id] ?? '' !!}
+    <div class="qr-section" style="text-align:center; margin:15px 0; padding:15px; background:#f9f9f9; border-radius:5px; border:1px dashed #ddd;">
+    @if(isset($qrCodes[$ct->id]) && !empty($qrCodes[$ct->id]))
+        @php
+            // Chuyển đổi SVG sang base64
+            $svgData = $qrCodes[$ct->id];
+            $base64Svg = 'data:image/svg+xml;base64,' . base64_encode($svgData);
+        @endphp
+        <img src="{{ $base64Svg }}" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
+    @else
+        <div style="color: #666; font-style: italic; padding: 20px;">
+            <div>QR Code không khả dụng</div>
+            <div style="font-size: 0.8em; margin-top: 5px;">Mã vé: {{ $donVe->ma_don }}-{{ $ct->id }}</div>
         </div>
+    @endif
+</div>
 
 
         <!-- Movie Information -->
