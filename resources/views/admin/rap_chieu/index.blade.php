@@ -90,7 +90,6 @@
                             <th style="width:50px;">STT</th>
                             <th class="text-start">Tên phòng</th>
                             <th>Định dạng</th>
-                            <th>Tổng ghế</th>
                             <th>Trạng thái</th>
                         </tr>
                     </thead>
@@ -100,7 +99,6 @@
                                 <td class="text-center fw-bold text-muted">{{ $key + 1 }}</td>
                                 <td class="text-start ps-4">{{ $p->ten }}</td>
                                 <td>{{ $p->dinhDang?->ten ?? 'Không có' }}</td>
-                                <td class="text-center">{{ $p->tong_ghe }}</td>
                                 <td class="text-center">
                                     @if($p->trang_thai == 'hoat_dong')
                                         <span class="badge bg-success">Hoạt động</span>

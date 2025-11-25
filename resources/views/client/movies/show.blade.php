@@ -80,7 +80,6 @@
                         <li class="mb-2"><i class="bi bi-shield-check me-2 text-primary"></i><strong>Độ tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?: '—' }}</li>
                         <li class="mb-2"><i class="bi bi-translate me-2 text-primary"></i><strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu?->ten ?? '—' }}</li>
                         <li class="mb-2"><i class="bi bi-aspect-ratio me-2 text-primary"></i><strong>Định dạng:</strong> {{ $phim->dinh_dang ?: '2D' }}</li>
-                        <li class="mb-2"><i class="bi bi-eye me-2 text-primary"></i><strong>Lượt xem:</strong> {{ number_format($phim->luot_xem ?? 0) }}</li>
                     </ul>
 
                     <hr class="border-secondary-subtle">
@@ -261,31 +260,32 @@
 </div>
 
     {{-- PHIM LIÊN QUAN --}}
-    @if(!empty($relatedMovies) && $relatedMovies->count())
-    <div class="container my-5 related-modern">
-        <h4 class="fw-bold text-light mb-3">Phim liên quan</h4>
-        <div class="row g-3">
-            @foreach($relatedMovies as $rel)
-            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                <a href="{{ route('movies.show', $rel->slug) }}" class="relx-card text-decoration-none d-block">
-                    <div class="relx-img-wrap position-relative overflow-hidden rounded-3 shadow-sm">
-                        <img src="{{ $rel->anh_poster ? asset('storage/' . $rel->anh_poster) : asset('images/no-poster.jpg') }}" 
-                             alt="{{ $rel->tieu_de }}" class="w-100 object-fit-cover">
-                        <div class="overlay position-absolute inset-0 d-flex align-items-center justify-content-center">
-                            <i class="bi bi-play-circle-fill text-white fs-1"></i>
+        @if(!empty($relatedMovies) && $relatedMovies->count())
+        <div class="container my-5 related-modern">
+            <h4 class="fw-bold text-light mb-3">Phim liên quan</h4>
+            <div class="related-movies-slider">
+                @foreach($relatedMovies as $rel)
+                <div class="px-2"> <!-- Add padding between slides -->
+                    <a href="{{ route('movies.show', $rel->slug) }}" class="relx-card text-decoration-none d-block">
+                        <div class="relx-img-wrap position-relative overflow-hidden rounded-3 shadow-sm">
+                            <img src="{{ $rel->anh_poster ? asset('storage/' . $rel->anh_poster) : asset('images/no-poster.jpg') }}" 
+                                alt="{{ $rel->tieu_de }}" class="w-100 object-fit-cover" style="aspect-ratio: 2/3;">
+                            <div class="overlay position-absolute inset-0 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-play-circle-fill text-white fs-1"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="relx-title text-light mt-1 text-truncate">{{ $rel->tieu_de }}</div>
-                </a>
+                        <div class="relx-title text-light mt-1 text-truncate">{{ $rel->tieu_de }}</div>
+                    </a>
+                </div>
+                @endforeach
             </div>
-            @endforeach
         </div>
-    </div>
     @endif
 
 </div>
-
 @push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
 <style>
 :root {
     --primary-bg: #0b1220;
@@ -347,10 +347,26 @@ body {
 .badge {
     color: #fff !important;
 }
+.related-movies-slider .slick-slide {
+        padding: 0 5px;
+    }
+    .slick-prev:before, 
+    .slick-next:before {
+        color: #fff;
+        font-size: 24px;
+    }
+    .slick-prev {
+        left: -30px;
+    }
+    .slick-next {
+        right: -20px;
+    }
 </style>
 @endpush
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
 <script>
     // Star rating
     document.querySelectorAll('.star-rating .star').forEach(star=>{
@@ -421,6 +437,40 @@ body {
 
         start();
     })();
+    $(document).ready(function(){
+        $('.related-movies-slider').slick({
+            dots: false,
+            infinite: true,
+            speed: 300,
+            slidesToShow: 6,
+            slidesToScroll: 1,
+            autoplay: true,
+            autoplaySpeed: 3000,
+            responsive: [
+                {
+                    breakpoint: 1024,
+                    settings: {
+                        slidesToShow: 4,
+                        slidesToScroll: 1,
+                    }
+                },
+                {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: 3,
+                        slidesToScroll: 1
+                    }
+                },
+                {
+                    breakpoint: 576,
+                    settings: {
+                        slidesToShow: 2,
+                        slidesToScroll: 1
+                    }
+                }
+            ]
+        });
+    });
 </script>
 @endpush
 @endsection

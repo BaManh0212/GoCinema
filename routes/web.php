@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\GheController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\BaiVietController as AdminBaiVietController;
+use App\Http\Controllers\Admin\LogController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -231,6 +232,10 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
     Route::post('/suatchieu/{id}/ghe/update', [AdminSuatChieuController::class, 'updateGheTrangThai'])
         ->name('suatchieu.ghe.update');
 
+    // 🔄 API cập nhật trạng thái giữ tạm ghế (thêm/xóa giữ tạm)
+    Route::post('/suatchieu/{id}/ghe/update-giu-tam', [AdminSuatChieuController::class, 'updateGheGiuTam'])
+        ->name('suatchieu.ghe.updateGiuTam');
+
     // 🟢 Lấy trạng thái ghế real-time
     Route::get('/suatchieu/{id}/seat-status', [AdminSuatChieuController::class, 'seatStatus'])
         ->name('suatchieu.seatStatus');
@@ -340,9 +345,13 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
             // Bật/tắt kích hoạt
             Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
         });
-        //Quản lý banner
+        // Quản lý banner
         Route::resource('banners', BannerController::class)->names('banners');
         Route::post('banners/{id}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
+
+        // Add route for admin.logs.index to fix missing route error
+        Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+
         // Quản lý liên hệ
         Route::prefix('contacts')->name('contacts.')->group(function () {
             Route::get('/', [AdminContactController::class, 'index'])->name('index');
@@ -389,7 +398,13 @@ Route::prefix('staff')
         Route::prefix('donve')->name('donve.')->group(function () {
             // Các route CRUD cơ bản
             Route::get('/', [StaffDonDatVeController::class, 'index'])->name('index');
+            // Tạo đơn vé tại quầy
+            Route::get('create', [StaffDonDatVeController::class, 'create'])->name('create');
+            Route::get('select-suat/{phim_id}', [StaffDonDatVeController::class, 'selectSuat'])->name('selectSuat');
+            Route::get('select-seats/{suat_chieu_id}', [StaffDonDatVeController::class, 'selectSeats'])->name('selectSeats');
             Route::get('{id}', [StaffDonDatVeController::class, 'show'])->name('show');
+            Route::post('store', [StaffDonDatVeController::class, 'store'])->name('store');
+            Route::get('confirm/{id}', [StaffDonDatVeController::class, 'confirm'])->name('confirm');
 
             // Trang check-in (form)
             Route::get('checkin/form', [StaffDonDatVeController::class, 'showCheckinForm'])->name('checkin');
@@ -406,15 +421,31 @@ Route::prefix('staff')
         // Quản lý phòng chiếu
         Route::resource('phongchieu', StaffPhongChieuController::class)->names('phongchieu');
         // Quản lý ghế theo từng phòng
+        Route::resource('sodo', SoDoGheController::class)->names('sodo');
+        Route::get('/staff/sodoghe/{phong_id}', [SoDoGheController::class, 'show'])
+        ->name('staff.sodoghe.show');
+        // Xem sơ đồ ghế của suất chiếu
+    //   Route::prefix('suatchieu')->name('suatchieu.')->group(function () {
+    //     
+    // });
+        Route::post('/staff/sodo/update-seat-status', [SoDoGheController::class, 'updateSeatStatus'])
+        ->name('staff.sodo.updateSeatStatus');
+        //  Route::get('/{suatChieu}', [AdminSuatChieuController::class, 'show'])->name('show'); // chi tiết
         // Route::get('phongchieu/{id}/ghe', [GheController::class, 'index'])->name('phongchieu.ghe');
         // Route::post('{id}/ghe', [GheController::class, 'store'])->name('phongchieu.ghe.store');
         // Route::delete('ghe/{id}', [GheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
 
-        Route::get('phongchieu/{id}/ghe', [StaffGheController::class, 'index'])->name('staff.phongchieu.ghe');
-        Route::post('phongchieu/{id}/ghe', [StaffGheController::class, 'store'])->name('staff.phongchieu.ghe.store');
-        Route::delete('ghe/{id}', [StaffGheController::class, 'destroy'])->name('staff.phongchieu.ghe.destroy');
-        Route::post('phongchieu/{id}/ghe/update-map', [StaffGheController::class, 'updateMap'])
-            ->name('staff.staff.phongchieu.ghe.updateMap');
+        Route::get('phongchieu/{id}/ghe', [StaffGheController::class, 'index'])->name('phongchieu.ghe');
+        Route::post('phongchieu/{id}/ghe', [StaffGheController::class, 'store'])->name('phongchieu.ghe.store');
+        Route::delete('ghe/{id}', [StaffGheController::class, 'destroy'])->name('phongchieu.ghe.destroy');
+Route::post('phongchieu/{id}/ghe/update-map', [StaffGheController::class, 'updateMap'])
+    ->name('phongchieu.ghe.updateMap');
+        Route::post('phongchieu/{id}/ghe/convert-vip', [StaffGheController::class, 'convertRowsToVip'])
+            ->name('phongchieu.ghe.convertRowsToVip');
+        Route::post('phongchieu/{id}/ghe/convert-normal', [StaffGheController::class, 'convertRowsToNormal'])
+            ->name('phongchieu.ghe.convertRowsToNormal');
+        Route::post('phongchieu/{id}/ghe/convert-double', [StaffGheController::class, 'convertToDoubleSeats'])
+            ->name('phongchieu.ghe.convertToDoubleSeats');
         // Quản lý suất chiếu
         Route::resource('suatchieu', StaffSuatChieuController::class)->names('suatchieu');
 
@@ -433,6 +464,14 @@ Route::prefix('staff')
         // Cập nhật trạng thái hàng loạt
         Route::post('suatchieu/bulk-update', [StaffSuatChieuController::class, 'bulkUpdate'])
             ->name('suatchieu.bulkUpdate');
+
+        // 🔄 API cập nhật trạng thái ghế
+        Route::patch('suatchieu/{id}/ghe/update-trang-thai', [StaffSuatChieuController::class, 'updateGheTrangThai'])
+            ->name('suatchieu.ghe.updateTrangThai');
+
+        // 🟢 Lấy trạng thái ghế real-time
+        Route::get('suatchieu/{id}/seat-status', [StaffSuatChieuController::class, 'seatStatus'])
+            ->name('suatchieu.seatStatus');
     });
 
 /*

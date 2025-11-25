@@ -14,7 +14,7 @@
         </a>
 
         {{-- 🔹 Menu --}}
-        <ul class="navbar-nav ms-auto d-flex align-items-center">
+        <ul class="navbar-nav ms-auto d-flex align-items-center flex-nowrap">
 
             <li class="nav-item">
                 <a class="nav-link px-3" href="{{ route('home') }}" style="font-weight: 500; transition: var(--transition);">
@@ -260,6 +260,10 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+.nav-link {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 0.75rem !important;
 }
 </style>
 

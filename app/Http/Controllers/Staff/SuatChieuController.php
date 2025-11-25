@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
+use App\Models\GheSuatChieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -262,131 +263,173 @@ class SuatChieuController extends Controller
      */
     public function gheIndex($id)
     {
-        $suatchieu = SuatChieu::with(['phong.ghe'])->findOrFail($id);
+        $suatchieu = SuatChieu::with(['phong.ghes'])->findOrFail($id);
 
-        $ghes = $suatchieu->phong->ghe()
+        $ghes = $suatchieu->phong->ghes()
             ->orderBy('hang')->orderBy('cot')->get()
             ->groupBy('hang');
+
+        // Lấy trạng thái ghế theo suất chiếu
+        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
+            ->pluck('trang_thai', 'ghe_id')
+            ->toArray();
 
         $giuTamIds = DB::table('ghe_giu_tam')
             ->where('suat_chieu_id', $id)
             ->pluck('ghe_id')->toArray();
 
-        return view('staff.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'giuTamIds'));
+        // Lấy ghế đã đặt
+        $gheDaDat = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->where('trang_thai', 'da_dat')
+            ->pluck('ghe_id')
+            ->toArray();
+
+        return view('staff.suatchieu.ghe_index', compact('suatchieu', 'ghes', 'gheStatuses', 'giuTamIds', 'gheDaDat'));
     }
 
     /**
-     * ⚙️ Tự động tạo suất chiếu nhiều ngày
+     * 🔄 API: Lấy trạng thái ghế theo thời gian thực cho suất chiếu (đồng bộ với mua vé/giữ tạm)
+     */
+    public function seatStatus($id)
+    {
+        // Tổng hợp trạng thái mới nhất
+        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
+            ->pluck('trang_thai', 'ghe_id')
+            ->toArray();
+
+        $giuTamIds = DB::table('ghe_giu_tam')
+            ->where('suat_chieu_id', $id)
+            ->where('het_han', '>', now())
+            ->pluck('ghe_id')
+            ->toArray();
+
+        $gheDaDat = DB::table('chi_tiet_ve')
+            ->where('suat_chieu_id', $id)
+            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+            ->pluck('ghe_id')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'ghe_statuses' => $gheStatuses,
+            'giu_tam_ids' => $giuTamIds,
+            'ghe_da_dat' => $gheDaDat,
+        ]);
+    }
+
+    /**
+     * ⚙️ Tự động tạo suất chiếu nhiều ngày (Preview mode)
      */
    public function autoStore(Request $request)
 {
     // 🎬 Validate phim
     $phim_id = $request->input('phim_id');
-    if (!$phim_id || !Phim::find($phim_id)) {
-        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phim hợp lệ.');
-    }
+    $phim = Phim::find($phim_id);
+    if (!$phim) return back()->withInput()->with('error', '⚠️ Vui lòng chọn phim hợp lệ.');
 
     // 🏠 Validate phòng
     $phong_id = $request->input('phong_id');
-    if (!$phong_id || !PhongChieu::find($phong_id)) {
-        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
-    }
+    $phong = PhongChieu::find($phong_id);
+    if (!$phong) return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
 
-    // 📅 Validate ngày bắt đầu
+    // 📅 Validate ngày
     try {
         $ngay_bat_dau = Carbon::parse($request->input('ngay_bat_dau'));
-    } catch (\Exception $e) {
-        return back()->withInput()->with('error', '⚠️ Ngày bắt đầu không hợp lệ.');
-    }
-
-    // 📅 Validate ngày kết thúc
-    try {
         $ngay_ket_thuc = Carbon::parse($request->input('ngay_ket_thuc'));
     } catch (\Exception $e) {
-        return back()->withInput()->with('error', '⚠️ Ngày kết thúc không hợp lệ.');
+        return back()->withInput()->with('error', '⚠️ Ngày không hợp lệ.');
     }
-
     if ($ngay_ket_thuc->lt($ngay_bat_dau)) {
-        return back()->withInput()->with('error', '❌ Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.');
+        return back()->withInput()->with('error', '❌ Ngày kết thúc phải sau ngày bắt đầu.');
     }
 
-    // ⏰ Validate giờ bắt đầu mỗi ngày
+    // ⏰ Thời gian bắt đầu
     $gio_bat_dau_ngay = $request->input('gio_bat_dau_ngay');
     if (!preg_match('/^\d{2}:\d{2}$/', $gio_bat_dau_ngay)) {
-        return back()->withInput()->with('error', '⚠️ Giờ bắt đầu không hợp lệ (HH:mm).');
+        return back()->withInput()->with('error', '⚠️ Giờ bắt đầu không hợp lệ.');
     }
 
-    // 💰 Validate giá vé
-    $gia_ve = $request->input('gia_ve');
-    if (!is_numeric($gia_ve) || $gia_ve < 0) {
-        return back()->withInput()->with('error', '⚠️ Giá vé phải là số lớn hơn hoặc bằng 0.');
-    }
+    // 💰 Giá vé
+    $gia_ve = $request->input('gia_ve') ?? 70000;
 
-    // ⏱️ Lấy thời lượng phim và khoảng nghỉ
-    $phim = Phim::find($phim_id);
-    $thoiLuong = $phim->thoi_luong ?? 120; 
+    // ⏱️ Thời lượng + thời gian dọn phòng
+    $thoiLuong = $phim->thoi_luong ?? 120;
     $khoangNghi = 15;
+
+    // 🕒 Giờ cố định (nếu chọn)
+    $gioCoDinh = $request->input('gio_co_dinh', []);
+
     $period = CarbonPeriod::create($ngay_bat_dau, $ngay_ket_thuc);
+    $preview = []; // Mảng chứa suất đề xuất
 
-    $conflicts = [];
-
-    // kiểm tra toàn bộ suất trước
     foreach ($period as $ngay) {
-        $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
+        $ngayStr = $ngay->format('Y-m-d');
+        $endOfDay = Carbon::parse($ngayStr . ' 23:59:59');
 
-        while ($start->hour < 23) {
-            $end = (clone $start)->addMinutes($thoiLuong);
-            if ($end->hour >= 23) break;
+        // 1️⃣ Nếu có chọn giờ cố định, tạo theo từng giờ
+        if (!empty($gioCoDinh)) {
+            foreach ($gioCoDinh as $gio) {
+                $start = Carbon::parse($ngayStr . ' ' . $gio);
+                $end = (clone $start)->addMinutes($thoiLuong + $khoangNghi);
 
-            $newStart = $start->toDateTimeString();
-            $newEnd   = $end->toDateTimeString();
+                // Bỏ qua nếu suất chiếu kết thúc sau 23:59
+                if ($end->gt($endOfDay)) continue;
 
-            $isConflict = SuatChieu::where('phong_id', $phong_id)
-                ->where('gio_bat_dau', '<', $newEnd)
-                ->where('gio_ket_thuc', '>', $newStart)
-                ->exists();
+                // Kiểm tra trùng với DB
+                $conflict = SuatChieu::where('phong_id', $phong_id)
+                    ->where('gio_bat_dau', '<', $end)
+                    ->where('gio_ket_thuc', '>', $start)
+                    ->exists();
 
-            if ($isConflict) {
-                $conflicts[] = $start->format('d/m/Y H:i') . ' - ' . $end->format('H:i');
+                $preview[] = [
+                    'phim_id' => $phim_id,
+                    'phong_id' => $phong_id,
+                    'gio_bat_dau' => $start->toDateTimeString(),
+                    'gio_ket_thuc' => $end->toDateTimeString(),
+                    'gia_ve' => $gia_ve,
+                    'trang_thai' => 'hoat_dong',
+                    'conflict' => $conflict,
+                    'phim_ten' => $phim->tieu_de,
+                    'phong_ten' => $phong->ten,
+                ];
             }
+        } else {
+            // 2️⃣ Nếu nhập giờ đầu tiên, tạo liên tục theo thời lượng + dọn phòng
+            $start = Carbon::parse($ngayStr . ' ' . $gio_bat_dau_ngay);
 
-            $start = $end->addMinutes($khoangNghi);
+            while ($start->lte(Carbon::parse($ngayStr . ' 23:00'))) {
+                $end = (clone $start)->addMinutes($thoiLuong);
+                if ($end->gt($endOfDay)) break;
+
+                // Kiểm tra trùng với DB
+                $conflict = SuatChieu::where('phong_id', $phong_id)
+                    ->where('gio_bat_dau', '<', $end)
+                    ->where('gio_ket_thuc', '>', $start)
+                    ->exists();
+
+                $preview[] = [
+                    'phim_id' => $phim_id,
+                    'phong_id' => $phong_id,
+                    'gio_bat_dau' => $start->toDateTimeString(),
+                    'gio_ket_thuc' => $end->toDateTimeString(),
+                    'gia_ve' => $gia_ve,
+                    'trang_thai' => 'hoat_dong',
+                    'conflict' => $conflict,
+                    'phim_ten' => $phim->tieu_de,
+                    'phong_ten' => $phong->ten,
+                ];
+
+                $start = $end->addMinutes($khoangNghi);
+            }
         }
     }
 
-    // Nếu có bất kỳ conflict, trả về lỗi
-    if (!empty($conflicts)) {
-        $msg = "❌ Không thể tạo suất chiếu, phòng đã có suất trùng: " . implode(', ', array_slice($conflicts, 0, 5));
-        if (count($conflicts) > 5) $msg .= ', ...';
-        return back()->withInput()->with('error', $msg);
-    }
+    // Lưu preview vào session
+    session(['suatchieu_preview' => $preview]);
 
-    // Tạo toàn bộ suất nếu không có conflict
-    $tongSuat = 0;
-    foreach ($period as $ngay) {
-        $start = Carbon::parse($ngay->format('Y-m-d') . ' ' . $gio_bat_dau_ngay);
-        while ($start->hour < 23) {
-            $end = (clone $start)->addMinutes($thoiLuong);
-            if ($end->hour >= 23) break;
-
-            SuatChieu::create([
-                'phim_id' => $phim_id,
-                'phong_id' => $phong_id,
-                'gio_bat_dau' => $start,
-                'gio_ket_thuc' => $end,
-                'gia_ve' => $gia_ve,
-                'trang_thai' => 'hoat_dong',
-            ]);
-
-            $tongSuat++;
-            $start = $end->addMinutes($khoangNghi);
-        }
-    }
-
-    return redirect()->route('staff.suatchieu.index')
-                     ->with('success', "🚀 Đã tạo {$tongSuat} suất chiếu thành công.");
+    return redirect()->back()->withInput()->with('preview', $preview);
 }
-
 
 
 
@@ -427,6 +470,51 @@ class SuatChieuController extends Controller
     }
 
     /**
+     * 💾 Lưu preview suất chiếu vào DB
+     */
+    public function storePreview(Request $request)
+    {
+        $previewJson = $request->input('preview_data');
+        if (!$previewJson) {
+            return back()->with('error', '⚠️ Không có dữ liệu preview để lưu.');
+        }
+
+        $preview = json_decode($previewJson, true);
+        if (!$preview) {
+            return back()->with('error', '⚠️ Dữ liệu preview không hợp lệ.');
+        }
+
+        $saved = 0;
+        $skipped = 0;
+
+        foreach ($preview as $suat) {
+            if (!$suat['conflict']) {
+                SuatChieu::create([
+                    'phim_id' => $suat['phim_id'],
+                    'phong_id' => $suat['phong_id'],
+                    'gio_bat_dau' => $suat['gio_bat_dau'],
+                    'gio_ket_thuc' => $suat['gio_ket_thuc'],
+                    'gia_ve' => $suat['gia_ve'],
+                    'trang_thai' => $suat['trang_thai'],
+                ]);
+                $saved++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        // Xóa session sau khi lưu
+        session()->forget('suatchieu_preview');
+
+        $msg = "🚀 Đã lưu {$saved} suất chiếu thành công.";
+        if ($skipped > 0) {
+            $msg .= " Bỏ qua {$skipped} suất do trùng phòng hoặc giờ .";
+        }
+
+        return redirect()->route('staff.suatchieu.index')->with('success', $msg);
+    }
+
+    /**
      * 🔄 Cập nhật trạng thái đơn lẻ
      */
     public function updateTrangThai(Request $request, $id)
@@ -448,5 +536,37 @@ class SuatChieuController extends Controller
 
     return back()->with('success', '✅ Cập nhật trạng thái suất chiếu thành công!');
 }
+
+    /**
+     * 🎭 Cập nhật trạng thái ghế theo suất chiếu
+     */
+    public function updateGheTrangThai(Request $request, $id)
+    {
+        $request->validate([
+            'ghe_id' => 'required|exists:ghe,id',
+            'trang_thai' => 'required|in:hoat_dong,bao_tri,vo_hieu_hoa',
+        ]);
+
+        $suatChieu = SuatChieu::findOrFail($id);
+
+        // Kiểm tra ghế có thuộc phòng của suất chiếu không
+        $ghe = GheSuatChieu::where('suat_chieu_id', $id)
+            ->where('ghe_id', $request->ghe_id)
+            ->first();
+
+        if (!$ghe) {
+            // Nếu chưa có bản ghi, tạo mới
+            GheSuatChieu::create([
+                'suat_chieu_id' => $id,
+                'ghe_id' => $request->ghe_id,
+                'trang_thai' => $request->trang_thai,
+            ]);
+        } else {
+            // Cập nhật trạng thái
+            $ghe->update(['trang_thai' => $request->trang_thai]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
+    }
 
 }

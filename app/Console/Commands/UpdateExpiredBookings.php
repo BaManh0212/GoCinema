@@ -29,8 +29,8 @@ class UpdateExpiredBookings extends Command
     {
         $this->info('Bắt đầu cập nhật đơn đặt vé đã quá hạn...');
 
-        // Lấy các đơn đặt vé có trạng thái 'da_dat' và suất chiếu đã bắt đầu
-        $expiredBookings = DonDatVe::where('trang_thai', 'da_dat')
+        // Lấy các đơn đặt vé có trạng thái 'da_thanh_toan' và suất chiếu đã bắt đầu
+        $expiredBookings = DonDatVe::where('trang_thai', 'da_thanh_toan')
             ->whereHas('suatChieu', function ($query) {
                 $query->where('gio_bat_dau', '<', Carbon::now());
             })

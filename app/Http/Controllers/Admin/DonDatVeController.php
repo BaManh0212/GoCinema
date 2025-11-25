@@ -7,6 +7,12 @@ use App\Models\DonDatVe;
 use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Writer;
+use App\Models\CheckinPrintLog;
+use Illuminate\Support\Facades\Auth;
 
 class DonDatVeController extends Controller
 {
@@ -44,24 +50,54 @@ class DonDatVeController extends Controller
     /**
      * In vé (PDF)
      */
-    public function print($id)
-    {
-        $donVe = DonDatVe::with([
-            'nguoiDung',
-            'suatChieu.phim',
-            'suatChieu.phongChieu',
-            'chiTietVes.ghe'
-        ])->findOrFail($id);
 
-        // Chỉ cho in nếu đơn đã thanh toán hoặc đã check-in
-        $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
-        if (! in_array($donVe->trang_thai, $allowedToPrint)) {
-            return redirect()->route('admin.donve.index')->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
-        }
+public function print($id)
+{
+    $donVe = DonDatVe::with([
+        'nguoiDung',
+        'suatChieu.phim',
+        'suatChieu.phongChieu',
+        'chiTietVes.ghe'
+    ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('admin.donve.print', compact('donVe'));
-        return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
+    $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
+    if (!in_array($donVe->trang_thai, $allowedToPrint)) {
+        return redirect()->route('admin.donve.index')
+            ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
+
+    // Log print action
+    $user = Auth::user();
+    CheckinPrintLog::create([
+        'user_id' => $user->id,
+        'don_dat_ve_id' => $donVe->id,
+        'action_type' => 'print',
+    ]);
+
+    // Tạo writer dùng SVG backend
+    $renderer = new ImageRenderer(
+        new RendererStyle(200, 1), // size=200, margin=1
+        new SvgImageBackEnd()
+    );
+    $writer = new Writer($renderer);
+
+    $qrCodes = [];
+    foreach ($donVe->chiTietVes as $ct) {
+        $qrData = [
+            'ma_don' => $donVe->ma_don,
+            'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
+            'ngay_dat' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $qrSvg = $writer->writeString(json_encode($qrData));
+        $qrCodes[$ct->id] = $qrSvg;
+    }
+
+    $pdf = Pdf::loadView('admin.donve.print', compact('donVe', 'qrCodes'));
+    return $pdf->stream("Ve_{$donVe->ma_don}.pdf");
+}
+
+
 
     /**
      * Thay đổi trạng thái đơn với logic chuyển trạng thái hợp lệ.
@@ -184,7 +220,7 @@ public function checkInByCode(Request $request)
     // Kiểm tra thời gian suất chiếu
     $now = now();
     $suatChieu = $don->suatChieu;
-    
+
     if (!$suatChieu) {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Không tìm thấy thông tin suất chiếu.'], 404);
@@ -195,7 +231,7 @@ public function checkInByCode(Request $request)
     $thoiGianBatDau = \Carbon\Carbon::parse($suatChieu->gio_bat_dau);
     $thoiGianBatDauCheckin = $thoiGianBatDau->copy()->subMinutes(45);  // Được phép check-in từ 45 phút trước
     $thoiGianKetThucCheckin = $thoiGianBatDau->copy()->subMinutes(10);  // Đến 10 phút trước khi phim bắt đầu
-    
+
     // Kiểm tra thời gian check-in hợp lệ (từ 45p đến 10p trước khi phim bắt đầu)
     if ($now->lt($thoiGianBatDauCheckin)) {
         // Nếu còn sớm hơn thời gian bắt đầu cho phép check-in
@@ -203,29 +239,24 @@ public function checkInByCode(Request $request)
             'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW,
             'options' => \Carbon\CarbonInterface::JUST_NOW | \Carbon\CarbonInterface::ONE_DAY_WORDS | \Carbon\CarbonInterface::TWO_DAY_WORDS
         ]);
-        return response()->json([
-            'success' => false,
-            'message' => "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai."
-        ], 400);
+        $message = "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 400);
+        }
+        return back()->withErrors(['ma_don' => $message]);
     } elseif ($now->gt($thoiGianKetThucCheckin)) {
         // Nếu đã quá thời gian cho phép check-in (ít hơn 10 phút trước khi phim bắt đầu)
-        return response()->json([
-            'success' => false,
-            'message' => 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.'
-        ], 400);
-        
-        $message = "Chỉ được phép check-in trước 10 phút khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
-        
+        $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.';
         if ($request->wantsJson()) {
-            return response()->json(['message' => $message], 422);
+            return response()->json(['success' => false, 'message' => $message], 400);
         }
         return back()->withErrors(['ma_don' => $message]);
     }
-    
+
     // Nếu đã quá thời gian bắt đầu phim
     if ($now->gt($thoiGianBatDau)) {
         $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ quầy vé để được hỗ trợ.';
-        
+
         if ($request->wantsJson()) {
             return response()->json(['message' => $message], 422);
         }
@@ -245,6 +276,14 @@ public function checkInByCode(Request $request)
         // ✅ Cập nhật trạng thái đơn vé tổng
         $don->trang_thai = 'da_checkin';
         $don->save();
+
+        // Log check-in action
+        $user = Auth::user();
+        CheckinPrintLog::create([
+            'user_id' => $user->id,
+            'don_dat_ve_id' => $don->id,
+            'action_type' => 'checkin',
+        ]);
 
         DB::commit();
 

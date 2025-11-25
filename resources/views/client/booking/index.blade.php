@@ -75,7 +75,7 @@
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-person-square me-2"></i>
-                        Chọn ghế (Tối đa 2 ghế cho thanh toán tại quầy)
+                        Chọn ghế (Tối đa 8 ghế liền kề cho 1 tài khoản)
                     </h5>
                 </div>
                 <div class="card-body">
@@ -86,6 +86,7 @@
                         <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
                         <div><span class="legend-box seat-da-thanh-toan"></span> Ghế đã đặt</div>
                         <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
+                        <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
                         <div><span class="legend-box seat-chon"></span> Ghế đã chọn</div>
                     </div>
 
@@ -106,12 +107,19 @@
                                                 $classes = 'seat seat-da-thanh-toan disabled';
                                                 $trangthai = 'da_dat';
                                                 $disabled = true;
+                                            } elseif(in_array($ghe->id, $gheChoThanhToan)){
+                                                $classes = 'seat seat-giu-tam disabled';
+                                                $trangthai = 'cho_thanh_toan';
+                                                $disabled = true;
                                             } elseif(in_array($ghe->id, $giuTamIds)){
                                                 $classes = 'seat seat-giu-tam disabled';
                                                 $trangthai = 'giu_tam';
                                                 $disabled = true;
-                                            } elseif($trangthai === 'bao_tri' || $trangthai === 'vo_hieu_hoa'){
-                                                $classes = 'seat seat-dat disabled';
+                                            } elseif($trangthai === 'bao_tri'){
+                                                $classes = 'seat seat-bao-tri disabled';
+                                                $disabled = true;
+                                            } elseif($trangthai === 'vo_hieu_hoa'){
+                                                $classes = 'seat seat-vo-hieu-hoa disabled';
                                                 $disabled = true;
                                             }
                                         @endphp
@@ -280,6 +288,14 @@
 
                     <hr>
 
+                    {{-- Số tiền giảm giá --}}
+                    <div class="d-flex justify-content-between fs-6 fw-bold text-success">
+                        <span>Giảm giá:</span>
+                        <span id="discount-amount">0đ</span>
+                    </div>
+
+                    <hr>
+
                     {{-- Tổng cộng --}}
                     <div class="d-flex justify-content-between fs-5 fw-bold">
                         <span>Tổng cộng:</span>
@@ -387,11 +403,13 @@
     transition: all 0.2s;
 }
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #98FB98; }
+.seat-doi { background-color: #98FB98; width: 94px; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-da-thanh-toan { background-color: #DC3545 !important; cursor: not-allowed; pointer-events: none; }
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; pointer-events: none; }
+.seat-bao-tri { background-color: #d1d5db !important; cursor: not-allowed; pointer-events: none; }
+.seat-vo-hieu-hoa { background-color: #6B7280 !important; cursor: not-allowed; pointer-events: none; }
 .seat-chon { background-color: #28a745 !important; color: white; }
 .seat.disabled { cursor: not-allowed !important; pointer-events: none; }
 
@@ -679,9 +697,9 @@ $(document).ready(function() {
             $(this).removeClass('seat-chon');
             selectedSeats = selectedSeats.filter(id => id !== gheId);
         } else {
-            // Chọn (kiểm tra tối đa 2 ghế cho thanh toán tại quầy)
-            if (selectedSeats.length >= 2) {
-                alert('Chỉ được chọn tối đa 2 ghế cho thanh toán tại quầy!');
+            // Chọn (kiểm tra tối đa 8 ghế cho 1 tài khoản)
+            if (selectedSeats.length >= 8) {
+                alert('Chỉ được chọn tối đa 8 ghế cho 1 tài khoản!');
                 return;
             }
             $(this).addClass('seat-chon');
@@ -863,13 +881,27 @@ function getComboItems() {
 }
 
 function getSeatPrice(seatType) {
+    let price = baseTicketPrice;
+
+    // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
+    const showDate = new Date('{{ $suatChieu->gio_bat_dau }}');
+    if (showDate.getDay() === 0 || showDate.getDay() === 6) {
+        price *= 1.2;
+    }
+
+    // Tăng giá buổi tối từ 18h trở đi: +15%
+    if (showDate.getHours() >= 18) {
+        price *= 1.15;
+    }
+
+    // Áp dụng loại ghế
     switch(seatType) {
         case 'vip':
-            return baseTicketPrice * 1.5;
+            return price * 1.5;
         case 'doi':
-            return baseTicketPrice * 2;
+            return price * 2;
         default:
-            return baseTicketPrice;
+            return price;
     }
 }
 
@@ -919,6 +951,9 @@ function updateTotals() {
     });
     $('#combo-list').html(comboListHtml);
     $('#combo-total').text(formatCurrency(comboTotal));
+
+    // Update discount display
+    $('#discount-amount').text(formatCurrency(voucherDiscount));
 
     const grandTotal = calculateTotal();
     $('#grand-total').text(formatCurrency(grandTotal));

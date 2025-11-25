@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('title', 'Sơ đồ ghế phòng chiếu')
 
@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-primary fw-bold">🎬 Quản lý ghế suất chiếu</h4>
-        <a href="{{ route('admin.suatchieu.index') }}" class="btn btn-secondary">← Quay lại danh sách</a>
+        <a href="{{ route('staff.suatchieu.index') }}" class="btn btn-secondary">← Quay lại danh sách</a>
     </div>
 
     <div class="card">
@@ -21,6 +21,7 @@
                 <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
                 <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
                 <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
+                <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
                 <div><span class="legend-box seat-dat"></span> Ghế đã đặt</div>
                 <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
             </div>
@@ -37,19 +38,17 @@
                                     $classes = 'seat seat-' . $ghe->loai;
                                     $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
 
-                                    // Ghế đã đặt (da_dat, da_thanh_toan, da_checkin) -> seat-dat
-                                    // Ghế giữ tạm (giu_tam - bao gồm chi_tiet_ve with trang_thai=cho_thanh_toan) -> seat-giu-tam
-                                    if(in_array($ghe->id, $giuTamIds)){
-                                        $classes = 'seat seat-giu-tam';
-                                        $trangthai = 'giu_tam';
-                                    } elseif(in_array($ghe->id, $gheDaDat)){
+                                    if(in_array($ghe->id, $gheDaDat)){
                                         $classes = 'seat seat-dat';
                                         $trangthai = 'da_dat';
+                                    } elseif(in_array($ghe->id, $giuTamIds)){
+                                        $classes = 'seat seat-giu-tam';
+                                        $trangthai = 'giu_tam';
                                     } elseif($trangthai === 'bao_tri'){
                                         $classes = 'seat seat-bao-tri';
-                                    } elseif($trangthai === 'vo_hieu_hoa'){
+                                        } elseif($trangthai === 'vo_hieu_hoa'){
                                         // removed vo_hieu_hoa state fallback
-                                    }
+                                        }
                                 @endphp
 
                                 <div class="{{ $classes }}"
@@ -133,73 +132,25 @@ let changes = {}; // Lưu trữ các thay đổi
 
 // Toggle trạng thái ghế
 document.querySelectorAll('.seat').forEach(seat => {
-    seat.addEventListener('click', async () => {
-        // Nếu ghế đã đặt => không đổi trạng thái
-        if(seat.dataset.trangthai === 'da_dat') return;
+    seat.addEventListener('click', () => {
+        // Nếu ghế đã đặt hoặc giữ tạm => không đổi trạng thái
+        if(seat.dataset.trangthai === 'da_dat' || seat.dataset.trangthai === 'giu_tam') return;
 
         const currentStatus = seat.dataset.trangthai;
         let newStatus, newClass;
 
-        // Chu kỳ: hoat_dong -> bao_tri -> giu_tam -> hoat_dong
+        // Chu kỳ: hoat_dong -> bao_tri -> hoat_dong (vo_hieu_hoa removed)
         if (currentStatus === 'hoat_dong') {
             newStatus = 'bao_tri';
             newClass = 'seat-bao-tri';
-            // Call API to update normal seat status
-            await updateSeatStatus(seat.dataset.gheId, newStatus, '{{ route("admin.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}');
         } else if (currentStatus === 'bao_tri') {
-            newStatus = 'giu_tam';
-            newClass = 'seat-giu-tam';
-            // Call API to add giữ tạm
-            await fetch('{{ route("admin.suatchieu.ghe.updateGiuTam", $suatchieu->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    ghe_id: seat.dataset.gheId,
-                    action: 'add'
-                })
-            }).then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    alert('❌ Cập nhật giữ tạm thất bại: ' + (data.message || 'Lỗi không xác định'));
-                }
-            })
-            .catch(() => {
-                alert('❌ Lỗi kết nối khi giữ tạm!');
-            });
-        } else if (currentStatus === 'giu_tam') {
             newStatus = 'hoat_dong';
             newClass = 'seat-' + seat.dataset.loai;
-            // Call API to remove giữ tạm
-            await fetch('{{ route("admin.suatchieu.ghe.updateGiuTam", $suatchieu->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    ghe_id: seat.dataset.gheId,
-                    action: 'remove'
-                })
-            }).then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    alert('❌ Cập nhật hủy giữ tạm thất bại: ' + (data.message || 'Lỗi không xác định'));
-                }
-            })
-            .catch(() => {
-                alert('❌ Lỗi kết nối khi hủy giữ tạm!');
-            });
-        } else {
-            // fallback: nếu trạng thái không hợp lệ
-            return;
         }
 
         // Cập nhật UI
         seat.dataset.trangthai = newStatus;
-        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-giu-tam' /* 'seat-vo-hieu-hoa' removed */);
+        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri' /* 'seat-vo-hieu-hoa' removed */);
         seat.classList.add(newClass);
 
         // Lưu thay đổi vào object
@@ -239,7 +190,7 @@ function updateSeatStatus(gheId, trangThai, url) {
 
 // Xử lý nút lưu
 document.getElementById('save-changes').addEventListener('click', () => {
-    const url = '{{ route("admin.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}';
+    const url = '{{ route("staff.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}';
     const promises = [];
 
     for (const [gheId, trangThai] of Object.entries(changes)) {
@@ -251,7 +202,7 @@ document.getElementById('save-changes').addEventListener('click', () => {
         changes = {}; // Reset changes
         document.getElementById('save-changes').disabled = true;
         // Quay lại trang index
-        window.location.href = '{{ route("admin.suatchieu.index") }}';
+        window.location.href = '{{ route("staff.suatchieu.index") }}';
     }).catch(() => {
         alert('❌ Có lỗi xảy ra khi lưu!');
     });
@@ -292,7 +243,7 @@ function applyLiveStatus(payload) {
 
 async function fetchLiveStatus() {
     try {
-        const res = await fetch(`{{ route('admin.suatchieu.seatStatus', $suatchieu->id) }}`);
+        const res = await fetch(`{{ route('staff.suatchieu.seatStatus', $suatchieu->id) }}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data && data.success) applyLiveStatus(data);

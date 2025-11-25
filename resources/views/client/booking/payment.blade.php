@@ -165,21 +165,6 @@
                             </div>
                         </label>
                     </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment_method" value="counter" class="mr-3">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-white font-bold text-sm">Q</span>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Thanh toán tại quầy</p>
-                                    <p class="text-sm text-gray-600">Thanh toán trực tiếp tại quầy khi nhận vé</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -194,49 +179,29 @@
     </div>
 </div>
 
+<!-- Modal thông báo thanh toán không thành công -->
+<div id="paymentFailedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full">
+        <h2 class="text-xl font-semibold mb-4 text-red-600">Thanh toán không thành công</h2>
+        <p class="mb-6 text-gray-700">Thanh toán thất bại do bạn đã rời khỏi trang thanh toán. Đơn vé sẽ không được lưu và ghế giữ sẽ bị hủy.</p>
+        <div class="flex justify-end space-x-4">
+            <button id="modalCancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Đóng</button>
+            <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ asset('js/payment.js') }}" defer></script>
+
 <script>
-document.getElementById('payButton').addEventListener('click', function() {
-    const selectedPayment = document.querySelector('input[name="payment_method"]:checked').value;
+    // Đặt attribute data để tjs có thể lấy ID đơn đặt vé từ nút payButton
+    document.addEventListener('DOMContentLoaded', function(){
+        const payButton = document.getElementById('payButton');
+        payButton.dataset.bookingId = '{{ $donDatVe->id }}';
+        payButton.dataset.total = '{{ $donDatVe->tong_tien }}';
 
-    // Hiển thị loading
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
-    this.disabled = true;
-
-    // Gửi request thanh toán
-    fetch('/booking/process-payment/{{ $donDatVe->id }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            payment_method: selectedPayment
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.redirect_url) {
-                // Redirect đến trang thanh toán bên thứ 3
-                window.location.href = data.redirect_url;
-            } else {
-                // Redirect đến trang xác nhận
-                window.location.href = data.redirect;
-            }
-        } else {
-            alert(data.message || 'Có lỗi xảy ra khi thanh toán');
-            // Reset button
-            document.getElementById('payButton').innerHTML = 'Thanh toán {{ number_format($donDatVe->tong_tien) }}đ';
-            document.getElementById('payButton').disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Có lỗi xảy ra khi thanh toán');
-        // Reset button
-        document.getElementById('payButton').innerHTML = 'Thanh toán {{ number_format($donDatVe->tong_tien) }}đ';
-        document.getElementById('payButton').disabled = false;
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        modalConfirmBtn.dataset.bookingId = '{{ $donDatVe->id }}';
     });
-});
 </script>
 @endsection

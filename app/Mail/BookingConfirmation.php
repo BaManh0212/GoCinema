@@ -10,7 +10,11 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\Image\ImageBackEndInterface;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 class BookingConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
@@ -30,42 +34,36 @@ class BookingConfirmation extends Mailable
     {
         $this->totalTicketPrice = 0;
         foreach ($this->donDatVe->chiTietVes as $ve) {
-            $seatPrice = $this->donDatVe->suatChieu->gia_ve;
-            if ($ve->ghe->loai === 'vip') {
-                $seatPrice *= 1.5;
-            } elseif ($ve->ghe->loai === 'doi') {
-                $seatPrice *= 2;
-            }
-            $this->totalTicketPrice += $seatPrice;
+            $this->totalTicketPrice += $ve->calculated_price;
         }
     }
 
-    protected function generateQrCode()
-    {
-        $data = [
-            'ma_don' => $this->donDatVe->ma_don,
-            'nguoi_dat' => $this->donDatVe->nguoiDung ? $this->donDatVe->nguoiDung->ho_ten : 'Khách hàng',
-            'phim' => $this->donDatVe->suatChieu->phim->tieu_de,
-            'rap' => $this->donDatVe->suatChieu->phong->rap->ten,
-            'phong' => $this->donDatVe->suatChieu->phong->ten,
-            'ngay_chieu' => $this->donDatVe->suatChieu->gio_bat_dau->format('d/m/Y H:i'),
-            'tong_tien' => number_format($this->donDatVe->tong_tien, 0, ',', '.') . ' VNĐ',
-            'trang_thai' => $this->donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán'
-        ];
+    protected function generateQrCode(){
+    $data = [
+        'ma_don' => $this->donDatVe->ma_don,
+        'ngay_dat' => now()->format('Y-m-d H:i:s'),
+        'phim' => $this->donDatVe->suatChieu->phim->ten_phim ?? 'N/A',
+        'rap' => $this->donDatVe->suatChieu->phongChieu->rap->ten_rap ?? 'N/A',
+        'phong' => $this->donDatVe->suatChieu->phongChieu->ten_phong ?? 'N/A',
+        'ngay_chieu' => $this->donDatVe->suatChieu->ngay_chieu ?? 'N/A',
+        'gio_bat_dau' => $this->donDatVe->suatChieu->gio_bat_dau ?? 'N/A',
+        'tong_tien' => number_format($this->donDatVe->tong_tien, 0, ',', '.') . ' VNĐ',
+        'trang_thai' => $this->donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán'
+    ];
 
-        // Tạo mã QR sử dụng endroid/qr-code
-        $qrCode = QrCode::create(json_encode($data))
-            ->setEncoding(new Encoding('UTF-8'))
-            ->setSize(300)
-            ->setMargin(10)
-            ->setErrorCorrectionLevel(ErrorCorrectionLevel::High);
-
-        $writer = new PngWriter();
-        $result = $writer->write($qrCode);
-        
-        // Lấy dữ liệu base64 của ảnh
-        $this->qrCode = base64_encode($result->getString());
-    }
+    // Use the same QR code generation as in admin print
+    $renderer = new ImageRenderer(
+        new RendererStyle(200, 1), // size=200, margin=1
+        new SvgImageBackEnd()
+    );
+    $writer = new Writer($renderer);
+    
+    // Generate QR code as SVG
+    $qrSvg = $writer->writeString(json_encode($data));
+    
+    // Store the SVG directly instead of base64 encoding
+    $this->qrCode = $qrSvg;
+}
 
     public function build()
     {

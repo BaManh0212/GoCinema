@@ -55,13 +55,7 @@
                         <p class="mb-1"><strong>Ngày đặt:</strong> {{ $donVe->created_at->format('H:i d/m/Y') }}</p>
                         <p class="mb-0">
                             <strong>Trạng thái:</strong>
-                            @php
-                                $statusColor = 'secondary';
-                                if ($donVe->trang_thai == 'da_thanh_toan') $statusColor = 'success';
-                                if ($donVe->trang_thai == 'da_huy') $statusColor = 'danger';
-                                if ($donVe->trang_thai == 'da_checkin') $statusColor = 'info';
-                            @endphp
-                            <span class="badge bg-{{ $statusColor }} text-uppercase">
+                            <span class="badge text-uppercase" style="background: white; color: black;">
                                 {{ str_replace('_', ' ', $donVe->trang_thai) }}
                             </span>
                         </p>
@@ -78,9 +72,9 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex mb-3">
-                        <img src="{{ $donVe->suatChieu->phim->hinh_anh ? asset('uploads/phim/' . $donVe->suatChieu->phim->hinh_anh) : asset('images/no-image.jpg') }}" 
-                             alt="{{ $donVe->suatChieu->phim->tieu_de }}" 
-                             class="img-thumbnail me-3" 
+                        <img src="{{ $donVe->suatChieu->phim->anh_poster ? asset('storage/' . $donVe->suatChieu->phim->anh_poster) : asset('images/no-image.jpg') }}"
+                             alt="{{ $donVe->suatChieu->phim->tieu_de }}"
+                             class="img-thumbnail me-3"
                              style="width: 80px; height: 120px; object-fit: cover;">
                         <div>
                             <h5 class="card-title mb-1">{{ $donVe->suatChieu->phim->tieu_de ?? 'N/A' }}</h5>
@@ -107,152 +101,69 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Danh sách vé -->
-        <div class="col-md-8 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0 fw-bold">🎟️ Danh sách vé</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="text-center">#</th>
-                                    <th>Ghế</th>
-                                    <th>Loại ghế</th>
-                                    <th class="text-end">Đơn giá</th>
-                                    <th class="text-end">Thành tiền</th>
-                                    <th class="text-center">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php 
-                                    $ticketTotal = 0;
-                                    $ticketCount = 0;
-                                @endphp
-                                @foreach($donVe->chiTietVes as $ct)
-                                    @php 
-                                        $seatPrice = $ct->gia;
-                                        $ticketTotal += $seatPrice;
-                                        $ticketCount++;
-                                    @endphp
-                                    <tr>
-                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td>{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</td>
-                                        <td>
-                                            @php
-                                                $seatType = 'Thường';
-                                                $seatBadge = 'bg-secondary';
-                                                if ($ct->loai_ghe === 'vip') {
-                                                    $seatType = 'VIP';
-                                                    $seatBadge = 'bg-warning text-dark';
-                                                } elseif ($ct->loai_ghe === 'doi') {
-                                                    $seatType = 'Đôi';
-                                                    $seatBadge = 'bg-info';
-                                                }
-                                            @endphp
-                                            <span class="badge {{ $seatBadge }}">{{ $seatType }}</span>
-                                        </td>
-                                        <td class="text-end">{{ number_format($ct->gia, 0, ',', '.') }} đ</td>
-                                        <td class="text-end">{{ number_format($seatPrice, 0, ',', '.') }} đ</td>
-                                        <td class="text-center">
-                                            @php
-                                                $ctColor = 'secondary';
-                                                if ($ct->trang_thai == 'da_thanh_toan') $ctColor = 'success';
-                                                if ($ct->trang_thai == 'da_huy') $ctColor = 'danger';
-                                                if ($ct->trang_thai == 'da_su_dung') $ctColor = 'info';
-                                            @endphp
-                                            <span class="badge bg-{{ $ctColor }} text-uppercase">
-                                                {{ str_replace('_', ' ', $ct->trang_thai) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="4" class="text-end fw-bold">Tổng tiền vé:</td>
-                                    <td class="text-end fw-bold" colspan="2">{{ number_format($ticketTotal, 0, ',', '.') }} đ</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <!-- Danh sách vé -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0 fw-bold">🎟️ Danh sách vé</h5>
         </div>
-
-        <!-- Thông tin thanh toán -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0 fw-bold">💰 Thông tin thanh toán</h5>
-                </div>
-                <div class="card-body">
-                    @if($donVe->maGiamGia)
-                    <div class="alert alert-info p-2 mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-tag me-1"></i> 
-                                <strong>Mã giảm giá:</strong> {{ $donVe->maGiamGia->ma }}
-                            </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th>Ghế</th>
+                            <th>Loại ghế</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                            <th class="text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $ticketTotal = 0;
+                            $ticketCount = 0;
+                        @endphp
+                        @foreach($donVe->chiTietVes as $ct)
                             @php
-                                $discount = $donVe->maGiamGia->loai_giam_gia === 'tien_mat' 
-                                    ? $donVe->maGiamGia->gia_tri 
-                                    : (($ticketTotal + ($donVe->combos->sum('pivot.gia') * $donVe->combos->sum('pivot.so_luong'))) * $donVe->maGiamGia->gia_tri / 100);
+                                $seatPrice = $ct->gia;
+                                $ticketTotal += $seatPrice;
+                                $ticketCount++;
                             @endphp
-                            <span class="badge bg-danger">
-                                -{{ number_format($discount, 0, ',', '.') }} đ
-                            </span>
-                        </div>
-                    </div>
-                    @endif
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Tổng tiền vé ({{ $ticketCount }} vé):</span>
-                            <span>{{ number_format($ticketTotal, 0, ',', '.') }} đ</span>
-                        </div>
-
-                        @if($donVe->combos->count() > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Combo & đồ ăn:</span>
-                            <span>{{ number_format($donVe->combos->sum(function($combo) {
-                                return $combo->pivot->gia * $combo->pivot->so_luong;
-                            }), 0, ',', '.') }} đ</span>
-                        </div>
-                        @endif
-
-                        @if($donVe->maGiamGia)
-                        <div class="d-flex justify-content-between mb-2 text-danger">
-                            <span>Giảm giá:</span>
-                            <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
-                        </div>
-                        @endif
-
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Tổng thanh toán:</h5>
-                            <h4 class="mb-0 text-danger">{{ number_format($donVe->tong_tien, 0, ',', '.') }} đ</h4>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <form action="{{ route('admin.donve.changeStatus', $donVe->id) }}" method="POST" class="mb-0">
-                            @csrf
-                            <div class="input-group">
-                                <select name="trang_thai" class="form-select">
-                                    <option value="cho_thanh_toan" {{ $donVe->trang_thai == 'cho_thanh_toan' ? 'selected' : '' }}>Chờ thanh toán</option>
-                                    <option value="da_thanh_toan" {{ $donVe->trang_thai == 'da_thanh_toan' ? 'selected' : '' }}>Đã thanh toán</option>
-                                    <option value="da_checkin" {{ $donVe->trang_thai == 'da_checkin' ? 'selected' : '' }} {{ $donVe->trang_thai != 'da_thanh_toan' ? 'disabled' : '' }}>Đã check-in</option>
-                                    <option value="da_huy" {{ $donVe->trang_thai == 'da_huy' ? 'selected' : '' }}>Đã hủy</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary">Cập nhật</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                            <tr>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td>{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }}</td>
+                                <td>
+                                    @php
+                                        $seatType = 'Thường';
+                                        $seatBadge = 'bg-white text-dark';
+                                        if ($ct->loai_ghe === 'vip') {
+                                            $seatType = 'VIP';
+                                            $seatBadge = 'bg-white text-dark';
+                                        } elseif ($ct->loai_ghe === 'doi') {
+                                            $seatType = 'Đôi';
+                                            $seatBadge = 'bg-white text-dark';
+                                        }
+                                    @endphp
+                                    <span class="badge {{ $seatBadge }}">{{ $seatType }}</span>
+                                </td>
+                                <td class="text-end">{{ number_format($ct->gia, 0, ',', '.') }} đ</td>
+                                <td class="text-end">{{ number_format($seatPrice, 0, ',', '.') }} đ</td>
+                                <td class="text-center">
+                                    <span class="badge text-uppercase" style="background: white; color: black;">
+                                        {{ str_replace('_', ' ', $ct->trang_thai) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Tổng tiền vé:</td>
+                            <td class="text-end fw-bold" colspan="2">{{ number_format($ticketTotal, 0, ',', '.') }} đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
     </div>

@@ -31,24 +31,68 @@
                                 <source src="{{ asset('storage/' . $banner->video_url) }}" type="video/mp4">
                             </video>
                         @endif
-                        @if ($banner->title)
-                            <div class="carousel-caption d-none d-md-block" style="background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 15px;">
-                                <h5 class="m-0" style="color: var(--text-light); font-weight: 600;">{{ $banner->title }}</h5>
+                            <div class="carousel-caption d-none d-md-flex" 
+                            style="background: var(--card-bg); 
+                                    backdrop-filter: blur(10px); 
+                                    border: 1px solid var(--card-border); 
+                                    border-radius: var(--border-radius); 
+                                    padding: 15px; 
+                                    display: flex; 
+                                    flex-direction: row; 
+                                    justify-content: space-between; 
+                                    align-items: center; 
+                                    width: 100%;">
+                            
+                            <!-- Thông tin bên trái -->
+                            <div class="caption-info" style="display: flex; flex-direction: column; gap: 5px;">
+                                <h5 class="m-0" style="color: var(--text-light); font-weight: 1000;">
+                                    Khám phá thế giới điện ảnh đỉnh cao
+                                </h5>
+                                <p style="color: var(--text-light); font-weight: 500; margin: 0;">
+                                    Cập nhật lịch chiếu mới nhất, phim bom tấn, trải nghiệm rạp sang trọng.
+                                </p>
+                                <p style="color: var(--text-light); font-weight: 500; margin: 0;">
+                                    Ưu đãi đặc biệt khi đặt vé trực tuyến!
+                                </p>
                             </div>
-                        @endif
+
+                            <!-- Nút bên phải -->
+                            <div class="caption-action">
+                                <a href="{{ route('schedule.index') }}" 
+                                class="btn btn-danger px-4 py-2" 
+                                style="font-weight: 600; border-radius: 30px;">
+                                    Đặt vé ngay
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 @endforeach
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
         </div>
     @endif
+
+    {{-- ================= THANH TÌM KIẾM ================= --}}
+    <section class="py-4" style="background: var(--primary-bg);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <form action="{{ route('movies.index') }}" method="GET" class="search-form">
+                        <div class="input-group input-group-lg shadow-lg" style="border-radius: 50px; overflow: hidden; background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border);">
+                            <span class="input-group-text bg-transparent border-0 text-muted">
+                                <i class="bi bi-search" style="font-size: 1.2rem;"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-0 bg-transparent text-light"
+                                   placeholder="Tìm kiếm phim, đạo diễn, diễn viên..." value="{{ request('search') }}"
+                                   style="font-size: 1.1rem; color: var(--text-light) !important;">
+                            <button class="btn btn-danger px-4 py-2" type="submit" style="border-radius: 0 50px 50px 0; font-weight: 600;">
+                                <i class="bi bi-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
 
     {{-- ================= PHIM NỔI BẬT ================= --}}
     <section class="py-5 section-gradient-red">
@@ -594,6 +638,24 @@
             .feature-icon {
                 font-size: 2.5rem;
             }
+
+            .search-form .input-group {
+                flex-direction: column;
+                border-radius: 20px !important;
+            }
+
+            .search-form .input-group .input-group-text {
+                border-radius: 20px 20px 0 0 !important;
+                border-bottom: none;
+            }
+
+            .search-form .input-group .form-control {
+                border-radius: 0 !important;
+            }
+
+            .search-form .input-group .btn {
+                border-radius: 0 0 20px 20px !important;
+            }
         }
     </style>
     @push('scripts')
@@ -606,6 +668,34 @@
                         const toast = new bootstrap.Toast(toastEl);
                         toast.show();
                     });
+                }
+
+                // Search form enhancement
+                const searchForm = document.querySelector('.search-form');
+                if (searchForm) {
+                    const searchInput = searchForm.querySelector('input[name="search"]');
+                    if (searchInput) {
+                        searchInput.addEventListener('focus', function() {
+                            this.parentElement.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+                        });
+                        searchInput.addEventListener('blur', function() {
+                            this.parentElement.style.boxShadow = '';
+                        });
+
+                        // Auto-search functionality
+                        let searchTimeout;
+                        searchInput.addEventListener('input', function() {
+                            clearTimeout(searchTimeout);
+                            const query = this.value.trim();
+
+                            // Only search if query is at least 2 characters or empty (to clear search)
+                            if (query.length >= 2 || query.length === 0) {
+                                searchTimeout = setTimeout(() => {
+                                    searchForm.submit();
+                                }, 500); // 500ms debounce
+                            }
+                        });
+                    }
                 }
             });
         </script>

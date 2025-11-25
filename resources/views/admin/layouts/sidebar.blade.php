@@ -126,16 +126,10 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#menuDon" aria-expanded="false" aria-controls="menuDon">
+        <a class="nav-link collapsed" href="{{ route('admin.donve.index') }}" >
             <i class="fas fa-fw fa-ticket-alt"></i>
             <span>Đơn đặt vé</span>
         </a>
-        <div id="menuDon" class="collapse" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{ route('admin.donve.index') }}"><i class="fas fa-list fa-sm mr-2"></i> Danh sách đơn</a>
-                <a class="collapse-item" href="{{ route('admin.donve.checkin') }}"><i class="fas fa-check-circle fa-sm mr-2"></i> Check-in vé</a>
-            </div>
-        </div>
     </li>
 
     <li class="nav-item {{ request()->is('admin/baiviet*') ? 'active' : '' }}">
@@ -149,6 +143,13 @@
         <a class="nav-link" href="{{ route('admin.contacts.index') }}">
             <i class="fas fa-envelope"></i>
             <span>Liên hệ</span>
+        </a>
+    </li>
+
+    <li class="nav-item {{ request()->is('admin/logs*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.logs.index') }}">
+            <i class="fas fa-fw fa-history"></i>
+            <span>Lịch sử Check-in & In vé</span>
         </a>
     </li>
 

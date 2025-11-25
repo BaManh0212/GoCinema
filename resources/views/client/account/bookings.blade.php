@@ -206,8 +206,8 @@
                                 <div class="row align-items-center">
                                     <div class="col-lg-2 col-md-3 mb-3 mb-md-0">
                                         <div class="movie-poster">
-                                            @if($booking->suatChieu->phim->poster)
-                                                <img src="{{ asset('uploads/phim/' . $booking->suatChieu->phim->poster) }}"
+                                            @if($booking->suatChieu->phim->anh_poster)
+                                                <img src="{{ asset('storage/' . $booking->suatChieu->phim->anh_poster) }}"
                                                      alt="{{ $booking->suatChieu->phim->tieu_de }}"
                                                      class="rounded-3 shadow-sm w-100"
                                                      style="max-width: 120px; height: 160px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);">

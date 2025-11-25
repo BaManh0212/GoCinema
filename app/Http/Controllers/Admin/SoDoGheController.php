@@ -77,9 +77,9 @@ public function show1(Request $request)
     foreach ($matrix as &$seat) {
         if (!isset($seat['id'])) $seat['id'] = $nextId++;
         $seat['gia'] = match($seat['loai'] ?? 'thuong') {
-            'vip' => $suatChieu->gia_ve * 1.5,
-            'doi' => $suatChieu->gia_ve * 2,
-            default => $suatChieu->gia_ve,
+            'vip' => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'vip']),
+            'doi' => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'doi']),
+            default => $this->calculateSeatPrice($suatChieu, (object)['loai' => 'thuong']),
         };
     }
 
@@ -124,7 +124,7 @@ public function show1(Request $request)
         $sodo->delete();
         return redirect()->route('admin.sodo.index')->with('success', 'Xóa sơ đồ ghế thành công');
     }
-public function updateSeatStatus(Request $request)
+    public function updateSeatStatus(Request $request)
 {
     $phong_id = $request->phong_id;
     $matrixUpdate = $request->matrix;
@@ -146,5 +146,32 @@ public function updateSeatStatus(Request $request)
 
     return response()->json(['success'=>true]);
 }
+
+    /**
+     * Tính giá ghế dựa trên loại ghế, ngày và khung giờ
+     */
+    private function calculateSeatPrice($suatChieu, $ghe)
+    {
+        $basePrice = $suatChieu->gia_ve;
+
+        // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
+        if ($suatChieu->gio_bat_dau->isWeekend()) {
+            $basePrice *= 1.2;
+        }
+
+        // Tăng giá buổi tối từ 18h trở đi: +15%
+        if ($suatChieu->gio_bat_dau->hour >= 18) {
+            $basePrice *= 1.15;
+        }
+
+        // Áp dụng loại ghế
+        if ($ghe->loai === 'vip') {
+            $basePrice *= 1.5;
+        } elseif ($ghe->loai === 'doi') {
+            $basePrice *= 2;
+        }
+
+        return $basePrice;
+    }
 
 }

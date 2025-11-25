@@ -21,7 +21,7 @@ class CheckVaiTro
         }
 
         // Lấy tên vai trò hiện tại của người dùng
-        $roleName = strtolower($user->vaiTro->ten ?? '');
+        $roleName = strtolower($user->vaiTro->ten ?? $user->loai_tai_khoan ?? '');
 
         // Nếu middleware không yêu cầu vai trò cụ thể → cho qua
         if (empty($roles)) {
