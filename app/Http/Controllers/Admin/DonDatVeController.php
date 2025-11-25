@@ -11,6 +11,8 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Writer;
+use App\Models\CheckinPrintLog;
+use Illuminate\Support\Facades\Auth;
 
 class DonDatVeController extends Controller
 {
@@ -63,6 +65,14 @@ public function print($id)
         return redirect()->route('admin.donve.index')
             ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
+
+    // Log print action
+    $user = Auth::user();
+    CheckinPrintLog::create([
+        'user_id' => $user->id,
+        'don_dat_ve_id' => $donVe->id,
+        'action_type' => 'print',
+    ]);
 
     // Tạo writer dùng SVG backend
     $renderer = new ImageRenderer(
@@ -266,6 +276,14 @@ public function checkInByCode(Request $request)
         // ✅ Cập nhật trạng thái đơn vé tổng
         $don->trang_thai = 'da_checkin';
         $don->save();
+
+        // Log check-in action
+        $user = Auth::user();
+        CheckinPrintLog::create([
+            'user_id' => $user->id,
+            'don_dat_ve_id' => $don->id,
+            'action_type' => 'checkin',
+        ]);
 
         DB::commit();
 
