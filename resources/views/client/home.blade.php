@@ -31,22 +31,43 @@
                                 <source src="{{ asset('storage/' . $banner->video_url) }}" type="video/mp4">
                             </video>
                         @endif
-                        @if ($banner->title)
-                            <div class="carousel-caption d-none d-md-block" style="background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 15px;">
-                                <h5 class="m-0" style="color: var(--text-light); font-weight: 600;">{{ $banner->title }}</h5>
+                            <div class="carousel-caption d-none d-md-flex" 
+                            style="background: var(--card-bg); 
+                                    backdrop-filter: blur(10px); 
+                                    border: 1px solid var(--card-border); 
+                                    border-radius: var(--border-radius); 
+                                    padding: 15px; 
+                                    display: flex; 
+                                    flex-direction: row; 
+                                    justify-content: space-between; 
+                                    align-items: center; 
+                                    width: 100%;">
+                            
+                            <!-- Thông tin bên trái -->
+                            <div class="caption-info" style="display: flex; flex-direction: column; gap: 5px;">
+                                <h5 class="m-0" style="color: var(--text-light); font-weight: 1000;">
+                                    Khám phá thế giới điện ảnh đỉnh cao
+                                </h5>
+                                <p style="color: var(--text-light); font-weight: 500; margin: 0;">
+                                    Cập nhật lịch chiếu mới nhất, phim bom tấn, trải nghiệm rạp sang trọng.
+                                </p>
+                                <p style="color: var(--text-light); font-weight: 500; margin: 0;">
+                                    Ưu đãi đặc biệt khi đặt vé trực tuyến!
+                                </p>
                             </div>
-                        @endif
+
+                            <!-- Nút bên phải -->
+                            <div class="caption-action">
+                                <a href="{{ route('schedule.index') }}" 
+                                class="btn btn-danger px-4 py-2" 
+                                style="font-weight: 600; border-radius: 30px;">
+                                    Đặt vé ngay
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 @endforeach
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
         </div>
     @endif
 

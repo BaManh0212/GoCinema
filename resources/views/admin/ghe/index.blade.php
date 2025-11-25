@@ -121,7 +121,7 @@
     width: 94px !important; /* 45px * 2 + margin */
 }
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #FFB6C1; }
+.seat-doi { background-color: #b6ffb7ff; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
 
@@ -383,7 +383,8 @@ document.getElementById('btnSaveLayout').addEventListener('click', () => {
                 window.location.href = data.redirect;
             }
         } else {
-            alert('❌ Lưu thất bại!');
+            const message = data.message || 'Lưu thất bại!';
+            alert('❌ ' + message);
         }
     })
     .catch(() => alert('❌ Lỗi kết nối!'));
