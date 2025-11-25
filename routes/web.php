@@ -67,11 +67,15 @@ Route::get('/lich-chieu', [PhimController::class, 'schedule'])->name('schedule.i
 Route::get('/booking', [App\Http\Controllers\BookingController::class, 'index'])->name('booking.index');
 Route::post('/booking/hold-seats', [App\Http\Controllers\BookingController::class, 'holdSeats'])->name('booking.holdSeats');
 Route::post('/booking/check-voucher', [App\Http\Controllers\BookingController::class, 'checkVoucher'])->name('booking.check-voucher');
+Route::get('/booking/payment/{id}', [App\Http\Controllers\BookingController::class, 'payment'])->whereNumber('id')->name('booking.payment');
+Route::post('/booking/process-payment/{id}', [BookingController::class, 'processPayment'])->name('booking.process-payment');
+Route::get('/booking/confirm/{id}', [App\Http\Controllers\BookingController::class, 'confirm'])->whereNumber('id')->name('booking.confirm');
 Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])->name('booking.store');
-Route::get('/booking/payment/{id}', [App\Http\Controllers\BookingController::class, 'payment'])->name('booking.payment');
-Route::post('/booking/process-payment/{id}', [App\Http\Controllers\BookingController::class, 'processPayment'])->name('booking.process-payment');
-Route::get('/booking/confirm/{id}', [App\Http\Controllers\BookingController::class, 'confirm'])->name('booking.confirm');
-Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->name('booking.cancel');
+Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->whereNumber('id')->name('booking.cancel');
+Route::post('/booking/momo-callback', [BookingController::class, 'momoCallback'])->name('booking.momo-callback');
+Route::get('/booking/momo-return', [BookingController::class, 'momoReturn'])->name('booking.momo-return');
+Route::get('/booking/zalopay-return', [BookingController::class, 'zalopayReturn'])->name('booking.zalopay_return');
+Route::post('/booking/zalopay-callback', [BookingController::class, 'zalopayCallback'])->name('booking.zalopay-callback');
 
 // JSON lịch chiếu (nếu cần load bằng JS) + Lưu đánh giá
 Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson'])->name('movies.schedule.json');
