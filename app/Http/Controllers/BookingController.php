@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use App\Mail\BookingConfirmation;
 use App\Models\SuatChieu;
@@ -496,6 +498,132 @@ class BookingController extends Controller
 
         $paymentMethod = $request->payment_method;
 
+        //===== Xử lý thanh toán MoMo ======//
+        if ($paymentMethod === 'momo') {
+            $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+
+            $partnerCode = env('MOMO_PARTNER_CODE', 'MOMOBKUN20180529');
+            $accessKey = env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j');
+            $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
+
+            $orderId = 'BOOKING_' . $donDatVe->id . '_' . time();;
+            $amount = (int) round($donDatVe->tong_tien); // MoMo yêu cầu integer
+            $orderInfo = 'Thanh toán đơn ' . $donDatVe->ma_don;
+            $redirectUrl = route('booking.confirm', $donDatVe->id); // GET route đã có
+            $ipnUrl = route('booking.momo-callback'); // bạn đã thêm route IPN nếu cần
+            $requestId = (string) time();
+            $requestType = 'payWithATM'; // hoặc request type phù hợp
+
+            $extraData = ''; // nếu cần truyền thêm
+
+            $rawHash = "accessKey={$accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$ipnUrl}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$partnerCode}&redirectUrl={$redirectUrl}&requestId={$requestId}&requestType={$requestType}";
+            $signature = hash_hmac('sha256', $rawHash, $secretKey);
+
+            $data = [
+                'partnerCode' => $partnerCode,
+                'accessKey'   => $accessKey,
+                'requestId'   => $requestId,
+                'amount'      => (string)$amount,
+                'orderId'     => $orderId,
+                'orderInfo'   => $orderInfo,
+                'redirectUrl' => $redirectUrl,
+                'ipnUrl'      => $ipnUrl,
+                'lang'        => 'vi',
+                'extraData'   => $extraData,
+                'requestType' => $requestType,
+                'signature'   => $signature,
+            ];
+
+            try {
+                $response = Http::timeout(10)->post($endpoint, $data)->json();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi kết nối MoMo: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            if (!empty($response) && isset($response['resultCode']) && $response['resultCode'] == 0 && !empty($response['payUrl'])) {
+                // Nếu request là AJAX trả JSON để client redirect
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'payUrl' => $response['payUrl']]);
+        }
+    // Nếu form submit bình thường: server trực tiếp redirect (browser sẽ load trang MoMo)
+    return redirect()->away($response['payUrl']);
+            }
+
+            // Trả về lỗi từ MoMo để debug
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tạo thanh toán MoMo: ' . ($response['message'] ?? 'Không xác định'),
+                'response' => $response,
+            ], 500);
+        }
+        
+       // ===== ZaloPay =====
+if ($paymentMethod === 'zalopay') {
+    $endpoint = env('ZALOPAY_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2/create');
+    $appId    = env('ZALOPAY_APP_ID');
+    $key1     = env('ZALOPAY_KEY1');
+
+    if (!$appId || !$key1) {
+        return response()->json(['success' => false, 'message' => 'Thiếu cấu hình ZaloPay (.env)'], 400);
+    }
+
+    $appUser    = substr((string)(auth()->user()->email ?? ('user' . $donDatVe->nguoi_dung_id)), 0, 50);
+    $appTime    = (int) round(microtime(true) * 1000);
+    $appTransId = date('ymd') . '_' . $donDatVe->id . '_' . time();
+    $amount     = (int) round($donDatVe->tong_tien);
+
+    $embedData = json_encode(['return_url' => route('booking.zalopay_return')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $item = json_encode([[
+        'itemid' => 'VE',
+        'itemname' => 'Vé xem phim',
+        'itemprice' => $amount,
+        'itemquantity' => 1
+    ]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    // THỨ TỰ MAC: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
+    $rawMac = $appId . '|' . $appTransId . '|' . $appUser . '|' . $amount . '|' . $appTime . '|' . $embedData . '|' . $item;
+    $mac = hash_hmac('sha256', $rawMac, $key1);
+
+    $payload = [
+        'app_id'       => (int)$appId,
+        'app_user'     => $appUser,
+        'app_time'     => $appTime,
+        'app_trans_id' => $appTransId,
+        'amount'       => $amount,
+        'embed_data'   => $embedData,
+        'item'         => $item,
+        'description'  => 'Thanh toán đơn ' . ($donDatVe->ma_don ?? $appTransId),
+        'mac'          => $mac,
+    ];
+
+    Log::info('ZaloPay rawMac', ['rawMac' => $rawMac]);
+    Log::info('ZaloPay payload', $payload);
+
+    try {
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
+        ])->timeout(15)->post($endpoint, $payload)->json();
+        Log::info('ZaloPay response', $response);
+    } catch (\Exception $e) {
+        Log::error('ZaloPay request error', ['msg' => $e->getMessage()]);
+        return response()->json(['success' => false, 'message' => 'Lỗi kết nối ZaloPay: ' . $e->getMessage()], 500);
+    }
+
+    if (isset($response['return_code']) && $response['return_code'] == 1 && !empty($response['order_url'])) {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'payUrl' => $response['order_url']]);
+        }
+        return redirect()->away($response['order_url']);
+    }
+
+    Log::warning('ZaloPay create failed', $response ?? []);
+    return response()->json(['success' => false, 'message' => 'Lỗi: ' . ($response['return_message'] ?? 'Không xác định'), 'response' => $response], 400);
+}
+
         try {
             DB::beginTransaction();
 
@@ -957,5 +1085,73 @@ class BookingController extends Controller
                 'message' => 'Có lỗi xảy ra khi hủy đơn.',
             ], 500);
         }
+    }
+
+     public function momoCallback(Request $request)
+    {
+        Log::info('MoMo IPN received', $request->all());
+
+        $orderId = $request->input('orderId'); // ví dụ: BOOKING_23
+        $resultCode = $request->input('resultCode');
+
+        if (!$orderId) {
+            Log::warning('MoMo IPN missing orderId', $request->all());
+            return response('Missing orderId', 400);
+        }
+
+        $id = (int) str_replace('BOOKING_', '', $orderId);
+        $donDatVe = DonDatVe::find($id);
+        if (!$donDatVe) {
+            Log::warning('MoMo IPN order not found: ' . $orderId);
+            return response('Order not found', 404);
+        }
+
+        // Nếu thanh toán thành công cập nhật trạng thái
+        if ((string)$resultCode === '0') {
+            $donDatVe->update([
+                'trang_thai' => 'da_thanh_toan',
+                'thoi_gian_thanh_toan' => Carbon::now(),
+            ]);
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+            Log::info('Order marked paid via MoMo: ' . $orderId);
+            return response('OK', 200);
+        }
+
+        Log::info('MoMo IPN returned failure', $request->all());
+        return response('Ignored', 200);
+    }
+
+    public function momoReturn(Request $request)
+    {
+        // Người dùng được redirect (GET) từ MoMo => xử lý hiển thị/redirect tới trang confirm
+        $orderId = $request->query('orderId');
+        $resultCode = $request->query('resultCode');
+
+        if (!$orderId) {
+            return redirect()->route('booking.index')->with('error', 'Thiếu dữ liệu trả về từ MoMo.');
+        }
+
+        $id = (int) str_replace('BOOKING_', '', $orderId);
+        if ($resultCode === '0') {
+            return redirect()->route('booking.confirm', $id)->with('success', 'Thanh toán MoMo thành công.');
+        }
+
+        return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công.');
+    }
+
+    public function zalopayReturn(Request $request)
+    {
+        // Hiển thị kết quả cho user, hoặc verify lại bằng key2 nếu cần
+        Log::info('ZaloPay return', $request->all());
+        // redirect tới trang confirm hoặc hiển thị lỗi
+        return redirect()->route('booking.confirm', $request->query('app_trans_id') ? explode('_', $request->query('app_trans_id'))[1] : null)
+            ->with('success', 'Thanh toán ZaloPay trả về (kiểm tra trạng thái).');
+    }
+
+    public function zalopayCallback(Request $request)
+    {
+        Log::info('ZaloPay callback', $request->all());
+        // TODO: verify mac using key2 and update order trạng thái nếu thanh toán thành công
+        return response('OK', 200);
     }
 }
