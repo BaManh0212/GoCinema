@@ -66,7 +66,7 @@
                             <td class="text-start">{{ $user->email }}</td>
                             <td>{{ $user->so_dien_thoai ?? '—' }}</td>
                             <td>
-                                <span class="badge bg-{{ $user->vaiTro->ten == 'quan_ly' ? 'success' : ($user->vaiTro->ten == 'nhan_vien' ? 'info' : 'primary') }} bg-opacity-75 px-3 py-2 shadow-sm">
+                                <span class="badge bg-{{ $user->vaiTro->ten == 'quan_ly' ? 'white' : ($user->vaiTro->ten == 'nhan_vien' ? 'white' : 'white') }} bg-opacity-75 px-3 py-2 shadow-sm">
                                     {{ ucfirst($user->vaiTro->ten ?? '—') }}
                                 </span>
                             </td>

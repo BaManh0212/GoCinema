@@ -32,7 +32,9 @@
             
             <div class="qr-code">
                 <p><strong>Mã QR của bạn:</strong></p>
-                <img src="data:image/png;base64,{{ $qrCode }}" alt="Mã QR đặt vé">
+                <div style="text-align: center; margin: 20px 0;">
+                    {!! $qrCode !!}
+                </div>
             </div>
             
             <p>Vui lòng xuất trình mã QR này khi đến rạp để nhận vé.</p>

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Ghe;
 use App\Models\PhongChieu;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Models\ChiTietVe;  // Assuming this model exists for booking details
 
 class GheController extends Controller
 {
@@ -131,20 +133,46 @@ class GheController extends Controller
     {
         $seats = $request->input('seats', []);
 
-        // Xóa tất cả ghế cũ của phòng
-        Ghe::where('phong_id', $phong_id)->delete();
+        // Validate seats data
+        foreach ($seats as $index => $seat) {
+            if (!isset($seat['hang']) || !is_string($seat['hang']) || strlen($seat['hang']) === 0) {
+                return response()->json(['success' => false, 'message' => "Invalid seat 'hang' at index $index"], 400);
+            }
+            if (!isset($seat['cot']) || !is_numeric($seat['cot']) || $seat['cot'] < 1) {
+                return response()->json(['success' => false, 'message' => "Invalid seat 'cot' at index $index"], 400);
+            }
+            if (!isset($seat['loai']) || !in_array($seat['loai'], ['thuong', 'vip', 'doi'], true)) {
+                return response()->json(['success' => false, 'message' => "Invalid seat 'loai' at index $index"], 400);
+            }
+            if (!isset($seat['trang_thai']) || !in_array($seat['trang_thai'], ['hoat_dong', 'bao_tri'], true)) {
+                return response()->json(['success' => false, 'message' => "Invalid seat 'trang_thai' at index $index"], 400);
+            }
+        }
 
-        // Tạo ghế mới từ ma trận
-        foreach ($seats as $seat) {
-            Ghe::create([
-                'phong_id' => $phong_id,
-                'hang' => $seat['hang'],
-                'cot' => $seat['cot'],
-                'loai' => $seat['loai'],
-                'trang_thai' => $seat['trang_thai'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        try {
+            // Xóa tất cả chi tiết vé (booking details) liên quan đến các ghế phòng này
+            $seatIds = Ghe::where('phong_id', $phong_id)->pluck('id');
+            if ($seatIds->count() > 0) {
+                DB::table('chi_tiet_ve')->whereIn('ghe_id', $seatIds)->delete();
+            }
+
+            // Xóa tất cả ghế cũ của phòng
+            Ghe::where('phong_id', $phong_id)->delete();
+
+            // Tạo ghế mới từ ma trận
+            foreach ($seats as $seat) {
+                Ghe::create([
+                    'phong_id' => $phong_id,
+                    'hang' => $seat['hang'],
+                    'cot' => $seat['cot'],
+                    'loai' => $seat['loai'],
+                    'trang_thai' => $seat['trang_thai'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
 
         return response()->json(['success' => true, 'redirect' => route('admin.phongchieu.index')]);
