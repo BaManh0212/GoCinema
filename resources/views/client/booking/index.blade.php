@@ -288,6 +288,14 @@
 
                     <hr>
 
+                    {{-- Số tiền giảm giá --}}
+                    <div class="d-flex justify-content-between fs-6 fw-bold text-success">
+                        <span>Giảm giá:</span>
+                        <span id="discount-amount">0đ</span>
+                    </div>
+
+                    <hr>
+
                     {{-- Tổng cộng --}}
                     <div class="d-flex justify-content-between fs-5 fw-bold">
                         <span>Tổng cộng:</span>
@@ -943,6 +951,9 @@ function updateTotals() {
     });
     $('#combo-list').html(comboListHtml);
     $('#combo-total').text(formatCurrency(comboTotal));
+
+    // Update discount display
+    $('#discount-amount').text(formatCurrency(voucherDiscount));
 
     const grandTotal = calculateTotal();
     $('#grand-total').text(formatCurrency(grandTotal));

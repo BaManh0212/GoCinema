@@ -80,7 +80,6 @@
                         <li class="mb-2"><i class="bi bi-shield-check me-2 text-primary"></i><strong>Độ tuổi:</strong> {{ $phim->do_tuoi_gioi_han ?: '—' }}</li>
                         <li class="mb-2"><i class="bi bi-translate me-2 text-primary"></i><strong>Ngôn ngữ:</strong> {{ $phim->ngonNgu?->ten ?? '—' }}</li>
                         <li class="mb-2"><i class="bi bi-aspect-ratio me-2 text-primary"></i><strong>Định dạng:</strong> {{ $phim->dinh_dang ?: '2D' }}</li>
-                        <li class="mb-2"><i class="bi bi-eye me-2 text-primary"></i><strong>Lượt xem:</strong> {{ number_format($phim->luot_xem ?? 0) }}</li>
                     </ul>
 
                     <hr class="border-secondary-subtle">

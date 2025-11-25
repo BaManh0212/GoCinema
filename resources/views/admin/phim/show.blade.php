@@ -54,8 +54,6 @@
 
                         <span class="badge {{ $class }}">{{ $trangThai }}</span>
                     </p>
-                    <p><strong>⭐ Đánh giá:</strong> {{ $phim->danh_gia ?? 0 }} / 10</p>
-                    <p><strong>👁️ Lượt xem:</strong> {{ $phim->luot_xem ?? 0 }}</p>
                     <p><strong>📁 Danh mục:</strong> 
                         @if($phim->danhMucs && $phim->danhMucs->count())
                         @foreach($phim->danhMucs as $dm)
