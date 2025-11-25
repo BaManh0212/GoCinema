@@ -71,6 +71,17 @@ class DonDatVeController extends Controller
             ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
 
+    // Log print action using CheckinPrintLog within try-catch
+    try {
+        \App\Models\CheckinPrintLog::create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'don_dat_ve_id' => $donVe->id,
+            'action_type' => 'print',
+        ]);
+    } catch (\Throwable $e) {
+        \Log::error('Failed to log print action in DonDatVeController: ' . $e->getMessage());
+    }
+
     // Tạo writer dùng SVG backend
     $renderer = new ImageRenderer(
         new RendererStyle(200, 1), // size=200, margin=1
@@ -273,6 +284,17 @@ public function checkInByCode(Request $request)
         $don->save();
 
         DB::commit();
+
+        // Log checkin action using CheckinPrintLog within try-catch
+        try {
+            \App\Models\CheckinPrintLog::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'don_dat_ve_id' => $don->id,
+                'action_type' => 'checkin',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to log checkin action in DonDatVeController: ' . $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Check-in thành công.', 'ma_don' => $maDon]);

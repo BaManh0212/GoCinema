@@ -146,6 +146,13 @@
         </a>
     </li>
 
+    <li class="nav-item {{ request()->is('admin/logs*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.logs.index') }}">
+            <i class="fas fa-fw fa-history"></i>
+            <span>Lịch sử Check-in & In vé</span>
+        </a>
+    </li>
+
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 

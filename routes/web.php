@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\GheController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\BaiVietController as AdminBaiVietController;
+use App\Http\Controllers\Admin\LogController;
 // Controllers của Staff
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SanPhamController as StaffSanPhamController;
@@ -344,9 +345,13 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
             // Bật/tắt kích hoạt
             Route::post('{id}/toggle', [MaGiamGiaController::class, 'toggle'])->name('toggle');
         });
-        //Quản lý banner
+        // Quản lý banner
         Route::resource('banners', BannerController::class)->names('banners');
         Route::post('banners/{id}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
+
+        // Add route for admin.logs.index to fix missing route error
+        Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+
         // Quản lý liên hệ
         Route::prefix('contacts')->name('contacts.')->group(function () {
             Route::get('/', [AdminContactController::class, 'index'])->name('index');
