@@ -506,15 +506,14 @@ class BookingController extends Controller
             $accessKey = env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j');
             $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
 
-            $orderId = 'BOOKING_' . $donDatVe->id . '_' . time();;
+            $orderId = 'BOOKING_' . $donDatVe->id . '_' . time();
             $amount = (int) round($donDatVe->tong_tien); // MoMo yêu cầu integer
             $orderInfo = 'Thanh toán đơn ' . $donDatVe->ma_don;
-            $redirectUrl = route('booking.confirm', $donDatVe->id); // GET route đã có
-            $ipnUrl = route('booking.momo-callback'); // bạn đã thêm route IPN nếu cần
+            $redirectUrl = route('booking.momo-return'); // ✅ FIX: sử dụng momo-return route
+            $ipnUrl = route('booking.momo-callback'); // ✅ callback URL
             $requestId = (string) time();
-            $requestType = 'payWithATM'; // hoặc request type phù hợp
-
-            $extraData = ''; // nếu cần truyền thêm
+            $requestType = 'payWithATM';
+            $extraData = '';
 
             $rawHash = "accessKey={$accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$ipnUrl}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$partnerCode}&redirectUrl={$redirectUrl}&requestId={$requestId}&requestType={$requestType}";
             $signature = hash_hmac('sha256', $rawHash, $secretKey);
@@ -534,9 +533,13 @@ class BookingController extends Controller
                 'signature'   => $signature,
             ];
 
+            Log::info('MoMo request', ['orderId' => $orderId, 'amount' => $amount, 'ipnUrl' => $ipnUrl]);
+
             try {
                 $response = Http::timeout(10)->post($endpoint, $data)->json();
+                Log::info('MoMo response', $response);
             } catch (\Exception $e) {
+                Log::error('MoMo request error: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
                     'message' => 'Lỗi kết nối MoMo: ' . $e->getMessage(),
@@ -544,15 +547,30 @@ class BookingController extends Controller
             }
 
             if (!empty($response) && isset($response['resultCode']) && $response['resultCode'] == 0 && !empty($response['payUrl'])) {
-                // Nếu request là AJAX trả JSON để client redirect
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'payUrl' => $response['payUrl']]);
-        }
-    // Nếu form submit bình thường: server trực tiếp redirect (browser sẽ load trang MoMo)
-    return redirect()->away($response['payUrl']);
+                // ✅ Lưu phương thức thanh toán TRƯỚC khi redirect
+                DB::beginTransaction();
+                try {
+                    $donDatVe->update([
+                        'phuong_thuc_thanh_toan' => 'momo',
+                    ]);
+                    DB::commit();
+                    
+                    Log::info('MoMo payment initiated', ['order_id' => $donDatVe->id, 'orderId' => $orderId]);
+                    
+                    // Trả JSON để JS redirect hoặc form submit bình thường
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => true, 'payUrl' => $response['payUrl']]);
+                    }
+                    return redirect()->away($response['payUrl']);
+                    
+                } catch (\Exception $e) {
+                    DB::rollback();
+                    Log::error('Error updating MoMo phuong_thuc: ' . $e->getMessage());
+                    return response()->json(['success' => false, 'message' => 'Lỗi cập nhật phương thức thanh toán'], 500);
+                }
             }
 
-            // Trả về lỗi từ MoMo để debug
+            Log::warning('MoMo create failed', $response ?? []);
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi tạo thanh toán MoMo: ' . ($response['message'] ?? 'Không xác định'),
@@ -1091,39 +1109,77 @@ if ($paymentMethod === 'zalopay') {
     {
         Log::info('MoMo IPN received', $request->all());
 
-        $orderId = $request->input('orderId'); // ví dụ: BOOKING_23
+        $orderId = $request->input('orderId');
         $resultCode = $request->input('resultCode');
+        $amount = $request->input('amount');
 
         if (!$orderId) {
             Log::warning('MoMo IPN missing orderId', $request->all());
             return response('Missing orderId', 400);
         }
 
-        $id = (int) str_replace('BOOKING_', '', $orderId);
+        // Extract ID từ orderId (BOOKING_23_timestamp)
+        $parts = explode('_', $orderId);
+        if (count($parts) < 2 || $parts[0] !== 'BOOKING') {
+            Log::warning('MoMo IPN invalid orderId format: ' . $orderId);
+            return response('Invalid orderId', 400);
+        }
+        
+        $id = (int) $parts[1];
         $donDatVe = DonDatVe::find($id);
+        
         if (!$donDatVe) {
             Log::warning('MoMo IPN order not found: ' . $orderId);
             return response('Order not found', 404);
         }
 
-        // Nếu thanh toán thành công cập nhật trạng thái
-        if ((string)$resultCode === '0') {
-            $donDatVe->update([
-                'trang_thai' => 'da_thanh_toan',
-                'thoi_gian_thanh_toan' => Carbon::now(),
-            ]);
-            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
-            Log::info('Order marked paid via MoMo: ' . $orderId);
-            return response('OK', 200);
-        }
+        DB::beginTransaction();
+        try {
+            // resultCode = 0: thành công
+            if ((string)$resultCode === '0') {
+                // Chỉ cập nhật nếu chưa thanh toán
+                if ($donDatVe->trang_thai !== 'da_thanh_toan') {
+                    $donDatVe->update([
+                        'trang_thai' => 'da_thanh_toan',
+                        'thoi_gian_thanh_toan' => Carbon::now(),
+                        'phuong_thuc_thanh_toan' => 'momo',
+                    ]);
+                    $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+                    
+                    Log::info('✅ Order marked paid via MoMo callback', ['orderId' => $orderId, 'don_dat_ve_id' => $id]);
+                    
+                    // Gửi email xác nhận
+                    try {
+                        Mail::to($donDatVe->nguoiDung->email)->sendNow(new BookingConfirmation($donDatVe));
+                        Log::info('✅ Email confirmation sent for MoMo payment: ' . $orderId);
+                    } catch (\Exception $e) {
+                        Log::error('❌ Error sending email for MoMo callback: ' . $e->getMessage());
+                    }
+                } else {
+                    Log::info('Order already marked paid, skipping update', ['orderId' => $orderId]);
+                }
+                
+                DB::commit();
+                return response('OK', 200);
+            }
 
-        Log::info('MoMo IPN returned failure', $request->all());
-        return response('Ignored', 200);
+            // resultCode !== 0: thanh toán thất bại
+            Log::warning('MoMo IPN returned failure', ['orderId' => $orderId, 'resultCode' => $resultCode]);
+            // Vẫn trả OK để MoMo server không retry
+            DB::commit();
+            return response('Ignored', 200);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error processing MoMo callback: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            return response('Internal error', 500);
+        }
     }
 
     public function momoReturn(Request $request)
     {
-        // Người dùng được redirect (GET) từ MoMo => xử lý hiển thị/redirect tới trang confirm
+        Log::info('MoMo return (GET redirect)', $request->all());
+        
         $orderId = $request->query('orderId');
         $resultCode = $request->query('resultCode');
 
@@ -1131,12 +1187,75 @@ if ($paymentMethod === 'zalopay') {
             return redirect()->route('booking.index')->with('error', 'Thiếu dữ liệu trả về từ MoMo.');
         }
 
-        $id = (int) str_replace('BOOKING_', '', $orderId);
-        if ($resultCode === '0') {
-            return redirect()->route('booking.confirm', $id)->with('success', 'Thanh toán MoMo thành công.');
+        // Extract ID từ orderId
+        $parts = explode('_', $orderId);
+        if (count($parts) < 2 || $parts[0] !== 'BOOKING') {
+            return redirect()->route('booking.index')->with('error', 'Dữ liệu orderId không hợp lệ.');
         }
 
-        return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công.');
+        $id = (int) $parts[1];
+        $donDatVe = DonDatVe::find($id);
+
+        if (!$donDatVe) {
+            return redirect()->route('booking.index')->with('error', 'Đơn đặt vé không tồn tại.');
+        }
+
+        // ✅ FIX: resultCode = 0 => thanh toán thành công => CẬP NHẬT TRẠNG THÁI NGAY
+        if ((string)$resultCode === '0') {
+            Log::info('MoMo payment successful, updating status', ['id' => $id, 'orderId' => $orderId]);
+            
+            DB::beginTransaction();
+            try {
+                // ✅ Cập nhật trạng thái ngay
+                $donDatVe->update([
+                    'trang_thai' => 'da_thanh_toan',
+                    'thoi_gian_thanh_toan' => Carbon::now(),
+                    'phuong_thuc_thanh_toan' => 'momo',
+                ]);
+                
+                // Cập nhật chi tiết vé
+                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+                
+                DB::commit();
+                
+                Log::info('✅ Order status updated to da_thanh_toan', ['id' => $id]);
+                
+                // ✅ Gửi email xác nhận
+                try {
+                    Mail::to($donDatVe->nguoiDung->email)->sendNow(new BookingConfirmation($donDatVe));
+                    Log::info('✅ Confirmation email sent', ['id' => $id]);
+                } catch (\Exception $e) {
+                    Log::error('Error sending confirmation email: ' . $e->getMessage());
+                }
+                
+                return redirect()->route('booking.confirm', $id)->with('success', 'Thanh toán MoMo thành công!');
+                
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Error updating status in momoReturn: ' . $e->getMessage());
+                return redirect()->route('booking.payment', $id)->with('error', 'Lỗi cập nhật trạng thái: ' . $e->getMessage());
+            }
+        }
+
+        // resultCode !== 0: thanh toán thất bại
+        Log::warning('MoMo payment failed', ['orderId' => $orderId, 'resultCode' => $resultCode]);
+        
+        // ✅ Nếu thanh toán thất bại, cập nhật lại trạng thái "cho_thanh_toan"
+        DB::beginTransaction();
+        try {
+            $donDatVe->update([
+                'trang_thai' => 'cho_thanh_toan',
+                'phuong_thuc_thanh_toan' => null,
+            ]);
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
+            DB::commit();
+            Log::info('Order reset to cho_thanh_toan after payment failure', ['id' => $id]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error resetting order status: ' . $e->getMessage());
+        }
+        
+        return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công. Vui lòng thử lại.');
     }
 
     public function zalopayReturn(Request $request)
