@@ -391,13 +391,21 @@
     <div class="row">
         <!-- Revenue by Movie Chart -->
         <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Doanh thu theo phim (VNĐ)</h6>
+            <div class="card shadow mb-4 chart-card">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line mr-2"></i>Doanh thu theo phim (VNĐ)
+                    </h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="revenueMovieDropdown"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="revenueByMovieChart"></canvas>
+                    <div class="chart-bar position-relative">
+                        <canvas id="revenueByMovieChart" style="max-height: 400px;"></canvas>
                     </div>
                 </div>
             </div>
@@ -405,13 +413,21 @@
 
         <!-- Tickets by Movie Chart -->
         <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Số vé bán theo phim</h6>
+            <div class="card shadow mb-4 chart-card">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-ticket-alt mr-2"></i>Số vé bán theo phim
+                    </h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="ticketsMovieDropdown"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="ticketsByMovieChart"></canvas>
+                    <div class="chart-bar position-relative">
+                        <canvas id="ticketsByMovieChart" style="max-height: 400px;"></canvas>
                     </div>
                 </div>
             </div>
@@ -665,6 +681,121 @@
     }
     .bg-gradient-warning {
         background: linear-gradient(87deg, #f6c23e 0, #dda20a 100%) !important;
+    }
+
+    /* Enhanced Chart Styles */
+    .chart-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .chart-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+
+    .chart-card .card-header h6 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .chart-card .card-header .fas {
+        opacity: 0.8;
+    }
+
+    .chart-overlay {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 200px;
+        z-index: 10;
+    }
+
+    .chart-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .chart-bar {
+        height: 400px !important;
+    }
+
+    /* Gradient backgrounds for charts */
+    .gradient-primary {
+        background: linear-gradient(135deg, rgba(78, 115, 223, 0.1) 0%, rgba(34, 74, 190, 0.1) 100%);
+    }
+
+    .gradient-success {
+        background: linear-gradient(135deg, rgba(28, 200, 138, 0.1) 0%, rgba(19, 133, 92, 0.1) 100%);
+    }
+
+    /* Animation classes */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .chart-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Enhanced dropdown styles */
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border-radius: 10px;
+    }
+
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateX(5px);
     }
 </style>
 @endpush
@@ -1095,52 +1226,94 @@ var myPieChart = new Chart(ctx, {
 
 // Revenue by Movie Chart
 var ctx = document.getElementById("revenueByMovieChart");
-var myBarChart = new Chart(ctx, {
+var gradientPrimary = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+gradientPrimary.addColorStop(0, 'rgba(78, 115, 223, 0.8)');
+gradientPrimary.addColorStop(1, 'rgba(78, 115, 223, 0.3)');
+
+var revenueChart = new Chart(ctx, {
     type: 'bar',
     data: {
         labels: @json(collect($topMovies)->pluck('tieu_de')),
         datasets: [{
             label: "Doanh thu",
-            backgroundColor: "rgba(78, 115, 223, 0.8)",
+            backgroundColor: gradientPrimary,
             borderColor: "rgba(78, 115, 223, 1)",
-            borderWidth: 1,
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
             data: @json(collect($topMovies)->pluck('revenue')),
+            hoverBackgroundColor: 'rgba(78, 115, 223, 0.9)',
+            hoverBorderColor: 'rgba(78, 115, 223, 1)',
+            hoverBorderWidth: 3,
         }],
     },
     options: {
         maintainAspectRatio: false,
+        responsive: true,
+        animation: {
+            duration: 2000,
+            easing: 'easeInOutQuart',
+            onComplete: function() {
+                var chartInstance = this.chart;
+                var ctx = chartInstance.ctx;
+                ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+                ctx.fillStyle = this.chart.config.options.defaultFontColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+
+                this.data.datasets.forEach(function(dataset, i) {
+                    var meta = chartInstance.controller.getDatasetMeta(i);
+                    meta.data.forEach(function(bar, index) {
+                        var data = dataset.data[index];
+                        if (data > 0) {
+                            ctx.fillText(data.toLocaleString() + 'đ', bar._model.x, bar._model.y - 5);
+                        }
+                    });
+                });
+            }
+        },
         layout: {
             padding: {
-                left: 10,
-                right: 25,
-                top: 25,
-                bottom: 0
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
             }
         },
         scales: {
             xAxes: [{
-                ticks: {
-                    maxTicksLimit: 5,
-                    padding: 10,
-                    callback: function(value, index, values) {
-                        return value.toLocaleString() + 'đ';
-                    }
-                },
-                gridLines: {
-                    color: "rgb(234, 236, 244)",
-                    zeroLineColor: "rgb(234, 236, 244)",
-                    drawBorder: false,
-                    borderDash: [2],
-                    zeroLineBorderDash: [2]
-                }
-            }],
-            yAxes: [{
                 gridLines: {
                     display: false,
                     drawBorder: false
                 },
                 ticks: {
-                    maxTicksLimit: 10
+                    maxTicksLimit: 5,
+                    padding: 15,
+                    fontColor: '#6c757d',
+                    fontSize: 12,
+                    callback: function(value, index, values) {
+                        // Truncate long movie titles
+                        return value.length > 15 ? value.substring(0, 15) + '...' : value;
+                    }
+                }
+            }],
+            yAxes: [{
+                gridLines: {
+                    color: "rgba(234, 236, 244, 0.3)",
+                    zeroLineColor: "rgba(234, 236, 244, 0.5)",
+                    drawBorder: false,
+                    borderDash: [5, 5],
+                    zeroLineBorderDash: [5, 5]
+                },
+                ticks: {
+                    beginAtZero: true,
+                    maxTicksLimit: 8,
+                    padding: 15,
+                    fontColor: '#6c757d',
+                    fontSize: 12,
+                    callback: function(value, index, values) {
+                        return (value / 1000000).toFixed(1) + 'M đ';
+                    }
                 }
             }],
         },
@@ -1148,78 +1321,127 @@ var myBarChart = new Chart(ctx, {
             display: false
         },
         tooltips: {
-            titleMarginBottom: 10,
-            titleFontColor: '#6e707e',
-            titleFontSize: 14,
-            backgroundColor: "rgb(255,255,255)",
-            bodyFontColor: "#858796",
-            borderColor: '#dddfeb',
-            borderWidth: 1,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            bodyFontColor: "#495057",
+            titleFontColor: '#495057',
+            titleFontSize: 16,
+            titleFontStyle: 'bold',
+            bodyFontSize: 14,
+            borderColor: 'rgba(78, 115, 223, 0.3)',
+            borderWidth: 2,
+            cornerRadius: 8,
             xPadding: 15,
             yPadding: 15,
-            displayColors: false,
-            caretPadding: 10,
+            displayColors: true,
             callbacks: {
                 title: function(tooltipItems, data) {
                     return data.labels[tooltipItems[0].index];
                 },
                 label: function(tooltipItem, chart) {
                     var value = tooltipItem.yLabel;
-                    return 'Doanh thu: ' + value.toLocaleString() + 'đ';
+                    return '💰 Doanh thu: ' + value.toLocaleString() + ' VNĐ';
                 }
             }
         },
+        plugins: {
+            datalabels: {
+                display: false
+            }
+        }
     }
 });
 
 // Tickets by Movie Chart
 var ctx = document.getElementById("ticketsByMovieChart");
-var myBarChart = new Chart(ctx, {
+var gradientSuccess = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+gradientSuccess.addColorStop(0, 'rgba(28, 200, 138, 0.8)');
+gradientSuccess.addColorStop(1, 'rgba(28, 200, 138, 0.3)');
+
+var ticketsChart = new Chart(ctx, {
     type: 'bar',
     data: {
         labels: @json(collect($topMovies)->pluck('tieu_de')),
         datasets: [{
             label: "Vé bán",
-            backgroundColor: "rgba(28, 200, 138, 0.8)",
+            backgroundColor: gradientSuccess,
             borderColor: "rgba(28, 200, 138, 1)",
-            borderWidth: 1,
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
             data: @json(collect($topMovies)->pluck('tickets_sold')),
+            hoverBackgroundColor: 'rgba(28, 200, 138, 0.9)',
+            hoverBorderColor: 'rgba(28, 200, 138, 1)',
+            hoverBorderWidth: 3,
         }],
     },
     options: {
         maintainAspectRatio: false,
+        responsive: true,
+        animation: {
+            duration: 2000,
+            easing: 'easeInOutQuart',
+            delay: 500, // Stagger animation
+            onComplete: function() {
+                var chartInstance = this.chart;
+                var ctx = chartInstance.ctx;
+                ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+                ctx.fillStyle = this.chart.config.options.defaultFontColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+
+                this.data.datasets.forEach(function(dataset, i) {
+                    var meta = chartInstance.controller.getDatasetMeta(i);
+                    meta.data.forEach(function(bar, index) {
+                        var data = dataset.data[index];
+                        if (data > 0) {
+                            ctx.fillText(data.toLocaleString(), bar._model.x, bar._model.y - 5);
+                        }
+                    });
+                });
+            }
+        },
         layout: {
             padding: {
-                left: 10,
-                right: 25,
-                top: 25,
-                bottom: 0
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
             }
         },
         scales: {
             xAxes: [{
-                ticks: {
-                    maxTicksLimit: 5,
-                    padding: 10,
-                    callback: function(value, index, values) {
-                        return value.toLocaleString();
-                    }
-                },
-                gridLines: {
-                    color: "rgb(234, 236, 244)",
-                    zeroLineColor: "rgb(234, 236, 244)",
-                    drawBorder: false,
-                    borderDash: [2],
-                    zeroLineBorderDash: [2]
-                }
-            }],
-            yAxes: [{
                 gridLines: {
                     display: false,
                     drawBorder: false
                 },
                 ticks: {
-                    maxTicksLimit: 10
+                    maxTicksLimit: 5,
+                    padding: 15,
+                    fontColor: '#6c757d',
+                    fontSize: 12,
+                    callback: function(value, index, values) {
+                        // Truncate long movie titles
+                        return value.length > 15 ? value.substring(0, 15) + '...' : value;
+                    }
+                }
+            }],
+            yAxes: [{
+                gridLines: {
+                    color: "rgba(234, 236, 244, 0.3)",
+                    zeroLineColor: "rgba(234, 236, 244, 0.5)",
+                    drawBorder: false,
+                    borderDash: [5, 5],
+                    zeroLineBorderDash: [5, 5]
+                },
+                ticks: {
+                    beginAtZero: true,
+                    maxTicksLimit: 8,
+                    padding: 15,
+                    fontColor: '#6c757d',
+                    fontSize: 12,
+                    callback: function(value, index, values) {
+                        return value.toLocaleString();
+                    }
                 }
             }],
         },
@@ -1227,27 +1449,33 @@ var myBarChart = new Chart(ctx, {
             display: false
         },
         tooltips: {
-            titleMarginBottom: 10,
-            titleFontColor: '#6e707e',
-            titleFontSize: 14,
-            backgroundColor: "rgb(255,255,255)",
-            bodyFontColor: "#858796",
-            borderColor: '#dddfeb',
-            borderWidth: 1,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            bodyFontColor: "#495057",
+            titleFontColor: '#495057',
+            titleFontSize: 16,
+            titleFontStyle: 'bold',
+            bodyFontSize: 14,
+            borderColor: 'rgba(28, 200, 138, 0.3)',
+            borderWidth: 2,
+            cornerRadius: 8,
             xPadding: 15,
             yPadding: 15,
-            displayColors: false,
-            caretPadding: 10,
+            displayColors: true,
             callbacks: {
                 title: function(tooltipItems, data) {
                     return data.labels[tooltipItems[0].index];
                 },
                 label: function(tooltipItem, chart) {
                     var value = tooltipItem.yLabel;
-                    return 'Vé bán: ' + value.toLocaleString() + ' vé';
+                    return '🎫 Vé bán: ' + value.toLocaleString() + ' vé';
                 }
             }
         },
+        plugins: {
+            datalabels: {
+                display: false
+            }
+        }
     }
 });
 </script>

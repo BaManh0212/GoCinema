@@ -1,18 +1,16 @@
-# TODO: Thêm logic tích điểm khi đặt vé thành công
+# TODO: Bổ sung chức năng Staff Đặt Vé Tại Quầy
 
-## Mục tiêu
-Thêm 1 điểm cho mỗi 1000 VND chi tiêu khi đặt vé thành công.
+## 1. Thêm phương thức thanh toán quét mã
+- [x] Cập nhật DonDatVeController.php: Thêm 'quet_ma' vào store() method
+- [x] Cập nhật select_seats.blade.php: Thêm option chọn phương thức thanh toán (tiền mặt hoặc quét mã)
 
-## Các file cần chỉnh sửa
-- [x] app/Http/Controllers/BookingController.php - phương thức processPayment (thanh toán online)
-- [x] app/Http/Controllers/Staff/DonDatVeController.php - phương thức store (đặt vé tại quầy)
-- [x] app/Http/Controllers/Staff/DonDatVeController.php - phương thức changeStatus (thay đổi trạng thái)
+## 2. Giới hạn hủy vé chỉ trước 2 tiếng giờ chiếu
+- [x] Cập nhật DonDatVeController.php: Thêm kiểm tra thời gian trong changeStatus() method
 
-## Logic tích điểm
-- Tính điểm = floor(tổng_tiền / 1000)
-- Gọi $user->themDiem($diem, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don)
+## 3. Thêm link vào sidebar staff
+- [x] Cập nhật resources/views/admin/layouts/sidebar.blade.php: Thêm menu item "Đặt Vé Tại Quầy" dẫn đến route staff.donve.create
 
-## Kiểm tra
-- [ ] Test thanh toán online (MoMo/VNPay)
-- [ ] Test đặt vé tại quầy
-- [ ] Test thay đổi trạng thái đơn từ admin/staff
+## 4. Test các thay đổi
+- [x] Kiểm tra luồng đặt vé với cả hai phương thức thanh toán
+- [x] Kiểm tra logic hủy vé với thời gian
+- [x] Kiểm tra link sidebar hoạt động
