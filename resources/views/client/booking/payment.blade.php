@@ -124,84 +124,42 @@
             <!-- Phương thức thanh toán -->
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold mb-4 text-gray-700">Chọn phương thức thanh toán</h2>
-                <div class="space-y-4">
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment_method" value="momo" class="mr-3" checked>
-                            <div class="flex items-center">
-                                <img src="https://developers.momo.vn/v3/img/logo-momo.png" alt="MoMo" class="w-8 h-8 mr-3">
-                                <div>
-                                    <p class="font-semibold">Ví MoMo</p>
-                                    <p class="text-sm text-gray-600">Thanh toán nhanh qua ví điện tử</p>
+                <form id="paymentForm" action="{{ route('booking.process-payment', $donDatVe->id) }}" method="POST">
+                    @csrf
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="payment_method" value="momo" class="mr-3" checked>
+                                <div class="flex items-center">
+                                    <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Square-1024x1024.png" alt="MoMo" class="w-8 h-8 mr-3">
+                                    <div>
+                                        <p class="font-semibold">Ví MoMo</p>
+                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua ví điện tử</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4"> 
+                            <label class="flex items-center"> 
+                                <input type="radio" name="payment_method" value="vnpay" class="mr-3"> 
+                                <div class="flex items-center"> 
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/VNPay_logo.png" alt="VNPay" class="w-8 h-8 mr-3"> 
+                                    <div> 
+                                        <p class="font-semibold">VNPay</p> 
+                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua cổng VNPay</p> 
+                                    </div> 
+                                </div> 
+                            </label> 
+                        </div>
+                    <!-- Nút thanh toán -->
+                    <div class="text-center mt-8">
+                        <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
+                            Thanh toán {{ number_format($donDatVe->tong_tien) }}đ
+                        </button>
+                        <p class="text-sm text-gray-600 mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
                     </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment_method" value="zalopay" class="mr-3">
-                            <div class="flex items-center">
-                                <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ZaloPay.png" alt="ZaloPay" class="w-8 h-8 mr-3">
-                                <div>
-                                    <p class="font-semibold">Ví ZaloPay</p>
-                                    <p class="text-sm text-gray-600">Thanh toán nhanh qua ví điện tử</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment_method" value="bank" class="mr-3">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-white font-bold text-sm">B</span>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Chuyển khoản ngân hàng</p>
-                                    <p class="text-sm text-gray-600">Thanh toán qua chuyển khoản</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
+                </form>
             </div>
+ 
 
-            <!-- Nút thanh toán -->
-            <div class="text-center">
-                <button id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
-                    Thanh toán {{ number_format($donDatVe->tong_tien) }}đ
-                </button>
-                <p class="text-sm text-gray-600 mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal thông báo thanh toán không thành công -->
-<div id="paymentFailedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 max-w-sm w-full">
-        <h2 class="text-xl font-semibold mb-4 text-red-600">Thanh toán không thành công</h2>
-        <p class="mb-6 text-gray-700">Thanh toán thất bại do bạn đã rời khỏi trang thanh toán. Đơn vé sẽ không được lưu và ghế giữ sẽ bị hủy.</p>
-        <div class="flex justify-end space-x-4">
-            <button id="modalCancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Đóng</button>
-            <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Xác nhận</button>
-        </div>
-    </div>
-</div>
-
-<script src="{{ asset('js/payment.js') }}" defer></script>
-
-<script>
-    // Đặt attribute data để tjs có thể lấy ID đơn đặt vé từ nút payButton
-    document.addEventListener('DOMContentLoaded', function(){
-        const payButton = document.getElementById('payButton');
-        payButton.dataset.bookingId = '{{ $donDatVe->id }}';
-        payButton.dataset.total = '{{ $donDatVe->tong_tien }}';
-
-        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        modalConfirmBtn.dataset.bookingId = '{{ $donDatVe->id }}';
-    });
-</script>
 @endsection

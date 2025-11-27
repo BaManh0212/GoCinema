@@ -172,8 +172,8 @@
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #1a237e;">BẮP NƯỚC</h3>
             @foreach($combos as $combo)
                 <div style="margin-bottom: 5px;">
-                    <div style="font-weight: 500;">{{ $combo->ten }} (x{{ $combo->pivot->so_luong }})</div>
-                    <div style="color: #757575; font-size: 14px;">{{ $combo->mo_ta }}</div>
+                    <div style="font-weight: 500;">{{ $combo->ten }} (x{{ $combo->so_luong }})</div>
+                    <div style="color: #757575; font-size: 14px;">{{ $combo->mo_ta ?? '' }}</div>
                 </div>
             @endforeach
         </div>
@@ -184,7 +184,7 @@
             @php
                 $ticketTotal = $donDatVe->chiTietVes->sum('gia');
                 $comboTotal = isset($combos) ? $combos->sum(function($combo) {
-                    return $combo->pivot->gia * $combo->pivot->so_luong;
+                    return $combo->gia * $combo->so_luong;
                 }) : 0;
                 $total = $ticketTotal + $comboTotal;
             @endphp
