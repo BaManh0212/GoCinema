@@ -1164,8 +1164,8 @@ var myBarChart = new Chart(ctx, {
                     return data.labels[tooltipItems[0].index];
                 },
                 label: function(tooltipItem, chart) {
-                    var value = tooltipItem.xLabel || tooltipItem.yLabel;
-                    return 'Doanh thu: ' + value.toLocaleString() + ' VND';
+                    var value = tooltipItem.yLabel;
+                    return 'Doanh thu: ' + value.toLocaleString() + 'đ';
                 }
             }
         },
@@ -1243,7 +1243,7 @@ var myBarChart = new Chart(ctx, {
                     return data.labels[tooltipItems[0].index];
                 },
                 label: function(tooltipItem, chart) {
-                    var value = tooltipItem.xLabel || tooltipItem.yLabel;
+                    var value = tooltipItem.yLabel;
                     return 'Vé bán: ' + value.toLocaleString() + ' vé';
                 }
             }

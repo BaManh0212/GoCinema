@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Mail\BookingConfirmation;
 use App\Models\SuatChieu;
@@ -433,6 +434,12 @@ class BookingController extends Controller
                     // Decrement combo quantity
                     $combo->decrement('so_luong', $comboData['so_luong']);
                 }
+            }
+
+            // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+            $diemTichLuy = floor($tongTien / 1000);
+            if ($diemTichLuy > 0) {
+                $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
             }
 
             // Xóa ghế giữ tạm sau khi tạo đơn đặt vé
@@ -1146,7 +1153,7 @@ if ($paymentMethod === 'vnpay') {
         try {
             // resultCode = 0: thành công
             if ((string)$resultCode === '0') {
-                // Chỉ cập nhật nếu chưa thanh toán
+            // Chỉ cập nhật nếu chưa thanh toán
                 if ($donDatVe->trang_thai !== 'da_thanh_toan') {
                     $donDatVe->update([
                         'trang_thai' => 'da_thanh_toan',
@@ -1154,9 +1161,19 @@ if ($paymentMethod === 'vnpay') {
                         'phuong_thuc_thanh_toan' => 'momo',
                     ]);
                     $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
-                    
+
+                    // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+                    $diemTichLuy = floor($donDatVe->tong_tien / 1000);
+                    if ($diemTichLuy > 0) {
+                        $user = $donDatVe->nguoiDung;
+                        $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+                    }
+
+                    // Clear dashboard cache to update statistics
+                    Cache::increment('dashboard_version', 1);
+
                     Log::info('✅ Order marked paid via MoMo callback', ['orderId' => $orderId, 'don_dat_ve_id' => $id]);
-                    
+
                     // Gửi email xác nhận
                     try {
                         Mail::to($donDatVe->nguoiDung->email)->sendNow(new BookingConfirmation($donDatVe));
@@ -1321,6 +1338,16 @@ if ($paymentMethod === 'vnpay') {
             ]);
 
             $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+            // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+            $diemTichLuy = floor($donDatVe->tong_tien / 1000);
+            if ($diemTichLuy > 0) {
+                $user = $donDatVe->nguoiDung;
+                $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+            }
+
+            // Clear dashboard cache to update statistics
+            Cache::increment('dashboard_version', 1);
 
             DB::commit();
 

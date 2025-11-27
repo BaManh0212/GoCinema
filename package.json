@@ -19,6 +19,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "chart.js": "^4.4.0",
         "startbootstrap-sb-admin-2": "^4.1.4"
     }
 }

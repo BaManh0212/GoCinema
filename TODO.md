@@ -1,27 +1,18 @@
-# Dashboard Enhancement Tasks
+# TODO: Thêm logic tích điểm khi đặt vé thành công
 
-## Summary Cards Enhancement
-- [ ] Add 4 new summary cards: Average Order Value, Conversion Rate, Occupancy Rate, Returning Customers
-- [ ] Update existing cards with percentage changes and trends
+## Mục tiêu
+Thêm 1 điểm cho mỗi 1000 VND chi tiêu khi đặt vé thành công.
 
-## New Charts Addition
-- [ ] Add bar chart for daily ticket sales
-- [ ] Add line chart for customer growth
-- [ ] Add pie chart for revenue by movie genre
+## Các file cần chỉnh sửa
+- [x] app/Http/Controllers/BookingController.php - phương thức processPayment (thanh toán online)
+- [x] app/Http/Controllers/Staff/DonDatVeController.php - phương thức store (đặt vé tại quầy)
+- [x] app/Http/Controllers/Staff/DonDatVeController.php - phương thức changeStatus (thay đổi trạng thái)
 
-## New Sections
-- [ ] Add top cinemas table
-- [ ] Add top genres table
-- [ ] Add system alerts section
-- [ ] Add recent activities section
+## Logic tích điểm
+- Tính điểm = floor(tổng_tiền / 1000)
+- Gọi $user->themDiem($diem, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don)
 
-## Improvements to Existing Sections
-- [ ] Enhance top movies table with more details
-- [ ] Improve recent orders with more information
-- [ ] Add export functionality to charts
-- [ ] Update chart styles and responsiveness
-
-## Data Variables Needed
-- [ ] Ensure controller passes: $averageOrderValue, $conversionRate, $occupancyRate, $returningCustomers
-- [ ] Add chart data: $dailyTickets, $customerGrowthLabels, $customerGrowthData, $genreRevenueLabels, $genreRevenueData
-- [ ] Add table data: $topCinemas, $topGenres, $systemAlerts, $recentActivities
+## Kiểm tra
+- [ ] Test thanh toán online (MoMo/VNPay)
+- [ ] Test đặt vé tại quầy
+- [ ] Test thay đổi trạng thái đơn từ admin/staff

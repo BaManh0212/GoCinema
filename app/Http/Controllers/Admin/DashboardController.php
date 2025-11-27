@@ -16,7 +16,8 @@ class DashboardController extends Controller
         $to   = Carbon::parse($request->input('to', now()->toDateString()))->endOfDay();
         $rapId = $request->integer('rap_id'); // optional
 
-        $cacheKey = "dash:v5:{$from->timestamp}:{$to->timestamp}:" . ($rapId ?: 'all');
+        $version = Cache::get('dashboard_version', 1);
+        $cacheKey = "dash:v5:{$version}:{$from->timestamp}:{$to->timestamp}:" . ($rapId ?: 'all');
 
         $data = Cache::remember($cacheKey, 300, function () use ($from, $to, $rapId) {
             // base cho DON_DAT_VE
@@ -76,7 +77,7 @@ class DashboardController extends Controller
                 ->where('d.trang_thai', 'da_thanh_toan')
                 ->whereBetween('d.created_at', [$from, $to])
                 ->whereIn('c.trang_thai', ['da_thanh_toan', 'da_su_dung'])
-                ->selectRaw('p.id, p.tieu_de, dm.ten as the_loai, SUM(d.tong_tien) as revenue, COUNT(*) as tickets_sold, p.danh_gia as rating, p.anh_poster as poster_url')
+                ->selectRaw('p.id, p.tieu_de, dm.ten as the_loai, SUM(c.gia) as revenue, COUNT(*) as tickets_sold, p.danh_gia as rating, p.anh_poster as poster_url')
                 ->groupBy('p.id', 'p.tieu_de', 'dm.ten', 'p.danh_gia', 'p.anh_poster')
                 ->orderByDesc('revenue')
                 ->limit(10)
