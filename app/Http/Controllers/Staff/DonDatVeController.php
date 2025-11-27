@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -161,6 +162,13 @@ class DonDatVeController extends Controller
                     }
                     $combo->so_luong = $combo->so_luong - $soLuongMua;
                     $combo->save();
+                }
+
+                // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+                $diemTichLuy = floor($donVe->tong_tien / 1000);
+                if ($diemTichLuy > 0) {
+                    $user = $donVe->nguoiDung;
+                    $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donVe->ma_don);
                 }
             } elseif ($target === 'da_checkin') {
                 foreach ($donVe->chiTietVes as $ct) {
@@ -542,6 +550,13 @@ public function selectSeats($suat_chieu_id)
                 'thoi_gian_thanh_toan' => Carbon::now(),
                 'phuong_thuc_thanh_toan' => $request->payment_method, // Phương thức thanh toán từ request
             ]);
+
+            // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+            $diemTichLuy = floor($tongTien / 1000);
+            if ($diemTichLuy > 0) {
+                $user = $donDatVe->nguoiDung;
+                $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+            }
 
             // Tạo chi tiết vé với trạng thái đã thanh toán
             foreach ($gheIds as $gheId) {

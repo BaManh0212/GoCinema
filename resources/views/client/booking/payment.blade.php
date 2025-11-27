@@ -124,9 +124,9 @@
             <!-- Phương thức thanh toán -->
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold mb-4 text-gray-700">Chọn phương thức thanh toán</h2>
-                <div class="space-y-4">
-                    <form id="paymentForm" action="{{ route('booking.process-payment', $donDatVe->id) }}" method="POST">
-                        @csrf
+                <form id="paymentForm" action="{{ route('booking.process-payment', $donDatVe->id) }}" method="POST">
+                    @csrf
+                    <div class="space-y-4">
                         <div class="border border-gray-200 rounded-lg p-4">
                             <label class="flex items-center">
                                 <input type="radio" name="payment_method" value="momo" class="mr-3" checked>
@@ -139,56 +139,27 @@
                                 </div>
                             </label>
                         </div>
-
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <label class="flex items-center">
-                                <input type="radio" name="payment_method" value="zalopay" class="mr-3">
-                                <div class="flex items-center">
-                                    <img src="https://play-lh.googleusercontent.com/MXoXRQvKYcPzk0AITb6nVJUxZMaWYESXar_HwK8KXbGMboZPQjcwVBcVtXlpOkfD7PM" alt="ZaloPay" class="w-8 h-8 mr-3">
-                                    <div>
-                                        <p class="font-semibold ">Ví ZaloPay</p>
-                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua ví điện tử</p>
-                                    </div>
-                                </div>
-                            </label>
+                        <div class="border border-gray-200 rounded-lg p-4"> 
+                            <label class="flex items-center"> 
+                                <input type="radio" name="payment_method" value="vnpay" class="mr-3"> 
+                                <div class="flex items-center"> 
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/VNPay_logo.png" alt="VNPay" class="w-8 h-8 mr-3"> 
+                                    <div> 
+                                        <p class="font-semibold">VNPay</p> 
+                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua cổng VNPay</p> 
+                                    </div> 
+                                </div> 
+                            </label> 
                         </div>
-
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <label class="flex items-center">
-                                <input type="radio" name="payment_method" value="bank" class="mr-3">
-                                <div class="flex items-center">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white font-bold text-sm">B</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-semibold">Chuyển khoản ngân hàng</p>
-                                        <p class="text-sm text-gray-600">Thanh toán qua chuyển khoản</p>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Nút thanh toán -->
-            <div class="text-center">
-                <!-- MOVE: button inside form để gửi POST đúng -->
-                <form id="paymentSubmitForm" action="{{ route('booking.process-payment', $donDatVe->id) }}" method="POST" style="display:inline;">
-                    @csrf
-                    <input type="hidden" name="payment_method" id="payment_method_input" value="{{ old('payment_method', 'momo') }}">
-                    <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
-                        Thanh toán {{ number_format($donDatVe->tong_tien) }}đ
-                    </button>
+                    <!-- Nút thanh toán -->
+                    <div class="text-center mt-8">
+                        <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
+                            Thanh toán {{ number_format($donDatVe->tong_tien) }}đ
+                        </button>
+                        <p class="text-sm text-gray-600 mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
+                    </div>
                 </form>
-                 <p class="text-sm text-gray-600 mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
-             </div>
+            </div>
  
-<script>
-    // Đồng bộ radio vào hidden input trước khi submit
-    document.getElementById('payButton').addEventListener('click', function(){
-        const sel = document.querySelector('input[name="payment_method"]:checked');
-        if (sel) document.getElementById('payment_method_input').value = sel.value;
-    });
-</script>
+
 @endsection

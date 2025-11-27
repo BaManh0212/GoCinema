@@ -74,8 +74,8 @@ Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store']
 Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->whereNumber('id')->name('booking.cancel');
 Route::post('/booking/momo-callback', [BookingController::class, 'momoCallback'])->name('booking.momo-callback');
 Route::get('/booking/momo-return', [BookingController::class, 'momoReturn'])->name('booking.momo-return');
-Route::get('/booking/zalopay-return', [BookingController::class, 'zalopayReturn'])->name('booking.zalopay_return');
-Route::post('/booking/zalopay-callback', [BookingController::class, 'zalopayCallback'])->name('booking.zalopay-callback');
+Route::get('/booking/vnpay-return', [BookingController::class, 'vnpayReturn'])->name('booking.vnpay-return');
+Route::post('/booking/vnpay-callback', [BookingController::class, 'vnpayCallback'])->name('booking.vnpay-callback');
 
 // JSON lịch chiếu (nếu cần load bằng JS) + Lưu đánh giá
 Route::get('/api/phim/{slug}/lich-chieu', [PhimController::class, 'lichChieuJson'])->name('movies.schedule.json');
