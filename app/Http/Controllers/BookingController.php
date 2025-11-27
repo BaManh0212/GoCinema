@@ -487,8 +487,9 @@ class BookingController extends Controller
      */
     public function processPayment(Request $request, $id)
     {
+        Log::info('Process payment request', $request->all());
         $request->validate([
-            'payment_method' => 'required|in:momo,zalopay,bank',
+            'payment_method' => 'required|in:momo,vnpay',
         ]);
 
         $donDatVe = DonDatVe::where('id', $id)
@@ -577,70 +578,78 @@ class BookingController extends Controller
                 'response' => $response,
             ], 500);
         }
-        
-       // ===== ZaloPay =====
-if ($paymentMethod === 'zalopay') {
-    $endpoint = env('ZALOPAY_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2/create');
-    $appId    = env('ZALOPAY_APP_ID');
-    $key1     = env('ZALOPAY_KEY1');
+     
+        //===== Xử lý thanh toán VNPay ======//
+if ($paymentMethod === 'vnpay') {
 
-    if (!$appId || !$key1) {
-        return response()->json(['success' => false, 'message' => 'Thiếu cấu hình ZaloPay (.env)'], 400);
-    }
+    $vnp_TmnCode = env('VNP_TMNCODE');
+    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $vnp_Url = env('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+    $vnp_Returnurl = route('booking.vnpay-return');
 
-    $appUser    = substr((string)(auth()->user()->email ?? ('user' . $donDatVe->nguoi_dung_id)), 0, 50);
-    $appTime    = (int) round(microtime(true) * 1000);
-    $appTransId = date('ymd') . '_' . $donDatVe->id . '_' . time();
-    $amount     = (int) round($donDatVe->tong_tien);
+    $vnp_TxnRef = 'BOOKING_' . $donDatVe->id . '_' . time();
+    $vnp_OrderInfo = 'Thanh toan don ' . preg_replace('/[^A-Za-z0-9 ]/', '', $donDatVe->ma_don);
+    $vnp_Amount = $donDatVe->tong_tien * 100; // VNPay nhân 100
+    $vnp_Locale = 'vn';
 
-    $embedData = json_encode(['return_url' => route('booking.zalopay_return')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    $item = json_encode([[
-        'itemid' => 'VE',
-        'itemname' => 'Vé xem phim',
-        'itemprice' => $amount,
-        'itemquantity' => 1
-    ]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-    // THỨ TỰ MAC: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
-    $rawMac = $appId . '|' . $appTransId . '|' . $appUser . '|' . $amount . '|' . $appTime . '|' . $embedData . '|' . $item;
-    $mac = hash_hmac('sha256', $rawMac, $key1);
-
-    $payload = [
-        'app_id'       => (int)$appId,
-        'app_user'     => $appUser,
-        'app_time'     => $appTime,
-        'app_trans_id' => $appTransId,
-        'amount'       => $amount,
-        'embed_data'   => $embedData,
-        'item'         => $item,
-        'description'  => 'Thanh toán đơn ' . ($donDatVe->ma_don ?? $appTransId),
-        'mac'          => $mac,
+    $inputData = [
+        "vnp_Version" => "2.1.0",
+        "vnp_TmnCode" => $vnp_TmnCode,
+        "vnp_Amount" => $vnp_Amount,
+        "vnp_Command" => "pay",
+        "vnp_CreateDate" => date('YmdHis'),
+        "vnp_CurrCode" => "VND",
+        "vnp_IpAddr" => request()->ip(),
+        "vnp_Locale" => $vnp_Locale,
+        "vnp_OrderInfo" => $vnp_OrderInfo,
+        "vnp_OrderType" => "billpayment",
+        "vnp_ReturnUrl" => $vnp_Returnurl,
+        "vnp_TxnRef" => $vnp_TxnRef,
+        "vnp_BankCode" => "NCB"
     ];
 
-    Log::info('ZaloPay rawMac', ['rawMac' => $rawMac]);
-    Log::info('ZaloPay payload', $payload);
+    // Sort & hash giống MoMo
+    ksort($inputData);
+    $query = http_build_query($inputData);
+    $vnp_SecureHash = hash_hmac('sha512', urldecode($query), $vnp_HashSecret);
+
+    // URL thanh toán
+    $paymentUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $vnp_SecureHash;
+
+    Log::info('[VNPAY] Request tạo thanh toán', [
+        'txnRef' => $vnp_TxnRef,
+        'amount' => $vnp_Amount,
+        'url' => $paymentUrl
+    ]);
 
     try {
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
-        ])->timeout(15)->post($endpoint, $payload)->json();
-        Log::info('ZaloPay response', $response);
+        DB::beginTransaction();
+
+        // Lưu phương thức trước khi redirect
+        $donDatVe->update([
+            'phuong_thuc_thanh_toan' => 'vnpay',
+            'ma_giao_dich' => $vnp_TxnRef
+        ]);
+
+        DB::commit();
     } catch (\Exception $e) {
-        Log::error('ZaloPay request error', ['msg' => $e->getMessage()]);
-        return response()->json(['success' => false, 'message' => 'Lỗi kết nối ZaloPay: ' . $e->getMessage()], 500);
+        DB::rollBack();
+        Log::error('Lỗi lưu thông tin VNPay: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Lỗi tạo thanh toán VNPay']);
     }
 
-    if (isset($response['return_code']) && $response['return_code'] == 1 && !empty($response['order_url'])) {
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'payUrl' => $response['order_url']]);
-        }
-        return redirect()->away($response['order_url']);
+    // Nếu là AJAX → trả JSON để FE redirect
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'payUrl' => $paymentUrl
+        ]);
     }
 
-    Log::warning('ZaloPay create failed', $response ?? []);
-    return response()->json(['success' => false, 'message' => 'Lỗi: ' . ($response['return_message'] ?? 'Không xác định'), 'response' => $response], 400);
+    // Không AJAX → redirect ngay
+    return redirect()->away($paymentUrl);
 }
+
 
         try {
             DB::beginTransaction();
@@ -1258,19 +1267,183 @@ if ($paymentMethod === 'zalopay') {
         return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công. Vui lòng thử lại.');
     }
 
-    public function zalopayReturn(Request $request)
-    {
-        // Hiển thị kết quả cho user, hoặc verify lại bằng key2 nếu cần
-        Log::info('ZaloPay return', $request->all());
-        // redirect tới trang confirm hoặc hiển thị lỗi
-        return redirect()->route('booking.confirm', $request->query('app_trans_id') ? explode('_', $request->query('app_trans_id'))[1] : null)
-            ->with('success', 'Thanh toán ZaloPay trả về (kiểm tra trạng thái).');
+ /**
+
+* Handle VNPay return URL
+  */
+  public function vnpayReturn(Request $request)
+{
+    Log::info('VNPay Return received', $request->all());
+
+    $vnp_ResponseCode = $request->input('vnp_ResponseCode');
+    $vnp_TxnRef = $request->input('vnp_TxnRef');
+    $vnp_SecureHash = $request->input('vnp_SecureHash');
+
+    if (!$vnp_TxnRef) {
+        return redirect()->route('booking.index')
+            ->with('error', 'Thiếu mã giao dịch từ VNPay.');
     }
 
-    public function zalopayCallback(Request $request)
-    {
-        Log::info('ZaloPay callback', $request->all());
-        // TODO: verify mac using key2 and update order trạng thái nếu thanh toán thành công
-        return response('OK', 200);
+    // Tách ID đơn hàng
+    $parts = explode('_', $vnp_TxnRef);
+    $id = (int)$parts[0];
+
+    $donDatVe = DonDatVe::find($id);
+    if (!$donDatVe) {
+        return redirect()->route('booking.index')
+            ->with('error', 'Đơn đặt vé không tồn tại.');
     }
+
+    // ===== Xác thực hash =====
+    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $inputData = $request->except(['vnp_SecureHash']);
+    ksort($inputData);
+
+    $hashString = urldecode(http_build_query($inputData));
+    $verifyHash = hash_hmac('sha512', $hashString, $vnp_HashSecret);
+
+    if ($verifyHash !== $vnp_SecureHash) {
+        return redirect()->route('booking.payment', $id)
+            ->with('error', 'Dữ liệu trả về không hợp lệ.');
+    }
+
+    // ===== Thanh toán thành công =====
+    if ($vnp_ResponseCode === "00") {
+        Log::info("VNPay Return indicates success for order $id");
+
+        DB::beginTransaction();
+        try {
+            $donDatVe->update([
+                'trang_thai' => 'da_thanh_toan',
+                'thoi_gian_thanh_toan' => now(),
+                'phuong_thuc_thanh_toan' => 'vnpay',
+                'ma_giao_dich' => $request->input('vnp_TransactionNo')
+            ]);
+
+            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+            DB::commit();
+
+            // Gửi email
+            try {
+                Mail::to($donDatVe->nguoiDung->email)
+                    ->sendNow(new BookingConfirmation($donDatVe));
+            } catch (\Exception $e) {
+                Log::error("Email send error in VNPay Return: " . $e->getMessage());
+            }
+
+            return redirect()->route('booking.confirm', $id)
+                ->with('success', 'Thanh toán VNPay thành công!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error("VNPay Return DB error: " . $e->getMessage());
+
+            return redirect()->route('booking.payment', $id)
+                ->with('error', 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage());
+        }
+    }
+
+    // ===== Thanh toán thất bại =====
+    Log::warning("VNPay return failed for order $id");
+
+    DB::beginTransaction();
+    try {
+        $donDatVe->update([
+            'trang_thai' => 'cho_thanh_toan',
+            'phuong_thuc_thanh_toan' => null,
+        ]);
+
+        $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error("VNPay reset error: " . $e->getMessage());
+    }
+
+    return redirect()->route('booking.payment', $id)
+        ->with('error', 'Thanh toán VNPay thất bại. Vui lòng thử lại.');
+}
+
+/**
+
+* VNPay IPN / Callback (nếu cần)
+  */
+  public function vnpayCallback(Request $request)
+{
+    Log::info('VNPay IPN received', $request->all());
+
+    // Lấy các tham số từ VNPay
+    $vnp_ResponseCode = $request->input('vnp_ResponseCode');
+    $vnp_TxnRef = $request->input('vnp_TxnRef');
+    $vnp_TransactionNo = $request->input('vnp_TransactionNo');
+    $vnp_SecureHash = $request->input('vnp_SecureHash');
+
+    if (!$vnp_TxnRef) {
+        Log::warning('VNPay missing vnp_TxnRef');
+        return response('Missing TxnRef', 400);
+    }
+
+    // Tách ID đơn hàng
+    $parts = explode('_', $vnp_TxnRef);
+    $id = (int)$parts[0];
+
+    $donDatVe = DonDatVe::find($id);
+    if (!$donDatVe) {
+        Log::warning("VNPay IPN order not found: $vnp_TxnRef");
+        return response('Order not found', 404);
+    }
+
+    // ===== Xác thực Secure Hash =====
+    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $inputData = $request->except(['vnp_SecureHash']);
+    ksort($inputData);
+
+    $hashString = urldecode(http_build_query($inputData));
+    $verifyHash = hash_hmac('sha512', $hashString, $vnp_HashSecret);
+
+    if ($verifyHash !== $vnp_SecureHash) {
+        Log::warning("VNPay IPN invalid hash for order $id");
+        return response("Invalid hash", 400);
+    }
+
+    DB::beginTransaction();
+    try {
+        if ($vnp_ResponseCode === "00") {
+            // Chỉ update nếu chưa thanh toán
+            if ($donDatVe->trang_thai !== 'da_thanh_toan') {
+                $donDatVe->update([
+                    'trang_thai' => 'da_thanh_toan',
+                    'thoi_gian_thanh_toan' => now(),
+                    'phuong_thuc_thanh_toan' => 'vnpay',
+                    'ma_giao_dich' => $vnp_TransactionNo
+                ]);
+
+                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+                Log::info("✅ VNPay IPN - Order $id marked as PAID");
+
+                // Gửi email
+                try {
+                    Mail::to($donDatVe->nguoiDung->email)
+                        ->sendNow(new BookingConfirmation($donDatVe));
+
+                    Log::info("Email sent for VNPay callback order $id");
+                } catch (\Exception $e) {
+                    Log::error("Email error VNPay callback: " . $e->getMessage());
+                }
+            }
+        } else {
+            Log::warning("VNPay IPN payment failed: $vnp_ResponseCode");
+        }
+
+        DB::commit();
+        return response("OK", 200);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error("VNPay callback error: " . $e->getMessage());
+        return response("Internal error", 500);
+    }
+}
+
 }

@@ -1,16 +1,27 @@
-# TODO: Bổ sung chức năng Staff Đặt Vé Tại Quầy
+# Dashboard Enhancement Tasks
 
-## 1. Thêm phương thức thanh toán quét mã
-- [x] Cập nhật DonDatVeController.php: Thêm 'quet_ma' vào store() method
-- [x] Cập nhật select_seats.blade.php: Thêm option chọn phương thức thanh toán (tiền mặt hoặc quét mã)
+## Summary Cards Enhancement
+- [ ] Add 4 new summary cards: Average Order Value, Conversion Rate, Occupancy Rate, Returning Customers
+- [ ] Update existing cards with percentage changes and trends
 
-## 2. Giới hạn hủy vé chỉ trước 2 tiếng giờ chiếu
-- [x] Cập nhật DonDatVeController.php: Thêm kiểm tra thời gian trong changeStatus() method
+## New Charts Addition
+- [ ] Add bar chart for daily ticket sales
+- [ ] Add line chart for customer growth
+- [ ] Add pie chart for revenue by movie genre
 
-## 3. Thêm link vào sidebar staff
-- [x] Cập nhật resources/views/admin/layouts/sidebar.blade.php: Thêm menu item "Đặt Vé Tại Quầy" dẫn đến route staff.donve.create
+## New Sections
+- [ ] Add top cinemas table
+- [ ] Add top genres table
+- [ ] Add system alerts section
+- [ ] Add recent activities section
 
-## 4. Test các thay đổi
-- [x] Kiểm tra luồng đặt vé với cả hai phương thức thanh toán
-- [x] Kiểm tra logic hủy vé với thời gian
-- [x] Kiểm tra link sidebar hoạt động
+## Improvements to Existing Sections
+- [ ] Enhance top movies table with more details
+- [ ] Improve recent orders with more information
+- [ ] Add export functionality to charts
+- [ ] Update chart styles and responsiveness
+
+## Data Variables Needed
+- [ ] Ensure controller passes: $averageOrderValue, $conversionRate, $occupancyRate, $returningCustomers
+- [ ] Add chart data: $dailyTickets, $customerGrowthLabels, $customerGrowthData, $genreRevenueLabels, $genreRevenueData
+- [ ] Add table data: $topCinemas, $topGenres, $systemAlerts, $recentActivities

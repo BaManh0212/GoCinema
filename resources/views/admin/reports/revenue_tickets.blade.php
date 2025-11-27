@@ -41,7 +41,7 @@
             @foreach($byMovie as $r)
               <tr>
                 <td>
-                  <a href="{{ route('admin.reports.movies.show', $r->id) }}">{{ $r->tieu_de }}</a>
+                  <a href="{{ route('admin.reports.movie.detail', $r->id) }}">{{ $r->tieu_de }}</a>
                 </td>
                 <td class="text-end">{{ number_format($r->so_ve) }}</td>
                 <td class="text-end">{{ number_format($r->doanh_thu,0,',','.') }}đ</td>
