@@ -3,94 +3,53 @@
 @section('title', 'Lịch sử đặt vé')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
     {{-- Header --}}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; overflow: hidden;">
-                <div class="card-body text-white p-5">
-                    <div class="row align-items-center">
-                        <div class="col-lg-8">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="avatar-xl me-4">
-                                    <div class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                                        <i class="fas fa-ticket-alt fa-4x text-white"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h2 class="mb-2 fw-bold">Lịch sử đặt vé</h2>
-                                    <p class="mb-3 opacity-90 fs-5">
-                                        <i class="fas fa-user-circle me-2"></i>{{ $user->ho_ten }}
-                                    </p>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="badge bg-white text-primary px-4 py-2 fs-6 rounded-pill">
-                                            <i class="fas fa-star me-2"></i>
-                                            <strong>{{ number_format($user->diem) }}</strong> điểm tích lũy
-                                        </div>
-                                        @if($user->so_dien_thoai)
-                                        <div class="badge bg-white bg-opacity-25 text-white px-4 py-2 fs-6 rounded-pill">
-                                            <i class="fas fa-phone me-2"></i>{{ $user->so_dien_thoai }}
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 text-lg-end">
-                            <a href="{{ url('/') }}" class="btn btn-light btn-lg rounded-pill px-4 py-3 shadow">
-                                <i class="fas fa-home me-2"></i>Về trang chủ
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     {{-- Quick Stats --}}
     @if(!$bookings->isEmpty())
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px;">
-                <div class="card-body text-center p-4">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <i class="fas fa-receipt fa-3x opacity-75"></i>
+    <div class="row mb-2">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+                <div class="card-body text-center p-2">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-receipt fa-2x opacity-75"></i>
                     </div>
-                    <h3 class="mb-2 fw-bold">{{ $bookings->total() }}</h3>
-                    <p class="mb-0 opacity-90">Tổng đơn hàng</p>
+                    <h4 class="mb-1 fw-bold">{{ $bookings->total() }}</h4>
+                    <p class="mb-0 opacity-90 small">Tổng đơn hàng</p>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 15px;">
-                <div class="card-body text-center p-4">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <i class="fas fa-check-circle fa-3x opacity-75"></i>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 10px;">
+                <div class="card-body text-center p-2">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
                     </div>
-                    <h3 class="mb-2 fw-bold">{{ $bookings->where('trang_thai', 'da_thanh_toan')->count() }}</h3>
-                    <p class="mb-0 opacity-90">Đã thanh toán</p>
+                    <h4 class="mb-1 fw-bold">{{ $bookings->where('trang_thai', 'da_thanh_toan')->count() }}</h4>
+                    <p class="mb-0 opacity-90 small">Đã thanh toán</p>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; border-radius: 15px;">
-                <div class="card-body text-center p-4">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <i class="fas fa-clock fa-3x opacity-75"></i>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; border-radius: 10px;">
+                <div class="card-body text-center p-2">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
                     </div>
-                    <h3 class="mb-2 fw-bold">{{ $bookings->where('trang_thai', 'cho_thanh_toan')->count() }}</h3>
-                    <p class="mb-0 opacity-90">Chờ thanh toán</p>
+                    <h4 class="mb-1 fw-bold">{{ $bookings->where('trang_thai', 'cho_thanh_toan')->count() }}</h4>
+                    <p class="mb-0 opacity-90 small">Chờ thanh toán</p>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #e83e8c 0%, #dc3545 100%); color: white; border-radius: 15px;">
-                <div class="card-body text-center p-4">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <i class="fas fa-wallet fa-3x opacity-75"></i>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #e83e8c 0%, #dc3545 100%); color: white; border-radius: 10px;">
+                <div class="card-body text-center p-2">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-wallet fa-2x opacity-75"></i>
                     </div>
-                    <h3 class="mb-2 fw-bold">{{ number_format($bookings->where('trang_thai', 'da_thanh_toan')->sum('tong_tien')) }}đ</h3>
-                    <p class="mb-0 opacity-90">Tổng chi tiêu</p>
+                    <h4 class="mb-1 fw-bold">{{ number_format($bookings->where('trang_thai', 'da_thanh_toan')->sum('tong_tien')) }}đ</h4>
+                    <p class="mb-0 opacity-90 small">Tổng chi tiêu</p>
                 </div>
             </div>
         </div>
@@ -98,10 +57,10 @@
     @endif
 
     {{-- Search & Filter --}}
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); color: white;">
-                <div class="card-body p-4">
+                <div class="card-body p-2">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-white">Tìm kiếm</label>
@@ -170,17 +129,17 @@
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white;">
-                <div class="card-header border-bottom-0 py-4" style="background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%); color: white;">
+                <div class="card-header border-bottom-0 py-2" style="background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%); color: white;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="mb-1 fw-bold text-white">
-                                <i class="fas fa-history text-light me-3"></i>Lịch sử đặt vé
-                            </h4>
-                            <p class="text-light opacity-75 mb-0">Quản lý và theo dõi các đơn đặt vé của bạn</p>
+                            <h5 class="mb-1 fw-bold text-white">
+                                <i class="fas fa-history text-light me-2"></i>Lịch sử đặt vé
+                            </h5>
+                            <p class="text-light opacity-75 mb-0 small">Quản lý và theo dõi các đơn đặt vé của bạn</p>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('account.index') }}" class="btn btn-outline-light rounded-pill px-4 text-white">
-                                <i class="fas fa-user me-2"></i>Hồ sơ cá nhân
+                            <a href="{{ route('account.index') }}" class="btn btn-outline-light rounded-pill px-3 text-white">
+                                <i class="fas fa-user me-1"></i>Hồ sơ cá nhân
                             </a>
                         </div>
                     </div>
@@ -200,111 +159,120 @@
                             </div>
                         </div>
                     @else
-                        <div class="booking-list">
-                            @foreach($bookings as $booking)
-                            <div class="booking-item border-bottom p-4" data-status="{{ $booking->trang_thai }}" data-movie="{{ $booking->suatChieu->phim->tieu_de ?? '' }}" data-code="{{ $booking->id }}" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1) !important;">
-                                <div class="row align-items-center">
-                                    <div class="col-lg-2 col-md-3 mb-3 mb-md-0">
-                                        <div class="movie-poster">
-                                            @if($booking->suatChieu->phim->anh_poster)
-                                                <img src="{{ asset('storage/' . $booking->suatChieu->phim->anh_poster) }}"
-                                                     alt="{{ $booking->suatChieu->phim->tieu_de }}"
-                                                     class="rounded-3 shadow-sm w-100"
-                                                     style="max-width: 120px; height: 160px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);">
-                                            @else
-                                                <div class="bg-dark rounded-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 160px; border: 2px solid rgba(255,255,255,0.1);">
-                                                    <i class="fas fa-film fa-3x text-light"></i>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-5 mb-3 mb-md-0">
-                                        <div class="booking-details">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill me-3">#{{ $booking->id }}</span>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead class="table-header">
+                                    <tr>
+                                        <th class="border-0 text-light fw-semibold">Poster</th>
+                                        <th class="border-0 text-light fw-semibold">Mã đơn</th>
+                                        <th class="border-0 text-light fw-semibold">Phim</th>
+                                        <th class="border-0 text-light fw-semibold">Chi tiết</th>
+                                        <th class="border-0 text-light fw-semibold">Giá tiền</th>
+                                        <th class="border-0 text-light fw-semibold">Trạng thái</th>
+                                        <th class="border-0 text-light fw-semibold">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($bookings as $booking)
+                                    <tr class="booking-row" data-status="{{ $booking->trang_thai }}" data-movie="{{ $booking->suatChieu->phim->tieu_de ?? '' }}" data-code="{{ $booking->id }}">
+                                        <td class="align-middle">
+                                            <div class="movie-poster">
+                                                @if($booking->suatChieu->phim->anh_poster)
+                                                    <img src="{{ asset('storage/' . $booking->suatChieu->phim->anh_poster) }}"
+                                                         alt="{{ $booking->suatChieu->phim->tieu_de }}"
+                                                         class="rounded-3 shadow-sm"
+                                                         style="width: 60px; height: 90px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                                                @else
+                                                    <div class="bg-dark rounded-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 90px; border: 1px solid rgba(255,255,255,0.1);">
+                                                        <i class="fas fa-film fa-lg text-light"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex flex-column">
+                                                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill mb-2">#{{ $booking->id }}</span>
                                                 @if($booking->ma_giam_gia)
-                                                    <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">
+                                                    <span class="badge bg-success fs-6 px-2 py-1 rounded-pill">
                                                         <i class="fas fa-tag me-1"></i>{{ $booking->ma_giam_gia->ma }}
                                                     </span>
                                                 @endif
                                             </div>
-                                            <h5 class="mb-2 fw-bold text-white">{{ $booking->suatChieu->phim->tieu_de ?? 'N/A' }}</h5>
+                                        </td>
+                                        <td class="align-middle">
+                                            <h6 class="mb-1 fw-bold text-white">{{ $booking->suatChieu->phim->tieu_de ?? 'N/A' }}</h6>
+                                            <small class="text-light opacity-75">{{ $booking->created_at->format('d/m/Y H:i') }}</small>
+                                        </td>
+                                        <td class="align-middle">
                                             <div class="booking-info text-light opacity-75">
                                                 <div class="mb-1">
                                                     <i class="fas fa-map-marker-alt me-2 text-info"></i>
-                                                    <strong class="text-light">{{ $booking->suatChieu->phong->rap->ten ?? 'N/A' }}</strong> - Phòng {{ $booking->suatChieu->phong->ten ?? '' }}
+                                                    <strong class="text-light">{{ $booking->suatChieu->phong->rap->ten ?? 'N/A' }}</strong>
                                                 </div>
                                                 <div class="mb-1">
                                                     <i class="fas fa-calendar-alt me-2 text-info"></i>
-                                                    {{ \Carbon\Carbon::parse($booking->suatChieu->gio_bat_dau)->format('l, d/m/Y \l\ú\c H:i') }} -
-                                                    {{ \Carbon\Carbon::parse($booking->suatChieu->gio_ket_thuc)->format('H:i') }}
+                                                    {{ \Carbon\Carbon::parse($booking->suatChieu->gio_bat_dau)->format('d/m/Y H:i') }}
                                                 </div>
                                                 <div class="mb-1">
                                                     <i class="fas fa-chair me-2 text-info"></i>
-                                                    Ghế:
                                                     @foreach($booking->chiTietVes as $detail)
                                                         <span class="badge bg-light text-dark me-1">{{ $detail->ghe->hang }}{{ $detail->ghe->cot }}</span>
                                                     @endforeach
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2 col-md-2 mb-3 mb-md-0 text-center">
-                                        <div class="price-section">
-                                            <div class="price-amount fs-4 fw-bold text-success mb-1">
-                                                {{ number_format($booking->tong_tien) }}đ
-                                            </div>
-                                            @if($booking->ma_giam_gia)
-                                                <div class="discount text-light opacity-75 small">
-                                                    Giảm {{ number_format($booking->ma_giam_gia->gia_tri) }}đ
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="price-section">
+                                                <div class="price-amount fs-5 fw-bold text-success mb-1">
+                                                    {{ number_format($booking->tong_tien) }}đ
                                                 </div>
-                                            @endif
-                                            <div class="booking-date text-light opacity-75 small mt-2">
-                                                {{ $booking->created_at->format('d/m/Y H:i') }}
+                                                @if($booking->ma_giam_gia)
+                                                    <div class="discount text-light opacity-75 small">
+                                                        Giảm {{ number_format($booking->ma_giam_gia->gia_tri) }}đ
+                                                    </div>
+                                                @endif
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2 col-md-2 text-center">
-                                        <div class="status-section mb-3">
+                                        </td>
+                                        <td class="align-middle">
                                             @if($booking->trang_thai == 'da_thanh_toan')
-                                                <span class="badge bg-success fs-6 px-4 py-2 rounded-pill w-100">
-                                                    <i class="fas fa-check-circle me-2"></i>Đã thanh toán
+                                                <span class="badge bg-success fs-6 px-3 py-1 rounded-pill">
+                                                    <i class="fas fa-check-circle me-1"></i>Đã thanh toán
                                                 </span>
                                             @elseif($booking->trang_thai == 'cho_thanh_toan')
-                                                <span class="badge bg-warning fs-6 px-4 py-2 rounded-pill w-100">
-                                                    <i class="fas fa-clock me-2"></i>Chờ thanh toán
+                                                <span class="badge bg-warning fs-6 px-3 py-1 rounded-pill">
+                                                    <i class="fas fa-clock me-1"></i>Chờ thanh toán
                                                 </span>
                                             @elseif($booking->trang_thai == 'da_huy')
-                                                <span class="badge bg-danger fs-6 px-4 py-2 rounded-pill w-100">
-                                                    <i class="fas fa-times-circle me-2"></i>Đã hủy
+                                                <span class="badge bg-danger fs-6 px-3 py-1 rounded-pill">
+                                                    <i class="fas fa-times-circle me-1"></i>Đã hủy
                                                 </span>
                                             @else
-                                                <span class="badge bg-secondary fs-6 px-4 py-2 rounded-pill w-100">{{ $booking->trang_thai }}</span>
+                                                <span class="badge bg-secondary fs-6 px-3 py-1 rounded-pill">{{ $booking->trang_thai }}</span>
                                             @endif
-                                        </div>
-                                        <div class="action-buttons">
-                                            <div class="btn-group w-100" role="group">
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="btn-group-vertical" role="group">
                                                 <a href="{{ route('booking.confirm', $booking->id) }}"
-                                                   class="btn btn-outline-light btn-sm rounded-pill px-3 text-white border-light">
+                                                   class="btn btn-outline-light btn-sm rounded-pill mb-1 text-white border-light">
                                                     <i class="fas fa-eye me-1"></i>Xem
                                                 </a>
                                                 @if($booking->trang_thai == 'cho_thanh_toan')
                                                     <form method="POST" action="{{ route('booking.cancel', $booking->id) }}"
-                                                          class="d-inline ms-1"
+                                                          class="d-inline"
                                                           onsubmit="return confirm('Bạn có chắc muốn hủy đơn đặt vé này?')">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
                                                             <i class="fas fa-times me-1"></i>Hủy
                                                         </button>
                                                     </form>
                                                 @endif
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
 
                         {{-- Pagination --}}
@@ -339,14 +307,35 @@
         box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
     }
 
-    .booking-item {
-        transition: all 0.2s ease;
-        background: #fff;
+    .table-dark {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 10px;
+        overflow: hidden;
     }
 
-    .booking-item:hover {
-        background: rgba(255,255,255,0.1) !important;
-        transform: translateX(5px);
+    .table-dark thead th {
+        background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+        border: none;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+    }
+
+    .table-dark tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.2s ease;
+    }
+
+    .table-dark tbody tr:hover {
+        background: rgba(255,255,255,0.05) !important;
+        transform: scale(1.01);
+    }
+
+    .table-dark tbody td {
+        border: none;
+        padding: 1rem;
+        vertical-align: middle;
     }
 
     .movie-poster img {
@@ -402,33 +391,33 @@
         border-radius: 10px 0 0 10px !important;
     }
 
-    .booking-list .booking-item:last-child {
-        border-bottom: none !important;
-    }
-
     @media (max-width: 768px) {
         .container-fluid {
-            padding-left: 15px;
-            padding-right: 15px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
-        .booking-item {
-            padding: 1rem !important;
+        .table-responsive {
+            font-size: 0.85rem;
         }
 
-        .btn-group {
-            flex-direction: column;
-            gap: 0.5rem;
+        .table-dark thead th {
+            padding: 0.5rem;
+            font-size: 0.75rem;
         }
 
-        .btn-group .btn {
-            width: 100%;
+        .table-dark tbody td {
+            padding: 0.5rem;
         }
-    }
 
-    .status-section .badge {
-        display: inline-block;
-        min-width: 140px;
+        .btn-group-vertical .btn {
+            margin-bottom: 0.25rem;
+        }
+
+        .movie-poster img {
+            width: 50px;
+            height: 75px;
+        }
     }
 </style>
 @endpush
@@ -439,37 +428,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const timeFilter = document.getElementById('timeFilter');
-    const bookingItems = document.querySelectorAll('.booking-item');
+    const bookingRows = document.querySelectorAll('.booking-row');
 
     function filterBookings() {
         const searchTerm = searchInput.value.toLowerCase();
         const statusValue = statusFilter.value;
         const timeValue = timeFilter.value;
 
-        bookingItems.forEach(item => {
-            const movieName = item.dataset.movie.toLowerCase();
-            const bookingCode = item.dataset.code.toString();
-            const status = item.dataset.status;
+        bookingRows.forEach(row => {
+            const movieName = row.dataset.movie.toLowerCase();
+            const bookingCode = row.dataset.code.toString();
+            const status = row.dataset.status;
 
-            let showItem = true;
+            let showRow = true;
 
             // Search filter
             if (searchTerm) {
-                showItem = movieName.includes(searchTerm) || bookingCode.includes(searchTerm);
+                showRow = movieName.includes(searchTerm) || bookingCode.includes(searchTerm);
             }
 
             // Status filter
-            if (statusValue && showItem) {
-                showItem = status === statusValue;
+            if (statusValue && showRow) {
+                showRow = status === statusValue;
             }
 
             // Time filter (basic implementation - you might want to enhance this)
-            if (timeValue && showItem) {
+            if (timeValue && showRow) {
                 // This would need actual date comparison - simplified for now
-                showItem = true; // Placeholder
+                showRow = true; // Placeholder
             }
 
-            item.style.display = showItem ? 'block' : 'none';
+            row.style.display = showRow ? 'table-row' : 'none';
         });
     }
 

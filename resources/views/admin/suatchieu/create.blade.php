@@ -23,123 +23,144 @@
     <form action="{{ route('admin.suatchieu.autoStore') }}" method="POST">
         @csrf
 
-        {{-- 🎞️ Thông tin cơ bản --}}
-        <div class="card section-card mb-4 shadow-sm">
-            <div class="card-header bg-light border-0">
-                <h5 class="fw-bold text-primary mb-0">
-                    <i class="bi bi-film"></i> 🎬 Thông tin phim & phòng chiếu
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="phim_id" class="form-label fw-semibold">🎬 Phim</label>
-                        <select name="phim_id" id="phim_id" class="form-select form-select-lg rounded-pill @error('phim_id') is-invalid @enderror">
-                            <option value="">-- Chọn phim --</option>
-                            @foreach ($phims as $phim)
-                                <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }}>
-                                    🎬 {{ $phim->tieu_de }} ({{ $phim->thoi_luong }} phút)
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <div class="row">
+            {{-- Cột trái: Thông tin cơ bản & Giá vé --}}
+            <div class="col-md-6">
+                {{-- 🎞️ Thông tin cơ bản --}}
+                <div class="card section-card mb-4 shadow-sm">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-film"></i> 🎬 Thông tin phim & phòng chiếu
+                        </h5>
                     </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <label for="phim_id" class="col-sm-3 col-form-label fw-semibold">🎬 Phim</label>
+                            <div class="col-sm-9">
+                                <select name="phim_id" id="phim_id" class="form-select form-select-lg @error('phim_id') is-invalid @enderror" style="max-width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                                    <option value="">-- Chọn phim --</option>
+                                    @foreach ($phims as $phim)
+                                        <option value="{{ $phim->id }}" {{ old('phim_id') == $phim->id ? 'selected' : '' }} data-subtext="{{ $phim->thoi_luong }} phút">
+                                            {{ Str::limit($phim->tieu_de, 30) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('phim_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div class="form-text text-muted">Tên phim sẽ được rút gọn nếu quá dài</div>
+                            </div>
+                        </div>
+                        <style>
+                            .select2-container {
+                                width: 100% !important;
+                            }
+                            .select2-results__option {
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+                        </style>
+                        <div class="row mb-3">
+                            <label for="phong_id" class="col-sm-3 col-form-label fw-semibold">🏢 Phòng chiếu</label>
+                            <div class="col-sm-9">
+                                <select name="phong_id" id="phong_id" class="form-select form-select-lg rounded-pill @error('phong_id') is-invalid @enderror">
+                                    <option value="">-- Chọn phòng --</option>
+                                    @foreach ($phongs as $phong)
+                                        <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
+                                            🏢 {{ $phong->ten }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="col-md-6">
-                        <label for="phong_id" class="form-label fw-semibold">🏢 Phòng chiếu</label>
-                        <select name="phong_id" id="phong_id" class="form-select form-select-lg rounded-pill @error('phong_id') is-invalid @enderror">
-                            <option value="">-- Chọn phòng --</option>
-                            @foreach ($phongs as $phong)
-                                <option value="{{ $phong->id }}" {{ old('phong_id') == $phong->id ? 'selected' : '' }}>
-                                    🏢 {{ $phong->ten }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('phong_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- 💰 Giá vé --}}
+                <div class="card section-card mb-4 shadow-sm">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-cash-stack"></i> 💰 Giá vé
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-semibold">💰 Giá vé</label>
+                            <div class="col-sm-9">
+                                <input type="number" name="gia_ve" min="0" step="1000"
+                                    value="{{ old('gia_ve', 70000) }}" class="form-control form-control-lg rounded-pill"
+                                    placeholder="Nhập giá vé...">
+                                <div class="form-text text-muted">💰 Giá vé mặc định: 70,000 VNĐ</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- 📅 Thời gian --}}
-        <div class="card section-card mb-4 shadow-sm">
-            <div class="card-header bg-light border-0">
-                <h5 class="fw-bold text-primary mb-0">
-                    <i class="bi bi-clock-history"></i> 📅 Thời gian chiếu
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">📅 Ngày bắt đầu</label>
-                        <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control form-control-lg rounded-pill">
+            {{-- Cột phải: Thời gian --}}
+            <div class="col-md-6">
+                <div class="card section-card mb-4 shadow-sm">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-clock-history"></i> 📅 Thời gian chiếu
+                        </h5>
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">📅 Ngày kết thúc</label>
-                        <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control form-control-lg rounded-pill">
-                    </div>
-
-                    {{-- Giờ chiếu đầu tiên + gợi ý --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">⏰ Giờ chiếu đầu tiên trong ngày</label>
-                        <div class="input-group">
-                            <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
-                                value="{{ old('gio_bat_dau_ngay', '08:00') }}"
-                                class="form-control form-control-lg rounded-pill">
-                            <button class="btn btn-outline-primary rounded-pill" type="button"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                💡 Gợi ý
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item gio-goi-y" href="#">🌅 08:00</a></li>
-                                <li><a class="dropdown-item gio-goi-y" href="#">☀️ 10:00</a></li>
-                                <li><a class="dropdown-item gio-goi-y" href="#">🌞 13:00</a></li>
-                                <li><a class="dropdown-item gio-goi-y" href="#">🌇 15:30</a></li>
-                                <li><a class="dropdown-item gio-goi-y" href="#">🌆 18:00</a></li>
-                                <li><a class="dropdown-item gio-goi-y" href="#">🌙 20:30</a></li>
-                            </ul>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-semibold">📅 Ngày bắt đầu</label>
+                            <div class="col-sm-9">
+                                <input type="date" name="ngay_bat_dau" value="{{ old('ngay_bat_dau') }}" class="form-control form-control-lg rounded-pill">
+                            </div>
                         </div>
-                        <div class="form-text text-muted">💡 Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
-                    </div>
-
-                    {{-- Giờ chiếu cố định --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">⏰ Chọn giờ chiếu cố định (có thể chọn nhiều)</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            @php
-                                $gioCoDinh = ['08:00','11:00','14:00','17:00','20:00'];
-                            @endphp
-                            @foreach($gioCoDinh as $gio)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="gio_co_dinh[]" value="{{ $gio }}"
-                                        id="gio_{{ str_replace(':','',$gio) }}"
-                                        {{ is_array(old('gio_co_dinh')) && in_array($gio, old('gio_co_dinh')) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="gio_{{ str_replace(':','',$gio) }}">
-                                        ⏰ {{ $gio }}
-                                    </label>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-semibold">📅 Ngày kết thúc</label>
+                            <div class="col-sm-9">
+                                <input type="date" name="ngay_ket_thuc" value="{{ old('ngay_ket_thuc') }}" class="form-control form-control-lg rounded-pill">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-semibold">⏰ Giờ chiếu đầu tiên trong ngày</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="time" id="gio_bat_dau_ngay" name="gio_bat_dau_ngay"
+                                        value="{{ old('gio_bat_dau_ngay', '08:00') }}"
+                                        class="form-control form-control-lg rounded-pill">
+                                    <button class="btn btn-outline-primary rounded-pill" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        💡 Gợi ý
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item gio-goi-y" href="#">🌅 08:00</a></li>
+                                        <li><a class="dropdown-item gio-goi-y" href="#">☀️ 10:00</a></li>
+                                        <li><a class="dropdown-item gio-goi-y" href="#">🌞 13:00</a></li>
+                                        <li><a class="dropdown-item gio-goi-y" href="#">🌇 15:30</a></li>
+                                        <li><a class="dropdown-item gio-goi-y" href="#">🌆 18:00</a></li>
+                                        <li><a class="dropdown-item gio-goi-y" href="#">🌙 20:30</a></li>
+                                    </ul>
                                 </div>
-                            @endforeach
+                                <div class="form-text text-muted">💡 Chọn nhanh hoặc nhập tay thời gian bắt đầu chiếu.</div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- 💰 Giá vé --}}
-        <div class="card section-card mb-4 shadow-sm">
-            <div class="card-header bg-light border-0">
-                <h5 class="fw-bold text-primary mb-0">
-                    <i class="bi bi-cash-stack"></i> 💰 Giá vé
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <input type="number" name="gia_ve" min="0" step="1000"
-                            value="{{ old('gia_ve', 70000) }}" class="form-control form-control-lg rounded-pill"
-                            placeholder="Nhập giá vé...">
-                        <div class="form-text text-muted">💰 Giá vé mặc định: 70,000 VNĐ</div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-semibold">⏰ Chọn giờ chiếu cố định (có thể chọn nhiều)</label>
+                            <div class="col-sm-9">
+                                <div class="d-flex flex-wrap gap-2">
+                                    @php
+                                        $gioCoDinh = ['08:00','11:00','14:00','17:00','20:00'];
+                                    @endphp
+                                    @foreach($gioCoDinh as $gio)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="gio_co_dinh[]" value="{{ $gio }}"
+                                                id="gio_{{ str_replace(':','',$gio) }}"
+                                                {{ is_array(old('gio_co_dinh')) && in_array($gio, old('gio_co_dinh')) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="gio_{{ str_replace(':','',$gio) }}">
+                                                ⏰ {{ $gio }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -172,37 +193,8 @@
                         </form>
                     </div>
 
-                    {{-- 🔍 Bộ lọc cho bảng preview --}}
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body py-3">
-                            <form id="preview-filter-form" class="row g-3 align-items-center">
-                                <div class="col-md-3">
-                                    <input type="text" id="filter-phim" class="form-control rounded-pill" placeholder="🔍 Tìm theo tên phim...">
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="date" id="filter-ngay" class="form-control rounded-pill">
-                                </div>
-                                <div class="col-md-3">
-                                    <select id="filter-phong" class="form-select rounded-pill">
-                                        <option value="">-- Chọn phòng chiếu --</option>
-                                        @foreach ($phongs as $phong)
-                                            <option value="{{ $phong->ten }}">{{ $phong->ten }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <select id="filter-trang-thai" class="form-select rounded-pill">
-                                        <option value="">-- Trạng thái --</option>
-                                        <option value="ok">✅ OK</option>
-                                        <option value="conflict">❌ Trùng lấn</option>
-                                    </select>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div>
-                        <table class="table table-hover" id="preview-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="preview-table" style="width:100%">
                             <thead class="table-header text-white">
                                 <tr class="text-center">
                                     <th style="width: 70px;">STT</th>
@@ -242,7 +234,154 @@
                         </table>
                     </div>
 
+                    <script>
+                        $(document).ready(function() {
+                            // Custom search function for case-insensitive partial matches
+                            $.fn.dataTable.ext.search.push(
+                                function(settings, data, dataIndex) {
+                                    var phim = $('#filter-phim').val().toLowerCase();
+                                    var phong = $('#filter-phong').val();
+                                    var ngay = $('#filter-ngay').val();
+                                    var trangThai = $('#filter-trang-thai').val();
+                                    
+                                    // Get row data
+                                    var rowData = table.row(dataIndex).data();
+                                    var rowPhim = $(rowData[1]).text().toLowerCase();
+                                    var rowPhong = rowData[2];
+                                    var rowNgay = rowData[3].split(' ')[0]; // Get only date part
+                                    var rowTrangThai = $(rowData[6]).find('.badge-danger').length > 0 ? 'conflict' : 'ok';
+                                    
+                                    // Apply filters
+                                    if (phim && !rowPhim.includes(phim)) {
+                                        return false;
+                                    }
+                                    
+                                    if (phong && rowPhong !== phong) {
+                                        return false;
+                                    }
+                                    
+                                    if (ngay) {
+                                        var ngayFilter = new Date(ngay).toLocaleDateString('vi-VN');
+                                        if (rowNgay !== ngayFilter) {
+                                            return false;
+                                        }
+                                    }
+                                    
+                                    if (trangThai && rowTrangThai !== trangThai) {
+                                        return false;
+                                    }
+                                    
+                                    return true;
+                                }
+                            );
 
+                            // Initialize DataTable
+                            var table = $('#preview-table').DataTable({
+                                responsive: true,
+                                pageLength: 10,
+                                lengthMenu: [5, 10, 25, 50, 100],
+                                language: {
+                                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json',
+                                    search: 'Tìm kiếm:',
+                                    lengthMenu: 'Hiển thị _MENU_ mục',
+                                    info: 'Hiển thị _START_ đến _END_ trong tổng số _TOTAL_ mục',
+                                    paginate: {
+                                        first: 'Đầu',
+                                        last: 'Cuối',
+                                        next: 'Sau',
+                                        previous: 'Trước'
+                                    }
+                                },
+                                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                                     "<'row'<'col-sm-12'tr>>" +
+                                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                                columnDefs: [
+                                    { orderable: false, targets: [0, 7] }, // Disable sorting on STT and Hành động columns
+                                    { className: 'text-center', targets: [0, 2, 3, 4, 5, 6] },
+                                    { className: 'text-start', targets: 1 }
+                                ],
+                                order: [[3, 'asc']], // Sort by start time by default
+                                // Disable built-in search to use our custom filtering
+                                search: {
+                                    search: '',
+                                    smart: false
+                                }
+                            });
+
+                            // Reset all filters
+                            function resetFilters() {
+                                $('#filter-phim').val('');
+                                $('#filter-phong').val('');
+                                $('#filter-ngay').val('');
+                                $('#filter-trang-thai').val('');
+                                table.draw();
+                            }
+
+                            // Add reset button if not exists
+                            if ($('#reset-filters').length === 0) {
+                                $('#preview-filter-form').append(`
+                                    <div class="col-12 text-end mt-2">
+                                        <button type="button" id="reset-filters" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Đặt lại bộ lọc
+                                        </button>
+                                    </div>
+                                `);
+                            }
+
+                            // Handle reset filters
+                            $(document).on('click', '#reset-filters', function() {
+                                resetFilters();
+                            });
+
+                            // Update table when any filter changes
+                            $('.filter-control').on('change keyup', function() {
+                                table.draw();
+                            });
+
+                            // Format date for comparison
+                            function formatDateForComparison(dateString) {
+                                if (!dateString) return '';
+                                const [day, month, year] = dateString.split('/');
+                                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                            }
+
+                            // Handle remove row button
+                            $(document).on('click', '.remove-row', function() {
+                                var row = $(this).closest('tr');
+                                var rowData = table.row(row).data();
+                                
+                                // Remove the row from DataTable
+                                table.row(row).remove().draw();
+                                
+                                // Update the preview data in the form
+                                updatePreviewData();
+                                
+                                // Show success message
+                                alert('Đã xóa suất chiếu khỏi danh sách');
+                            });
+                            
+                            // Function to update preview data in the form
+                            function updatePreviewData() {
+                                var previewData = [];
+                                table.rows().every(function() {
+                                    var rowData = this.data();
+                                    // Reconstruct the original data structure from the row
+                                    var data = {
+                                        phim_ten: $(rowData[1]).text(),
+                                        phong_ten: rowData[2],
+                                        gio_bat_dau: rowData[3],
+                                        gio_ket_thuc: rowData[4],
+                                        gia_ve: rowData[5].replace(/[^0-9]/g, ''), // Extract numbers only
+                                        conflict: $(rowData[6]).find('.badge-danger').length > 0
+                                    };
+                                    previewData.push(data);
+                                });
+                                
+                                // Update the hidden input fields
+                                $('#preview-data-input-top, #preview-data-input-bottom').val(JSON.stringify(previewData));
+                            }
+                        });
+                    </script>
                 </div>
             @endif
         </div>
@@ -251,10 +390,22 @@
 @endsection
 
 {{-- ⚙️ Script & CSS --}}
-@push('scripts')
+@push('styles')
     {{-- Select2 --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    {{-- DataTables --}}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css"/>
+@endpush
+
+@push('scripts')
+    {{-- Select2 --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    {{-- DataTables --}}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -362,7 +513,7 @@
         box-shadow: 0 15px 30px rgba(0,0,0,0.12);
     }
     .container {
-        max-width: 900px;
+        max-width: 1200px;
     }
 
     /* =================== Titles & Icons =================== */
@@ -422,6 +573,17 @@
 /* Kết quả dropdown */
 .select2-results__option {
     white-space: normal; /* vẫn cho xuống dòng khi list quá dài */
+}
+
+/* Giới hạn chiều rộng dropdown select2 */
+.select2-container--default .select2-dropdown {
+    max-width: 100% !important;
+    width: auto !important;
+    min-width: 100% !important;
+}
+.select2-container--default .select2-results > .select2-results__options {
+    max-width: 100% !important;
+    width: auto !important;
 }
 
 /* Input date/time đồng bộ chiều cao */
@@ -490,8 +652,20 @@ input[type="date"], input[type="time"], .form-control {
 
     /* =================== Table Styles =================== */
     #preview-table {
-        table-layout: fixed;
+        width: 100% !important;
+        margin: 0;
+    }
+    
+    #preview-table td, #preview-table th {
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    #preview-table_wrapper .dataTables_scroll {
         width: 100%;
+        overflow: auto;
     }
     .table-header {
         background: linear-gradient(90deg, #4e73df, #224abe);

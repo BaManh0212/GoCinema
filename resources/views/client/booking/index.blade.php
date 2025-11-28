@@ -91,51 +91,107 @@
                     </div>
 
                     {{-- Sơ đồ ghế --}}
-                    <div class="seat-map p-4 border rounded bg-light">
-                        <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
+                    <div class="seat-map p-4 border rounded bg-light" style="display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center;">
+                        {{-- Màn hình --}}
+                        <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $suatChieu->phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
-                        <div class="d-flex flex-column align-items-center">
-                            @foreach ($ghes as $hang => $danhSachGhe)
-                                <div class="d-flex mb-2">
-                                    @foreach ($danhSachGhe as $ghe)
-                                        @php
-                                            $classes = 'seat seat-' . $ghe->loai;
-                                            $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
-                                            $disabled = false;
+                        {{-- Lối vào --}}
+                        <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
+                            <div class="seat-preview seat-entrance">VÀO</div>
+                        </div>
 
-                                            if(in_array($ghe->id, $gheDaDat)){
-                                                $classes = 'seat seat-da-thanh-toan disabled';
-                                                $trangthai = 'da_dat';
-                                                $disabled = true;
-                                            } elseif(in_array($ghe->id, $gheChoThanhToan)){
-                                                $classes = 'seat seat-giu-tam disabled';
-                                                $trangthai = 'cho_thanh_toan';
-                                                $disabled = true;
-                                            } elseif(in_array($ghe->id, $giuTamIds)){
-                                                $classes = 'seat seat-giu-tam disabled';
-                                                $trangthai = 'giu_tam';
-                                                $disabled = true;
-                                            } elseif($trangthai === 'bao_tri'){
-                                                $classes = 'seat seat-bao-tri disabled';
-                                                $disabled = true;
-                                            } elseif($trangthai === 'vo_hieu_hoa'){
-                                                $classes = 'seat seat-vo-hieu-hoa disabled';
-                                                $disabled = true;
-                                            }
-                                        @endphp
+                        @php
+                            $hangLetters = range('A', chr(ord('A') + $suatChieu->phong->so_hang - 1));
+                        @endphp
 
-                                        <button type="button" class="seat {{ $classes }} {{ $disabled ? 'disabled' : '' }}"
-                                                data-ghe-id="{{ $ghe->id }}"
-                                                data-hang="{{ $ghe->hang }}"
-                                                data-cot="{{ $ghe->cot }}"
-                                                data-loai="{{ $ghe->loai }}"
-                                                data-trangthai="{{ $trangthai }}"
-                                                {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}>
-                                            {{ $ghe->hang }}{{ $ghe->cot }}
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @endforeach
+                        @foreach ($hangLetters as $index => $hang)
+                            {{-- Nhãn hàng --}}
+                            <div class="fw-bold text-primary d-flex align-items-center justify-content-center" style="height: 45px;">{{ $hang }}</div>
+
+                            {{-- Ghế trong hàng --}}
+                            <div class="row-seats d-flex align-items-center mb-2">
+                                @php
+                                    $danhSachGhe = $ghes->get($hang, collect());
+                                    $cot = 1;
+                                    $hasDoubleInRow = false;
+                                    for ($c = 1; $c <= $suatChieu->phong->so_cot; $c++) {
+                                        $gheCheck = $danhSachGhe->firstWhere('cot', $c);
+                                        if ($gheCheck && $gheCheck->loai == 'doi') {
+                                            $hasDoubleInRow = true;
+                                            break;
+                                        }
+                                    }
+                                @endphp
+                                @while ($cot <= $suatChieu->phong->so_cot)
+                                    @php
+                                        $ghe = $danhSachGhe->firstWhere('cot', $cot);
+                                        $currentLoai = $ghe ? $ghe->loai : 'thuong';
+                                        $isDouble = $currentLoai == 'doi';
+                                        $isLastSeat = $cot == $suatChieu->phong->so_cot;
+                                        $skipLastIfDoubleAndOdd = $isLastSeat && $hasDoubleInRow && $suatChieu->phong->so_cot % 2 == 1;
+                                        $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
+                                        $disabled = false;
+
+                                        if ($ghe && in_array($ghe->id, $gheDaDat)) {
+                                            $trangthai = 'da_dat';
+                                            $disabled = true;
+                                        } elseif ($ghe && in_array($ghe->id, $gheChoThanhToan)) {
+                                            $trangthai = 'cho_thanh_toan';
+                                            $disabled = true;
+                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds)) {
+                                            $trangthai = 'giu_tam';
+                                            $disabled = true;
+                                        } elseif ($trangthai === 'bao_tri') {
+                                            $disabled = true;
+                                        } elseif ($trangthai === 'vo_hieu_hoa') {
+                                            $disabled = true;
+                                        }
+
+                                        $classes = 'seat seat-' . $currentLoai;
+                                        if ($trangthai === 'bao_tri') {
+                                            $classes = 'seat seat-bao-tri disabled';
+                                        } elseif ($trangthai === 'da_dat') {
+                                            $classes = 'seat seat-da-thanh-toan disabled';
+                                        } elseif ($trangthai === 'cho_thanh_toan') {
+                                            $classes = 'seat seat-giu-tam disabled';
+                                        } elseif ($trangthai === 'giu_tam') {
+                                            $classes = 'seat seat-giu-tam disabled';
+                                        } elseif ($trangthai === 'vo_hieu_hoa') {
+                                            $classes = 'seat seat-vo-hieu-hoa disabled';
+                                        }
+
+                                        if ($isDouble) $classes .= ' double-seat';
+                                    @endphp
+
+                                    @if(!$skipLastIfDoubleAndOdd)
+                                    <button type="button" class="seat {{ $classes }} {{ $disabled ? 'disabled' : '' }}"
+                                            data-ghe-id="{{ $ghe ? $ghe->id : '' }}"
+                                            data-hang="{{ $hang }}"
+                                            data-cot="{{ $cot }}"
+                                            data-loai="{{ $currentLoai }}"
+                                            data-trangthai="{{ $trangthai }}"
+                                            {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}>
+                                        @if($isDouble)
+                                            💑
+                                            @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
+                                        @else
+                                            {{ $hang }}{{ $cot }}
+                                        @endif
+                                    </button>
+                                    @endif
+
+                                    @php $cot++; @endphp
+                                @endwhile
+                            </div>
+
+                            @if ($hang == chr(ord('A') + ceil($suatChieu->phong->so_hang / 2) - 1))
+                                <div style="grid-column: 1 / -1; height: 20px;"></div>
+                            @endif
+                        @endforeach
+
+                        {{-- Lối ra --}}
+                        <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
+                            <div class="seat-preview seat-exit">RA</div>
                         </div>
                     </div>
 
@@ -402,8 +458,11 @@
     user-select: none;
     transition: all 0.2s;
 }
+.double-seat {
+    width: 94px !important; /* 45px * 2 + margin */
+}
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #98FB98; width: 94px; }
+.seat-doi { background-color: #98FB98; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-dat { background-color: #FF6347 !important; cursor: not-allowed; }
 .seat-da-thanh-toan { background-color: #DC3545 !important; cursor: not-allowed; pointer-events: none; }
@@ -412,6 +471,31 @@
 .seat-vo-hieu-hoa { background-color: #6B7280 !important; cursor: not-allowed; pointer-events: none; }
 .seat-chon { background-color: #28a745 !important; color: white; }
 .seat.disabled { cursor: not-allowed !important; pointer-events: none; }
+
+.seat-preview {
+    width: 35px;
+    height: 35px;
+    margin: 3px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    text-align: center;
+    line-height: 35px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    display: inline-block;
+}
+
+.seat-entrance {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+}
+.seat-exit {
+    background: #4ecdc4;
+    color: white;
+    border-color: #4ecdc4;
+}
 
 .legend-box {
     display: inline-block;
@@ -702,6 +786,7 @@ $(document).ready(function() {
                 alert('Chỉ được chọn tối đa 8 ghế cho 1 tài khoản!');
                 return;
             }
+
             $(this).addClass('seat-chon');
             selectedSeats.push(gheId);
         }
@@ -760,6 +845,45 @@ $(document).ready(function() {
     $('#book-btn').click(function() {
         if (selectedSeats.length === 0) {
             alert('Vui lòng chọn ít nhất 1 ghế!');
+            return;
+        }
+
+        // Kiểm tra ghế liên tiếp cho ghế thường và VIP
+        let hasNonConsecutiveSeats = false;
+        const rowsWithSeats = {};
+
+        // Nhóm ghế theo hàng
+        selectedSeats.forEach(gheId => {
+            const seat = $('.seat[data-ghe-id="' + gheId + '"]');
+            const hang = seat.data('hang');
+            const loai = seat.data('loai');
+
+            if (!rowsWithSeats[hang]) {
+                rowsWithSeats[hang] = [];
+            }
+            rowsWithSeats[hang].push({ gheId, loai, cot: seat.data('cot') });
+        });
+
+        // Kiểm tra từng hàng
+        for (const hang in rowsWithSeats) {
+            const rowSeats = rowsWithSeats[hang].filter(seat => seat.loai === 'thuong' || seat.loai === 'vip');
+            if (rowSeats.length > 1) {
+                const columns = rowSeats.map(seat => parseInt(seat.cot)).sort((a, b) => a - b);
+                for (let i = 1; i < columns.length; i++) {
+                    if (columns[i] !== columns[i-1] + 1) {
+                        hasNonConsecutiveSeats = true;
+                        break;
+                    }
+                }
+            }
+            if (hasNonConsecutiveSeats) break;
+        }
+
+        if (hasNonConsecutiveSeats) {
+            // Hiển thị modal cảnh báo
+            $('#errorMessage').text('Ghế thường và VIP phải được chọn liên tiếp trong cùng một hàng!');
+            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            errorModal.show();
             return;
         }
 
@@ -986,6 +1110,31 @@ function toggleBookButton() {
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+}
+
+// Kiểm tra ghế có liên tiếp trong hàng không (chỉ áp dụng cho ghế thường và VIP)
+function areSeatsConsecutiveInRow(hang, selectedSeats) {
+    // Lấy tất cả ghế đã chọn trong hàng này không phải ghế đôi
+    const rowSeats = selectedSeats.filter(gheId => {
+        const seat = $('.seat[data-ghe-id="' + gheId + '"]');
+        return seat.data('hang') === hang && seat.data('loai') !== 'doi';
+    });
+
+    if (rowSeats.length <= 1) return true; // 0 hoặc 1 ghế luôn liên tiếp
+
+    // Lấy số cột của các ghế
+    const columns = rowSeats.map(gheId => {
+        const seat = $('.seat[data-ghe-id="' + gheId + '"]');
+        return parseInt(seat.data('cot'));
+    }).sort((a, b) => a - b);
+
+    // Kiểm tra liên tiếp
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] !== columns[i-1] + 1) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // Reset mã giảm giá

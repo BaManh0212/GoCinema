@@ -21,47 +21,97 @@
                 <div><span class="legend-box seat-doi"></span> Ghế đôi</div>
                 <div><span class="legend-box seat-thuong"></span> Ghế thường</div>
                 <div><span class="legend-box seat-bao-tri"></span> Ghế bảo trì</div>
-                <div><span class="legend-box seat-vo-hieu-hoa"></span> Ghế vô hiệu hóa</div>
                 <div><span class="legend-box seat-dat"></span> Ghế đã đặt</div>
                 <div><span class="legend-box seat-giu-tam"></span> Ghế giữ tạm</div>
             </div>
 
             {{-- Sơ đồ ghế --}}
-            <div class="seat-map p-4 border rounded bg-white shadow-sm">
-                <div class="screen mb-4">🎥 MÀN HÌNH CHIẾU</div>
+            <div class="seat-map p-4 border rounded bg-white shadow-sm" style="display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: center;">
+                {{-- Màn hình --}}
+                <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $suatchieu->phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
-                <div class="d-flex flex-column align-items-center">
-                    @foreach ($ghes as $hang => $danhSachGhe)
-                        <div class="d-flex mb-2">
-                            @foreach ($danhSachGhe as $ghe)
-                                @php
-                                    $classes = 'seat seat-' . $ghe->loai;
-                                    $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
+                {{-- Lối vào --}}
+                <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
+                    <div class="seat-preview seat-entrance">VÀO</div>
+                </div>
 
-                                    if(in_array($ghe->id, $gheDaDat)){
-                                        $classes = 'seat seat-dat';
-                                        $trangthai = 'da_dat';
-                                    } elseif(in_array($ghe->id, $giuTamIds)){
-                                        $classes = 'seat seat-giu-tam';
-                                        $trangthai = 'giu_tam';
-                                    } elseif($trangthai === 'bao_tri'){
-                                        $classes = 'seat seat-bao-tri';
-                                        } elseif($trangthai === 'vo_hieu_hoa'){
-                                        // removed vo_hieu_hoa state fallback
-                                        }
-                                @endphp
+                @php
+                    $hangLetters = range('A', chr(ord('A') + $suatchieu->phong->so_hang - 1));
+                @endphp
 
-                                <div class="{{ $classes }}"
-                                     data-ghe-id="{{ $ghe->id }}"
-                                     data-hang="{{ $ghe->hang }}"
-                                     data-cot="{{ $ghe->cot }}"
-                                     data-loai="{{ $ghe->loai }}"
-                                     data-trangthai="{{ $trangthai }}">
-                                    {{ $ghe->hang }}{{ $ghe->cot }}
-                                </div>
-                            @endforeach
-                        </div>
-                    @endforeach
+                @foreach ($hangLetters as $index => $hang)
+                    {{-- Checkbox chọn hàng --}}
+                    <div class="d-flex align-items-center justify-content-center" style="height: 45px;">
+                        <input type="checkbox" class="row-checkbox" value="{{ $hang }}" id="row-{{ $hang }}">
+                        <label for="row-{{ $hang }}" class="ms-1 fw-bold">{{ $hang }}</label>
+                    </div>
+
+                    {{-- Ghế trong hàng --}}
+                    <div class="row-seats d-flex align-items-center mb-2">
+                        @php
+                            $danhSachGhe = $ghes->get($hang, collect());
+                            $cot = 1;
+                            $hasDoubleInRow = false;
+                            for ($c = 1; $c <= $suatchieu->phong->so_cot; $c++) {
+                                $gheCheck = $danhSachGhe->firstWhere('cot', $c);
+                                if ($gheCheck && $gheCheck->loai == 'doi') {
+                                    $hasDoubleInRow = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        @while ($cot <= $suatchieu->phong->so_cot)
+                            @php
+                                $ghe = $danhSachGhe->firstWhere('cot', $cot);
+                                $currentLoai = $ghe ? $ghe->loai : 'thuong';
+                                $isDouble = $currentLoai == 'doi';
+                                $isLastSeat = $cot == $suatchieu->phong->so_cot;
+                                $skipLastIfDoubleAndOdd = $isLastSeat && $hasDoubleInRow && $suatchieu->phong->so_cot % 2 == 1;
+                                $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
+                                if ($ghe && in_array($ghe->id, $giuTamIds)) {
+                                    $trangthai = 'giu_tam';
+                                } elseif ($ghe && in_array($ghe->id, $gheDaDat)) {
+                                    $trangthai = 'da_dat';
+                                }
+                                $classes = 'seat seat-' . $currentLoai;
+                                if ($trangthai === 'bao_tri') {
+                                    $classes = 'seat seat-bao-tri';
+                                } elseif ($trangthai === 'da_dat') {
+                                    $classes = 'seat seat-dat';
+                                } elseif ($trangthai === 'giu_tam') {
+                                    $classes = 'seat seat-giu-tam';
+                                }
+                                if ($isDouble) $classes .= ' double-seat';
+                            @endphp
+
+                            @if(!$skipLastIfDoubleAndOdd)
+                            <div class="{{ $classes }}"
+                                 data-ghe-id="{{ $ghe ? $ghe->id : '' }}"
+                                 data-hang="{{ $hang }}"
+                                 data-cot="{{ $cot }}"
+                                 data-loai="{{ $currentLoai }}"
+                                 data-trangthai="{{ $trangthai }}">
+                                @if($isDouble)
+                                    💑
+                                    @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
+                                @else
+                                    {{ $hang }}{{ $cot }}
+                                @endif
+                            </div>
+                            @endif
+
+                            @php $cot++; @endphp
+                        @endwhile
+                    </div>
+
+                    @if ($hang == chr(ord('A') + ceil($suatchieu->phong->so_hang / 2) - 1))
+                        <div style="grid-column: 1 / -1; height: 20px;"></div>
+                    @endif
+                @endforeach
+
+                {{-- Lối ra --}}
+                <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
+                    <div class="seat-preview seat-exit">RA</div>
                 </div>
             </div>
 
@@ -90,8 +140,11 @@
     color: #222;
     user-select: none;
 }
+.double-seat {
+    width: 94px !important; /* 45px * 2 + margin */
+}
 .seat-vip { background-color: #FFD700; }
-.seat-doi { background-color: #98FB98; width: 94px; }
+.seat-doi { background-color: #98FB98; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
 /* .seat-vo-hieu-hoa { background-color: #6B7280 !important; } removed */
@@ -123,6 +176,30 @@
     transform: scale(1.08);
     transition: 0.15s;
 }
+.seat-preview {
+    width: 35px;
+    height: 35px;
+    margin: 3px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    text-align: center;
+    line-height: 35px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    display: inline-block;
+}
+
+.seat-entrance {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+}
+.seat-exit {
+    background: #4ecdc4;
+    color: white;
+    border-color: #4ecdc4;
+}
 </style>
 @endpush
 
@@ -132,25 +209,32 @@ let changes = {}; // Lưu trữ các thay đổi
 
 // Toggle trạng thái ghế
 document.querySelectorAll('.seat').forEach(seat => {
-    seat.addEventListener('click', () => {
-        // Nếu ghế đã đặt hoặc giữ tạm => không đổi trạng thái
-        if(seat.dataset.trangthai === 'da_dat' || seat.dataset.trangthai === 'giu_tam') return;
+    seat.addEventListener('click', async () => {
+        // Nếu ghế đã đặt => không đổi trạng thái
+        if(seat.dataset.trangthai === 'da_dat') return;
 
         const currentStatus = seat.dataset.trangthai;
         let newStatus, newClass;
 
-        // Chu kỳ: hoat_dong -> bao_tri -> hoat_dong (vo_hieu_hoa removed)
+        // Chu kỳ: hoat_dong -> bao_tri -> hoat_dong
         if (currentStatus === 'hoat_dong') {
             newStatus = 'bao_tri';
             newClass = 'seat-bao-tri';
+            // Call API to update normal seat status
+            await updateSeatStatus(seat.dataset.gheId, newStatus, '{{ route("staff.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}');
         } else if (currentStatus === 'bao_tri') {
             newStatus = 'hoat_dong';
             newClass = 'seat-' + seat.dataset.loai;
+            // Call API to update normal seat status
+            await updateSeatStatus(seat.dataset.gheId, newStatus, '{{ route("staff.suatchieu.ghe.updateTrangThai", $suatchieu->id) }}');
+        } else {
+            // fallback: nếu trạng thái không hợp lệ
+            return;
         }
 
         // Cập nhật UI
         seat.dataset.trangthai = newStatus;
-        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri' /* 'seat-vo-hieu-hoa' removed */);
+        seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong', 'seat-bao-tri', 'seat-giu-tam' /* 'seat-vo-hieu-hoa' removed */);
         seat.classList.add(newClass);
 
         // Lưu thay đổi vào object

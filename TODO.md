@@ -1,16 +1,46 @@
-# TODO: Bổ sung chức năng Staff Đặt Vé Tại Quầy
+# Booking Page Interface Optimization
 
-## 1. Thêm phương thức thanh toán quét mã
-- [x] Cập nhật DonDatVeController.php: Thêm 'quet_ma' vào store() method
-- [x] Cập nhật select_seats.blade.php: Thêm option chọn phương thức thanh toán (tiền mặt hoặc quét mã)
+## Completed Tasks
+- [ ] Create TODO list for tracking progress
 
-## 2. Giới hạn hủy vé chỉ trước 2 tiếng giờ chiếu
-- [x] Cập nhật DonDatVeController.php: Thêm kiểm tra thời gian trong changeStatus() method
+## In Progress
+- [ ] Visual Design Overhaul
+  - [ ] Modern color scheme and accessibility
+  - [ ] Improved typography and spacing
+  - [ ] Enhanced card designs with shadows/gradients
 
-## 3. Thêm link vào sidebar staff
-- [x] Cập nhật resources/views/admin/layouts/sidebar.blade.php: Thêm menu item "Đặt Vé Tại Quầy" dẫn đến route staff.donve.create
+## Pending Tasks
+- [ ] Seat Selection Improvements
+  - [ ] Better visual feedback and animations
+  - [ ] Improved legend design
+  - [ ] Enhanced mobile responsiveness
 
-## 4. Test các thay đổi
-- [x] Kiểm tra luồng đặt vé với cả hai phương thức thanh toán
-- [x] Kiểm tra logic hủy vé với thời gian
-- [x] Kiểm tra link sidebar hoạt động
+- [ ] Combo Selection Redesign
+  - [ ] Modern card layout
+  - [ ] Improved quantity controls
+  - [ ] Better stock indicators
+
+- [ ] Voucher Section Simplification
+  - [ ] Cleaner input design
+  - [ ] Better messaging
+  - [ ] Improved applied voucher display
+
+- [ ] Payment Summary Enhancement
+  - [ ] More prominent total display
+  - [ ] Better cost breakdown
+  - [ ] Progress indicators
+
+- [ ] UX Improvements
+  - [ ] Loading states for AJAX
+  - [ ] Better error handling
+  - [ ] Smooth animations
+  - [ ] Mobile experience
+
+- [ ] Performance Optimizations
+  - [ ] Code cleanup
+  - [ ] Reduced JavaScript redundancy
+
+## Testing
+- [ ] Test on various devices
+- [ ] Ensure functionality works
+- [ ] Performance check

@@ -122,16 +122,7 @@
     color: #333;
     display: inline-block;
 }
-.seat-aisle {
-    width: 60px !important;
-    background: #efefef;
-    color: #666;
-    font-size: 9px;
-    font-weight: bold;
-    border: 2px dashed #bbb;
-    line-height: 12px;
-    padding-top: 10px;
-}
+
 .seat-screen {
     background: #2c3e50;
     color: white;
@@ -250,14 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 seat.className = "seat-preview";
                 seat.textContent = c;
                 row.appendChild(seat);
-
-                // Lối đi giữa mỗi 8 ghế
-                if (c % 8 === 0 && c < soCot) {
-                    const midAisle = document.createElement('div');
-                    midAisle.className = "seat-preview seat-aisle";
-                    midAisle.textContent = "LỐI ĐI";
-                    row.appendChild(midAisle);
-                }
             }
 
 
