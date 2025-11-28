@@ -487,7 +487,7 @@
     @include('client.layouts.navigation')
 
     {{-- ✅ Content --}}
-    <main class="w-100 p-0 m-0">
+    <main class="w-100 px-3 py-0 m-0">
         @yield('content')
     </main>
 

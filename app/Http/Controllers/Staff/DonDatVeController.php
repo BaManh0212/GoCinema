@@ -669,7 +669,7 @@ public function selectSeats($suat_chieu_id)
         // Nhóm ghế theo hàng
         $seatsByRow = [];
         foreach ($ghes as $ghe) {
-            $seatsByRow[$ghe->hang][] = $ghe->cot;
+            $seatsByRow[$ghe->hang][] = $ghe;
         }
 
         // Nếu có nhiều hơn 1 hàng thì không liên tiếp
@@ -677,13 +677,27 @@ public function selectSeats($suat_chieu_id)
             return false;
         }
 
-        // Lấy danh sách cột trong hàng duy nhất
-        $columns = array_values($seatsByRow)[0];
-        sort($columns);
+        // Lấy danh sách ghế trong hàng duy nhất
+        $seatsInRow = array_values($seatsByRow)[0];
 
-        // Kiểm tra cột có liên tiếp không
-        for ($i = 0; $i < count($columns) - 1; $i++) {
-            if ($columns[$i + 1] - $columns[$i] !== 1) {
+        // Tính vị trí rendered cho từng ghế
+        $renderedPositions = [];
+        foreach ($seatsInRow as $ghe) {
+            if ($ghe->loai === 'doi') {
+                // Double seats are rendered at position (column + 1) / 2
+                $renderedPositions[] = ($ghe->cot + 1) / 2;
+            } else {
+                // Regular seats are rendered at their column position
+                $renderedPositions[] = $ghe->cot;
+            }
+        }
+
+        // Sắp xếp vị trí rendered
+        sort($renderedPositions);
+
+        // Kiểm tra vị trí rendered có liên tiếp không
+        for ($i = 0; $i < count($renderedPositions) - 1; $i++) {
+            if ($renderedPositions[$i + 1] - $renderedPositions[$i] !== 1) {
                 return false;
             }
         }

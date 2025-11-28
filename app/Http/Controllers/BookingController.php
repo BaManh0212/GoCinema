@@ -245,13 +245,7 @@ class BookingController extends Controller
             ]);
         }
 
-        // Kiểm tra ghế liên tiếp
-        if (!$this->areSeatsConsecutive($gheIds)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ghế phải được chọn liên tiếp nhau trong cùng một hàng.',
-            ]);
-        }
+
         $comboItems = $request->combo_items ?? [];
         $maGiamGia = $request->ma_giam_gia; // có thể là mã hệ thống hoặc mã VCxxxxxx
         $voucherNguoiDungId = $request->voucher_nd_id; // id voucher_nguoi_dung nếu có
