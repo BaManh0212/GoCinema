@@ -36,16 +36,6 @@
                         <span class="input-group-text">đến</span>
                     </div>
                     <input type="date" name="to" value="{{ $to->format('Y-m-d') }}" class="form-control form-control-sm">
-                    @if(isset($cinemas) && $cinemas->count() > 0)
-                    <select name="rap_id" class="form-control form-control-sm ml-2" style="max-width: 200px;">
-                        <option value="">Tất cả rạp</option>
-                        @foreach($cinemas as $cinema)
-                            <option value="{{ $cinema->id }}" {{ $rapId == $cinema->id ? 'selected' : '' }}>
-                                {{ $cinema->ten }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @endif
                     <div class="input-group-append">
                         <button class="btn btn-primary btn-sm" type="submit">
                             <i class="fas fa-filter"></i> Lọc

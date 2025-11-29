@@ -25,71 +25,77 @@
     </div>
 
     {{-- Sơ đồ ghế --}}
-    <div class="seat-map p-4 border rounded bg-white shadow-sm">
+    <div class="seat-map p-4 border rounded bg-white shadow-sm" style="display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: center;">
         {{-- Màn hình --}}
-        <div class="screen mb-4" style="width: {{ $phong->so_cot * 45 + 40 }}px;">🎥 MÀN HÌNH CHIẾU</div>
+        <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
         {{-- Lối vào --}}
-        <div class="d-flex justify-content-start mb-3" style="padding-left: 50px;">
+        <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
             <div class="seat-preview seat-entrance">VÀO</div>
         </div>
 
-        <div class="d-flex flex-column align-items-center">
-            @php
-                $hangLetters = range('A', chr(ord('A') + $phong->so_hang - 1));
-            @endphp
+        @php
+            $hangLetters = range('A', chr(ord('A') + $phong->so_hang - 1));
+        @endphp
 
-            @foreach ($hangLetters as $index => $hang)
-                <div class="d-flex mb-2 align-items-center">
-                    {{-- Checkbox chọn hàng --}}
-                    <div class="me-3">
-                        <input type="checkbox" class="row-checkbox" value="{{ $hang }}" id="row-{{ $hang }}">
-                        <label for="row-{{ $hang }}" class="ms-1 fw-bold">{{ $hang }}</label>
-                    </div>
+        @foreach ($hangLetters as $index => $hang)
+            {{-- Checkbox chọn hàng --}}
+            <div class="d-flex align-items-center justify-content-center" style="height: 45px;">
+                <input type="checkbox" class="row-checkbox" value="{{ $hang }}" id="row-{{ $hang }}">
+                <label for="row-{{ $hang }}" class="ms-1 fw-bold">{{ $hang }}</label>
+            </div>
 
-                    {{-- Ghế trong hàng --}}
+            {{-- Ghế trong hàng --}}
+            <div class="row-seats d-flex align-items-center mb-2">
+                @php
+                    $cot = 1;
+                    $hasDoubleInRow = false;
+                    for ($c = 1; $c <= $phong->so_cot; $c++) {
+                        $keyCheck = $hang . '-' . $c;
+                        $gheCheck = $ghes->get($keyCheck);
+                        if ($gheCheck && $gheCheck->loai == 'doi') {
+                            $hasDoubleInRow = true;
+                            break;
+                        }
+                    }
+                @endphp
+                @while ($cot <= $phong->so_cot)
                     @php
-                        $cot = 1;
+                        $key = $hang . '-' . $cot;
+                        $ghe = $ghes->get($key);
+                        $currentLoai = $ghe ? $ghe->loai : 'thuong';
+                        $currentTrangThai = $ghe ? $ghe->trang_thai : 'hoat_dong';
+                        $isDouble = $currentLoai == 'doi';
+                        $isLastSeat = $cot == $phong->so_cot;
+                        $skipLastIfDoubleAndOdd = $isLastSeat && $hasDoubleInRow && $phong->so_cot % 2 == 1;
                     @endphp
-                    @while ($cot <= $phong->so_cot)
-                        @php
-                            $key = $hang . '-' . $cot;
-                            $ghe = $ghes->get($key);
-                            $currentLoai = $ghe ? $ghe->loai : 'thuong';
-                            $currentTrangThai = $ghe ? $ghe->trang_thai : 'hoat_dong';
-                            $isDouble = $currentLoai == 'doi';
-                        @endphp
 
-                        <div class="seat seat-{{ $currentLoai }} {{ $currentTrangThai == 'bao_tri' ? 'seat-bao-tri' : '' }} {{ $isDouble ? 'double-seat' : '' }}"
-                             data-hang="{{ $hang }}"
-                             data-cot="{{ $cot }}"
-                             data-loai="{{ $currentLoai }}"
-                             data-trangthai="{{ $currentTrangThai }}">
-                            @if($isDouble)
-                                💑
-                                @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
-                            @else
-                                {{ $hang }}{{ $cot }}
-                            @endif
-                        </div>
-
-                        {{-- Lối đi giữa mỗi 8 ghế --}}
-                        @if($cot % 8 == 0 && $cot < $phong->so_cot)
-                            <div class="seat-preview seat-aisle">LỐI ĐI</div>
+                    @if(!$skipLastIfDoubleAndOdd)
+                    <div class="seat seat-{{ $currentLoai }} {{ $currentTrangThai == 'bao_tri' ? 'seat-bao-tri' : '' }} {{ $isDouble ? 'double-seat' : '' }}"
+                         data-hang="{{ $hang }}"
+                         data-cot="{{ $cot }}"
+                         data-loai="{{ $currentLoai }}"
+                         data-trangthai="{{ $currentTrangThai }}">
+                        @if($isDouble)
+                            💑
+                            @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
+                        @else
+                            {{ $hang }}{{ $cot }}
                         @endif
+                    </div>
+                    @endif
 
-                        @php $cot++; @endphp
-                    @endwhile
-                </div>
+                    @php $cot++; @endphp
+                @endwhile
+            </div>
 
-                @if ($hang == chr(ord('A') + ceil($phong->so_hang / 2) - 1))
-                    <div style="height: 20px;"></div>
-                @endif
-            @endforeach
-        </div>
+            @if ($hang == chr(ord('A') + ceil($phong->so_hang / 2) - 1))
+                <div style="grid-column: 1 / -1; height: 20px;"></div>
+            @endif
+        @endforeach
 
         {{-- Lối ra --}}
-        <div class="d-flex justify-content-end mt-3" style="padding-right: 50px;">
+        <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
             <div class="seat-preview seat-exit">RA</div>
         </div>
     </div>
@@ -161,16 +167,7 @@
     color: #333;
     display: inline-block;
 }
-.seat-aisle {
-    width: 60px !important;
-    background: #efefef;
-    color: #666;
-    font-size: 9px;
-    font-weight: bold;
-    border: 2px dashed #bbb;
-    line-height: 12px;
-    padding-top: 10px;
-}
+
 .seat-entrance {
     background: #ff6b6b;
     color: white;

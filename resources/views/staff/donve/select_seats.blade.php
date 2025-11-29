@@ -7,7 +7,8 @@
     .seat-map {
         background-color: #f8f9fa;
         border-radius: 10px;
-        overflow: hidden;
+        padding: 20px;
+        margin-bottom: 20px;
     }
 
     .seat {
@@ -21,35 +22,31 @@
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        color: #fff;
+        color: #000;
         user-select: none;
         transition: all 0.15s ease-in-out;
         position: relative;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    
+
     /* Seat types */
     .seat-thuong { 
         background: linear-gradient(135deg, #87CEFA, #87CEFA);
-        color: #000;
     }
     
     .seat-vip { 
         background: linear-gradient(135deg, #ffc107, #e0a800);
-        color: #000;
     }
     
     .seat-doi { 
         background: linear-gradient(135deg, #98FB98, #98FB98);
         width: 75px;
-        color: #000;
     }
     
     .seat-chon { 
         background: #28a745 !important;
         transform: scale(1.05);
         box-shadow: 0 0 0 2px #fff, 0 0 0 4px #28a745;
-        color: #000;
     }
     
     .seat-da-thanh-toan { 
@@ -57,8 +54,6 @@
         opacity: 0.7;
         cursor: not-allowed;
         pointer-events: none;
-        box-shadow: none;
-        color: #000;
     }
     
     .seat-giu-tam { 
@@ -66,8 +61,6 @@
         opacity: 0.7;
         cursor: not-allowed;
         pointer-events: none;
-        box-shadow: none;
-        color: #000;
     }
     
     .seat-dat {
@@ -75,8 +68,6 @@
         opacity: 0.5;
         cursor: not-allowed;
         pointer-events: none;
-        box-shadow: none;
-        color: #000;
     }
 
     .seat-bao-tri {
@@ -84,16 +75,8 @@
         opacity: 0.7;
         cursor: not-allowed;
         pointer-events: none;
-        box-shadow: none;
-        color: #000;
     }
     
-    .seat.disabled { 
-        cursor: not-allowed !important; 
-        pointer-events: none;
-        opacity: 0.5;
-    }
-
     .screen {
         background: linear-gradient(to right, #333, #555, #333);
         color: #fff;
@@ -107,186 +90,78 @@
         text-transform: uppercase;
         font-size: 0.9rem;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .screen:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(0deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
-        pointer-events: none;
     }
 
-    .seat:not(.disabled):hover {
+    .seat:not(.disabled):not(.seat-da-thanh-toan):not(.seat-giu-tam):not(.seat-dat):not(.seat-bao-tri):hover {
         transform: scale(1.05);
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         z-index: 1;
     }
 
-    /* Seat map container */
-    .seat-map {
-        position: relative;
-    }
-    
-    /* Legend */
     .legend-container {
         background: #f1f3f5;
-        padding: 10px 15px;
-        border-radius: 6px;
-        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
         display: flex;
         flex-wrap: wrap;
+        gap: 15px;
         justify-content: center;
-        gap: 10px 20px;
     }
     
     .legend-item {
         display: flex;
         align-items: center;
-        font-size: 13px;
-        color: #343a40;
+        margin: 0 10px;
+        font-size: 0.9rem;
     }
+    
     .legend-box {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         border-radius: 3px;
-        margin-right: 5px;
-        vertical-align: middle;
-    }
-    
-    .seat-vip .legend-box {
-        background-color: #ffc107;
-    }
-    
-    .seat-doi .legend-box {
-        background-color: #fd7e14;
-    }
-    
-    .seat-thuong .legend-box {
-        background-color: #e9ecef;
-    }
-    
-    .seat-da-thanh-toan .legend-box {
-        background-color: #DC3545;
-    }
-    
-    .seat-giu-tam .legend-box {
-        background-color: #6c757d;
-    }
-    
-    .seat-chon .legend-box {
-        background-color: #198754;
-    }
-    
-    /* Selected seats list */
-    #selected-seats-list {
-        margin-top: 10px;
-    }
-    
-    .selected-seat-badge {
-        background-color: #e9ecef;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        margin-right: 5px;
-        margin-bottom: 5px;
-    }
-    
-    .selected-seat-badge .seat-type {
-        font-weight: 600;
-        margin-left: 5px;
-        color: #6c757d;
-    }
-    
-    .selected-seat-badge .remove-seat {
-        margin-left: 5px;
-        cursor: pointer;
-        color: #dc3545;
-        font-weight: bold;
-    }
-    
-    /* Combo section */
-    .combo-item {
-        transition: all 0.2s;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 10px;
-    }
-    
-    .combo-item:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
-    }
-    
-    .combo-item .card-body {
-        padding: 10px;
-    }
-    
-    .combo-item h6 {
-        margin-bottom: 5px;
-        font-size: 0.95rem;
-    }
-    
-    .combo-item small {
-        font-size: 0.8rem;
-    }
-    
-    /* Form controls */
-    .form-control[type="number"]::-webkit-inner-spin-button,
-    .form-control[type="number"]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    
-    .form-control[type="number"] {
-        -moz-appearance: textfield;
-        text-align: center;
-        width: 50px;
+        margin-right: 8px;
         display: inline-block;
-        margin: 0 5px;
+    }
+
+    .seat-preview {
+        width: 35px;
+        height: 35px;
+        margin: 3px;
+        border-radius: 6px;
+        border: 2px solid #ddd;
+        text-align: center;
+        line-height: 35px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #333;
+        display: inline-block;
+    }
+
+    .seat-entrance {
+        background: #ff6b6b;
+        color: white;
+        border-color: #ff6b6b;
     }
     
-    .btn-decrease, .btn-increase {
-        width: 30px;
-        height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
+    .seat-exit {
+        background: #4ecdc4;
+        color: white;
+        border-color: #4ecdc4;
     }
-    
-    /* Responsive adjustments */
+
     @media (max-width: 768px) {
         .seat {
             width: 30px;
             height: 30px;
-            font-size: 10px;
+            line-height: 30px;
+            font-size: 9px;
+            margin: 2px;
         }
         
-        .seat-gap {
-            width: 10px;
-            height: 30px;
+        .seat-doi {
+            width: 64px;
         }
-    }
-    
-    /* Hide number input spinner */
-    .hide-spinner::-webkit-outer-spin-button,
-    .hide-spinner::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    
-    .hide-spinner {
-        -moz-appearance: textfield;
     }
 </style>
 @endpush
@@ -294,7 +169,6 @@
 @section('content')
 <div class="container my-5">
     <div class="row">
-        {{-- Thông tin phim và suất chiếu --}}
         <div class="col-lg-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
@@ -303,306 +177,303 @@
                         {{ $suatChieu->phim->tieu_de }}
                     </h5>
                 </div>
-                <div class="card-body bg-dark rounded-3">
-                    <div class="row align-items-center">
+                <div class="card-body">
+                    <div class="row">
                         <div class="col-md-4">
                             @if($suatChieu->phim->anh_poster)
                                 <img src="{{ asset('storage/' . $suatChieu->phim->anh_poster) }}"
                                      alt="{{ $suatChieu->phim->tieu_de }}"
-                                     class="img-fluid rounded shadow"
-                                     style="border: 2px solid rgba(255,255,255,0.1);">
+                                     class="img-fluid rounded shadow">
                             @else
-                                <div class="bg-dark bg-opacity-25 rounded d-flex align-items-center justify-content-center"
-                                     style="height: 200px; border: 2px dashed rgba(255,255,255,0.1);">
-                                    <i class="bi bi-image text-white-50 fs-1"></i>
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                     style="height: 200px;">
+                                    <i class="bi bi-image text-muted fs-1"></i>
                                 </div>
                             @endif
                         </div>
-                        <div class="col-md-8 text-white">
-                            <h5 class="fw-bold text-white mb-3">{{ $suatChieu->phim->tieu_de }}</h5>
-                            
-                            <div class="movie-info-item mb-2">
-                                <i class="bi bi-building text-warning me-2"></i>
-                                <span class="text-white-75">Rạp:</span>
-                                <span class="ms-1 fw-medium">{{ $suatChieu->phong->rap->ten }}</span>
+                        <div class="col-md-8">
+                            <h5 class="mb-3">{{ $suatChieu->phim->tieu_de }}</h5>
+                            <div class="mb-2">
+                                <i class="bi bi-building text-primary me-2"></i>
+                                {{ $suatChieu->phong->rap->ten }}
                             </div>
-                            
-                            <div class="movie-info-item mb-2">
-                                <i class="bi bi-calendar-event text-info me-2"></i>
-                                <span class="text-white-75">Ngày chiếu:</span>
-                                <span class="ms-1 fw-medium">{{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('l, d/m/Y') }}</span>
+                            <div class="mb-2">
+                                <i class="bi bi-calendar-event text-primary me-2"></i>
+                                {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('d/m/Y H:i') }}
                             </div>
-                            
-                            <div class="movie-info-item mb-2">
-                                <i class="bi bi-clock text-success me-2"></i>
-                                <span class="text-white-75">Giờ chiếu:</span>
-                                <span class="ms-1 fw-medium">
-                                    {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('H:i') }} - 
-                                    {{ \Carbon\Carbon::parse($suatChieu->gio_ket_thuc)->format('H:i') }}
-                                </span>
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt text-primary me-2"></i>
+                                Phòng {{ $suatChieu->phong->ten }}
                             </div>
-                            
-                            <div class="movie-info-item mb-2">
-                                <i class="bi bi-ticket-perforated text-danger me-2"></i>
-                                <span class="text-white-75">Phòng:</span>
-                                <span class="ms-1 fw-medium">{{ $suatChieu->phong->ten }}</span>
-                            </div>
-                            
-                            <div class="movie-info-item">
-                                <i class="bi bi-cash-coin text-primary me-2"></i>
-                                <span class="text-white-75">Giá vé:</span>
-                                <span class="ms-1 fw-bold text-warning">{{ number_format($suatChieu->gia_ve, 0, ',', '.') }}đ</span>
+                            <div class="mb-2">
+                                <i class="bi bi-ticket-perforated text-primary me-2"></i>
+                                Giá vé: {{ number_format($suatChieu->gia_ve, 0, ',', '.') }}đ
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Sơ đồ ghế --}}
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-person-square me-2"></i>
-                        Chọn ghế (Tối đa 8 ghế liền kề)
+                        Chọn ghế
                     </h5>
                 </div>
                 <div class="card-body">
-                    {{-- Chú thích --}}
-                    <div class="legend-container mb-4">
+                    <!-- Legend -->
+                    <div class="legend-container">
+                        <div class="legend-item">
+                            <span class="legend-box seat-thuong"></span>
+                            <span>Thường</span>
+                        </div>
                         <div class="legend-item">
                             <span class="legend-box seat-vip"></span>
-                            <span>Ghế VIP</span>
+                            <span>VIP</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-box seat-doi"></span>
-                            <span>Ghế đôi</span>
+                            <span>Đôi</span>
                         </div>
                         <div class="legend-item">
-                            <span class="legend-box seat-thuong"></span>
-                            <span>Ghế thường</span>
+                            <span class="legend-box" style="background: #28a745;"></span>
+                            <span>Đang chọn</span>
                         </div>
                         <div class="legend-item">
-                            <span class="legend-box seat-da-thanh-toan"></span>
-                            <span>Ghế đã đặt</span>
+                            <span class="legend-box" style="background: #DC3545;"></span>
+                            <span>Đã đặt</span>
                         </div>
                         <div class="legend-item">
-                            <span class="legend-box seat-giu-tam"></span>
-                            <span>Ghế giữ tạm</span>
+                            <span class="legend-box" style="background: #6c757d;"></span>
+                            <span>Giữ tạm</span>
                         </div>
                         <div class="legend-item">
-                            <span class="legend-box seat-bao-tri"></span>
-                            <span>Ghế bảo trì</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-box seat-chon"></span>
-                            <span>Ghế đã chọn</span>
+                            <span class="legend-box" style="background: #ffc107;"></span>
+                            <span>Bảo trì</span>
                         </div>
                     </div>
 
-                    {{-- Sơ đồ ghế --}}
+                    <!-- Screen -->
+                    <div class="screen mb-4">MÀN HÌNH</div>
+
+                    <!-- Entrance -->
+                    <div class="text-start mb-3">
+                        <div class="seat-preview seat-entrance">VÀO</div>
+                    </div>
+
+                    <!-- Seating Area -->
                     <div class="seat-map">
-                        <div class="screen">MÀN HÌNH CHIẾU</div>
+                        @php
+                            $hangLetters = range('A', chr(ord('A') + $suatChieu->phong->so_hang - 1));
+                        @endphp
 
-                        <div class="d-flex flex-column align-items-center">
-                            @foreach ($ghes as $hang => $danhSachGhe)
-                                <div class="d-flex mb-2">
-                                    @foreach ($danhSachGhe as $ghe)
-                                        @php
-                                            $classes = 'seat seat-' . $ghe->loai;
-                                            $trangthai = $gheStatuses[$ghe->id] ?? 'hoat_dong';
-                                            $disabled = false;
-                                            $basePrice = $suatChieu->gia_ve;
+                        @foreach ($hangLetters as $hang)
+                            <div class="d-flex justify-content-center mb-2">
+                                @php
+                                    $danhSachGhe = $ghes->get($hang, collect());
+                                    $cot = 1;
+                                    $seatCount = 0;
+                                    
+                                    // First pass to check for double seats
+                                    $doubleSeats = [];
+                                    for ($c = 1; $c <= $suatChieu->phong->so_cot; $c++) {
+                                        $ghe = $danhSachGhe->firstWhere('cot', $c);
+                                        if ($ghe && $ghe->loai == 'doi') {
+                                            $doubleSeats[$c] = true;
+                                        }
+                                    }
+                                @endphp
 
-                                            // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
-                                            if ($suatChieu->gio_bat_dau->isWeekend()) {
-                                                $basePrice *= 1.2;
-                                            }
+                                @while ($cot <= $suatChieu->phong->so_cot)
+                                    @php
+                                        // Skip if this is the second part of a double seat
+                                        if (isset($doubleSeats[$cot - 1]) && $doubleSeats[$cot - 1]) {
+                                            $cot++;
+                                            continue;
+                                        }
 
-                                            // Tăng giá buổi tối từ 18h trở đi: +15%
-                                            if ($suatChieu->gio_bat_dau->hour >= 18) {
-                                                $basePrice *= 1.15;
-                                            }
-
-                                            // Áp dụng loại ghế
-                                            if ($ghe->loai === 'vip') {
-                                                $basePrice *= 1.5;
-                                            } elseif ($ghe->loai === 'doi') {
-                                                $basePrice *= 2;
-                                            }
-
-                                            $gia = $basePrice;
-
-                                            if(in_array($ghe->id, $gheDaDat)){
-                                                $classes = 'seat seat-da-thanh-toan disabled';
-                                                $trangthai = 'da_dat';
-                                                $disabled = true;
-                                            } elseif(in_array($ghe->id, $giuTamIds)){
-                                                $classes = 'seat seat-giu-tam disabled';
-                                                $trangthai = 'giu_tam';
-                                                $disabled = true;
-                                            } elseif(isset($gheStatuses[$ghe->id]) && $gheStatuses[$ghe->id] === 'bao_tri') {
-                                                $classes = 'seat seat-bao-tri disabled';
-                                                $trangthai = 'bao_tri';
-                                                $disabled = true;
-
-                                            } elseif(isset($gheStatuses[$ghe->id]) && $gheStatuses[$ghe->id] === 'vo_hieu_hoa') {
-                                                $classes = 'seat seat-vo-hieu-hoa disabled';
-                                                $trangthai = 'vo_hieu_hoa';
-                                                $disabled = true;
-                                            }
-                                        @endphp
-
-                                        <button type="button" class="seat {{ $classes }} {{ $disabled ? 'disabled' : '' }}"
-                                                data-ghe-id="{{ $ghe->id }}"
-                                                data-hang="{{ $hang }}"
-                                                data-cot="{{ $ghe->cot }}"
-                                                data-loai="{{ $ghe->loai }}"
-                                                data-gia="{{ $gia }}"
-                                                data-trangthai="{{ $trangthai }}"
-                                                {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}>
-                                            {{ $hang }}{{ $ghe->cot }}
-                                        </button>
+                                        $ghe = $danhSachGhe->firstWhere('cot', $cot);
+                                        $currentLoai = $ghe ? $ghe->loai : 'thuong';
+                                        $isDouble = $currentLoai == 'doi';
                                         
-                                        @if($ghe->cot % 5 == 0 && !$loop->last)
-                                            <div class="seat-gap"></div>
+                                        $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
+                                        if ($ghe && in_array($ghe->id, $giuTamIds)) {
+                                            $trangthai = 'giu_tam';
+                                        } elseif ($ghe && in_array($ghe->id, $gheDaDat)) {
+                                            $trangthai = 'da_dat';
+                                        }
+                                        
+                                        $classes = 'seat seat-' . $currentLoai;
+                                        if ($trangthai === 'bao_tri') {
+                                            $classes = 'seat seat-bao-tri';
+                                        } elseif ($trangthai === 'da_dat') {
+                                            $classes = 'seat seat-da-thanh-toan';
+                                        } elseif ($trangthai === 'giu_tam') {
+                                            $classes = 'seat seat-giu-tam';
+                                        } elseif ($trangthai === 'da_dat') {
+                                            $classes = 'seat seat-dat';
+                                        }
+
+                                        $seatNumber = $hang . $cot;
+                                    @endphp
+
+                                    <div class="{{ $classes }}"
+                                         data-ghe-id="{{ $ghe ? $ghe->id : '' }}"
+                                         data-hang="{{ $hang }}"
+                                         data-cot="{{ $cot }}"
+                                         data-loai="{{ $currentLoai }}"
+                                         data-trangthai="{{ $trangthai }}"
+                                         title="{{ $seatNumber }}"
+                                         @if(in_array($trangthai, ['da_dat', 'giu_tam', 'bao_tri', 'da_thanh_toan']))
+                                            style="cursor: not-allowed;"
+                                         @endif>
+                                        @if($isDouble)
+                                            💑
+                                        @else
+                                            {{ $cot }}
                                         @endif
-                                    @endforeach
-                                </div>
-                            @endforeach
-                        </div>
+                                    </div>
+
+                                    @php
+                                        $cot++;
+                                        $seatCount++;
+                                    @endphp
+                                @endwhile
+                            </div>
+
+                            @if ($hang == chr(ord('A') + floor($suatChieu->phong->so_hang / 2) - 1))
+                                <div style="height: 20px;"></div>
+                            @endif
+                        @endforeach
                     </div>
-                    
+
+                    <!-- Exit -->
+                    <div class="text-end mt-3">
+                        <div class="seat-preview seat-exit">RA</div>
+                    </div>
                 </div>
             </div>
+
         </div>
 
-        {{-- Thanh toán --}}
         <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
+            <!-- Customer Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-lines-fill me-2"></i>
+                        Thông tin khách hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="customer-form">
+                        <div class="mb-3">
+                            <label for="customer-name" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="customer-phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="customer-email">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Combo & Food -->
+            <div class="card shadow-sm">
                 <div class="card-header bg-warning">
                     <h5 class="mb-0">
-                        <i class="bi bi-receipt me-2"></i>
+                        <i class="bi bi-cup-hot me-2"></i>
+                        Combo & Đồ ăn
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if($combos->count() > 0)
+                        @foreach($combos as $combo)
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="mb-0">{{ $combo->ten }}</h6>
+                                    <small class="text-muted">{{ number_format($combo->gia, 0, ',', '.') }}đ</small>
+                                    @if($combo->so_luong > 0)
+                                        <div class="text-success">
+                                            <small>Còn lại: {{ $combo->so_luong }} cái</small>
+                                        </div>
+                                    @else
+                                        <div class="text-danger">
+                                            <small>Hết hàng</small>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary btn-decrease" 
+                                            data-combo-id="{{ $combo->id }}"
+                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" 
+                                           class="form-control form-control-sm text-center mx-1 hide-spinner" 
+                                           id="combo-{{ $combo->id }}-qty" 
+                                           value="0" 
+                                           min="0" 
+                                           max="{{ $combo->so_luong }}" 
+                                           style="width: 50px;"
+                                           data-combo-id="{{ $combo->id }}"
+                                           {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                    <button class="btn btn-sm btn-outline-primary btn-increase" 
+                                            data-combo-id="{{ $combo->id }}"
+                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-info-circle me-1"></i> Hiện không có combo nào
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Booking Information -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart-check me-2"></i>
                         Thông tin đặt vé
                     </h5>
                 </div>
                 <div class="card-body">
-                    {{-- Thông tin phim --}}
+                    <!-- Selected Seats -->
                     <div class="mb-4">
-                        <h6>Thông tin phim</h6>
-                        <p class="mb-1"><strong>{{ $suatChieu->phim->tieu_de }}</strong></p>
-                        <p class="mb-1 small text-muted">
-                            {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('H:i') }} - 
-                            {{ \Carbon\Carbon::parse($suatChieu->gio_ket_thuc)->format('H:i') }} | 
-                            {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('d/m/Y') }}
-                        </p>
-                        <p class="mb-1 small">
-                            <span class="text-muted">Rạp:</span> {{ $suatChieu->phong->rap->ten }} - {{ $suatChieu->phong->ten }}
-                        </p>
-                    </div>
-
-                    {{-- Combo & Đồ ăn --}}
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Combo & Đồ ăn</h6>
-                            {{-- Remove the add button --}}
-                            {{-- <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#comboSection">
-                                <i class="bi bi-plus-lg"></i> Thêm
-                            </button> --}}
-                        </div>
-                        
-                        {{-- Make combo section visible by default --}}
-                        <div id="comboSection">
-                            <div class="card card-body bg-light mb-3">
-                                @if($combos->count() > 0)
-                                    @foreach($combos as $combo)
-                                        @if($combo->so_luong > 0)
-                                            <div class="combo-item mb-3 p-2 border rounded" data-combo-id="{{ $combo->id }}">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="mb-1">{{ $combo->ten }}</h6>
-                                                        <small class="text-muted">{{ number_format($combo->gia, 0, ',', '.') }}đ</small>
-                                                        <div class="text-success small">Còn: {{ $combo->so_luong }}</div>
-                                                    </div>
-                                                    <div class="d-flex align-items-center">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-decrease me-1"
-                                                                data-combo-id="{{ $combo->id }}">
-                                                            <i class="bi bi-dash"></i>
-                                                        </button>
-                                                        <input type="number" class="form-control form-control-sm text-center combo-qty"
-                                                            id="combo-{{ $combo->id }}-qty" value="0" min="0" max="{{ $combo->so_luong }}"
-                                                            style="width: 50px;" data-combo-id="{{ $combo->id }}">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary btn-increase ms-1"
-                                                                data-combo-id="{{ $combo->id }}">
-                                                            <i class="bi bi-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                @else
-                                    <p class="text-muted small mb-0">Không có combo nào khả dụng</p>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div id="selected-combos">
-                            <p class="text-muted small mb-0">Chưa chọn combo</p>
+                        <label class="form-label fw-bold mb-2">Ghế đã chọn:</label>
+                        <div id="selected-seats" class="selected-seats-container p-3 bg-white rounded-3 border">
+                            <span class="text-muted">Chưa chọn ghế nào</span>
                         </div>
                     </div>
 
-                    {{-- Phương thức thanh toán --}}
+                    <!-- Selected Combos -->
                     <div class="mb-4">
-                        <h6>Phương thức thanh toán</h6>
-                        <div class="d-flex gap-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="tien_mat" value="tien_mat" checked>
-                                <label class="form-check-label" for="tien_mat">
-                                    <i class="bi bi-cash-coin me-1"></i> Tiền mặt
-                                </label>
-                            </div>
+                        <label class="form-label fw-bold mb-2">Combo đã chọn:</label>
+                        <div id="selected-combos" class="p-3 bg-white rounded-3 border">
+                            <span class="text-muted">Chưa chọn combo nào</span>
                         </div>
                     </div>
 
-                    {{-- Thông tin khách hàng --}}
-                    <div class="mb-4">
-                        <h6>Thông tin khách hàng</h6>
-                        <div class="mb-3">
-                            <label for="customer_phone" class="form-label small mb-1">Số điện thoại (nếu có)</label>
-                            <input type="text" class="form-control form-control-sm" id="customer_phone" placeholder="Nhập số điện thoại">
-                        </div>
-                        <div class="mb-3">
-                            <label for="customer_name" class="form-label small mb-1">Tên khách hàng (nếu có)</label>
-                            <input type="text" class="form-control form-control-sm" id="customer_name" placeholder="Nhập tên khách hàng">
-                        </div>
-                    </div>
-
-                    {{-- Tổng thanh toán --}}
+                    <!-- Total -->
                     <div class="border-top pt-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Tổng tiền vé:</span>
-                            <span id="payment-ticket-amount">0đ</span>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Tổng cộng:</h5>
+                            <h4 class="mb-0 text-primary" id="total-amount">0đ</h4>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Combo & Đồ ăn:</span>
-                            <span id="payment-combo-amount">0đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 border-top">
-                            <span>Tổng thanh toán:</span>
-                            <span class="text-primary" id="payment-total-amount">0đ</span>
-                        </div>
-                        
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="button" class="btn btn-secondary" id="reset-selection">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Chọn lại
-                            </button>
-                            <button type="button" class="btn btn-primary" id="confirm-booking" disabled>
-                                <i class="bi bi-ticket-perforated me-1"></i> Xác nhận đặt vé
-                            </button>
-                            <a href="{{ route('staff.donve.selectSuat', $suatChieu->phim_id) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i> Chọn suất khác
-                            </a>
-                        </div>
+                        <button id="confirm-booking" class="btn btn-success btn-lg w-100" disabled>
+                            <i class="bi bi-check-circle me-2"></i>Xác nhận đặt vé
+                        </button>
                     </div>
                 </div>
             </div>
@@ -610,521 +481,366 @@
     </div>
 </div>
 
-{{-- Modal xác nhận --}}
-<div class="modal fade" id="confirmModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Xác nhận đặt vé</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i> Vui lòng kiểm tra lại thông tin trước khi xác nhận.
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Thông tin phim</h6>
-                        <p class="mb-1"><strong>Phim:</strong> {{ $suatChieu->phim->tieu_de }}</p>
-                        <p class="mb-1"><strong>Suất chiếu:</strong> {{ \Carbon\Carbon::parse($suatChieu->gio_bat_dau)->format('H:i d/m/Y') }}</p>
-                        <p class="mb-1"><strong>Phòng:</strong> {{ $suatChieu->phong->ten }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Thông tin đặt vé</h6>
-                        <div id="confirm-seats"></div>
-                        <div id="confirm-combos"></div>
-                        <div class="d-flex justify-content-between fw-bold mt-2">
-                            <span>Tổng cộng:</span>
-                            <span id="confirm-total"></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-3">
-                    <label for="staff_note" class="form-label">Ghi chú (nếu có)</label>
-                    <textarea class="form-control" id="staff_note" rows="2"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirm-booking-btn">
-                    <i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Modal thông báo --}}
-<div class="modal fade" id="messageModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="messageModalTitle">Thông báo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="messageModalBody">
-                <!-- Nội dung thông báo sẽ được điền vào đây -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="detailsBtn" style="display:none;">Chi tiết</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    .selected-seats-container {
+        min-height: 60px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+    .seat-badge {
+        display: inline-flex;
+        align-items: center;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 16px;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        color: #212529;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .seat-badge .seat-type {
+        font-weight: 600;
+        margin-right: 6px;
+        color: #495057;
+    }
+    .seat-badge .seat-number {
+        background: #e9ecef;
+        padding: 1px 8px;
+        border-radius: 10px;
+        margin: 0 4px;
+        font-family: monospace;
+    }
+    .seat-badge .remove-seat {
+        margin-left: 6px;
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 1.1em;
+        line-height: 1;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .seat-badge .remove-seat:hover {
+        opacity: 1;
+    }
+    
+    /* Combo styles */
+    .combo-badge {
+        display: inline-flex;
+        align-items: center;
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        border-radius: 16px;
+        padding: 6px 12px;
+        margin: 4px;
+        font-size: 0.85rem;
+    }
+    .combo-badge .combo-name {
+        font-weight: 600;
+        color: #e65100;
+        margin-right: 6px;
+    }
+    .combo-badge .combo-qty {
+        background: #ffecb3;
+        padding: 1px 8px;
+        border-radius: 10px;
+        margin: 0 4px;
+        font-family: monospace;
+    }
+    .combo-badge .combo-price {
+        color: #2e7d32;
+        font-weight: 500;
+        margin-left: 4px;
+    }
+</style>
+@endsection
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Khởi tạo biến
-    let selectedSeats = [];
-    let comboQuantities = {};
-    let baseTicketPrice = {{ $suatChieu->gia_ve }};
-    let combosData = @json($combos);
-    
-    // Khởi tạo số lượng combo
-    combosData.forEach(combo => {
-        comboQuantities[combo.id] = 0;
-    });
-    
-    // Xử lý click tăng số lượng combo
-    $(document).on('click', '.btn-increase', function() {
-        const comboId = $(this).data('combo-id');
-        const input = $(`#combo-${comboId}-qty`);
-        const max = parseInt(input.attr('max'));
-        let value = parseInt(input.val()) || 0;
-        
-        if (value < max) {
-            value++;
-            input.val(value);
-            comboQuantities[comboId] = value;
-            updateSelectedCombos();
-            updatePaymentSummary();
-        }
-        
-        // Bật/tắt nút giảm/tăng
-        $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
-        $(this).prop('disabled', value >= max);
-    });
-    
-    // Xử lý click giảm số lượng combo
-    $(document).on('click', '.btn-decrease', function() {
-        const comboId = $(this).data('combo-id');
-        const input = $(`#combo-${comboId}-qty`);
-        const max = parseInt(input.attr('max'));
-        let value = parseInt(input.val()) || 0;
-        
-        if (value > 0) {
-            value--;
-            input.val(value);
-            comboQuantities[comboId] = value;
-            updateSelectedCombos();
-            updatePaymentSummary();
-        }
-        
-        // Bật/tắt nút giảm/tăng
-        $(this).prop('disabled', value <= 0);
-        $(`.btn-increase[data-combo-id="${comboId}"]`).prop('disabled', value >= max);
-    });
-    
-    // Xử lý nhập trực tiếp số lượng
-    $(document).on('change', '.combo-qty', function() {
-        const comboId = $(this).data('combo-id');
-        const max = parseInt($(this).attr('max'));
-        let value = parseInt($(this).val()) || 0;
-        
-        // Đảm bảo giá trị nằm trong khoảng cho phép
-        if (value < 0) value = 0;
-        if (value > max) value = max;
-        
-        $(this).val(value);
-        comboQuantities[comboId] = value;
-        updateSelectedCombos();
-        updatePaymentSummary();
-        
-        // Bật/tắt nút giảm/tăng
-        $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
-        $(`.btn-increase[data-combo-id="${comboId}"]`).prop('disabled', value >= max);
-    });
-    
-    // Xử lý chọn ghế
-    $('.seat-map').on('click', '.seat:not(.disabled)', function() {
-        const gheId = $(this).data('ghe-id');
-        const hang = $(this).data('hang');
-        const cot = $(this).data('cot');
-        const loai = $(this).data('loai');
-        const gia = $(this).data('gia');
-        const seatLabel = hang + cot;
+document.addEventListener('DOMContentLoaded', function() {
+    const seats = document.querySelectorAll('.seat:not(.seat-da-thanh-toan):not(.seat-giu-tam):not(.seat-dat):not(.seat-bao-tri)');
+    const selectedSeats = new Set();
+    const selectedSeatsContainer = document.getElementById('selected-seats');
+    const totalAmountElement = document.getElementById('total-amount');
+    const confirmButton = document.getElementById('confirm-booking');
+    const ticketPrice = {{ $suatChieu->gia_ve }};
+    let comboQuantities = {!! $combos->pluck('so_luong', 'id') !!};
+    let comboPrices = {!! $combos->pluck('gia', 'id') !!};
 
-        // Nếu ghế đã được chọn thì bỏ chọn
-        if ($(this).hasClass('seat-chon')) {
-            $(this).removeClass('seat-chon');
-            selectedSeats = selectedSeats.filter(id => id !== gheId);
+    // Initialize combo quantities
+    Object.keys(comboQuantities).forEach(comboId => {
+        const input = document.getElementById(`combo-${comboId}-qty`);
+        if (input) {
+            input.addEventListener('change', updateComboQuantity);
+        }
+    });
+
+    // Handle seat selection
+    function toggleSeatSelection(seatElement) {
+        const seatId = seatElement.dataset.gheId;
+        const seatNumber = `${seatElement.dataset.hang}${seatElement.dataset.cot}`;
+        const seatType = seatElement.dataset.loai;
+
+        if (seatElement.classList.contains('seat-chon')) {
+            // Deselect seat
+            seatElement.classList.remove('seat-chon');
+            selectedSeats.delete(seatId);
         } else {
-            // Kiểm tra số lượng ghế tối đa
-            if (selectedSeats.length >= 8) {
-                showMessage('Thông báo', 'Chỉ được chọn tối đa 8 ghế cho mỗi lần đặt!');
+            // Check seat limit based on type
+            const seatCount = seatType === 'doi' ? 2 : 1;
+            const currentSeatCount = Array.from(selectedSeats).reduce((total, id) => {
+                const element = document.querySelector(`[data-ghe-id="${id}"]`);
+                return total + (element && element.dataset.loai === 'doi' ? 2 : 1);
+            }, 0);
+
+            if (currentSeatCount + seatCount > 8) {
+                alert('Bạn chỉ được chọn tối đa 8 ghế');
                 return;
             }
 
-            $(this).addClass('seat-chon');
-            selectedSeats.push(gheId);
+            // Select the seat
+            seatElement.classList.add('seat-chon');
+            selectedSeats.add(seatId);
         }
 
-        updateSelectedSeatsDisplay();
-        updateTotals();
-        updatePaymentSummary();
-        toggleBookButton();
-    });
+        updateSelectedSeats();
+        updateTotal();
+    }
     
-    // Xử lý nút chọn lại
-    $('#reset-selection').click(function() {
-        // Xóa tất cả các ghế đã chọn
-        $('.seat-chon').removeClass('seat-chon');
-        selectedSeats = [];
-        
-        // Đặt lại số lượng combo về 0
-        $('.combo-qty').val(0);
-        Object.keys(comboQuantities).forEach(key => {
-            comboQuantities[key] = 0;
+    // Add click event listeners to all seats
+    seats.forEach(seat => {
+        seat.addEventListener('click', function() {
+            toggleSeatSelection(this);
         });
-        
-        // Cập nhật giao diện
-        updateSelectedSeatsDisplay();
-        updateSelectedCombos();
-        updateTotals();
-        updatePaymentSummary();
-        toggleBookButton();
     });
-    
-    // Xử lý nút xác nhận đặt vé
-    $('#confirm-booking').click(function() {
-        if (selectedSeats.length === 0) {
-            showMessage('Lỗi', 'Vui lòng chọn ít nhất 1 ghế!');
+
+    // Update selected seats display
+    function updateSelectedSeats() {
+        selectedSeatsContainer.innerHTML = '';
+        if (selectedSeats.size === 0) {
+            selectedSeatsContainer.innerHTML = '<span class="text-muted">Chưa chọn ghế nào</span>';
+            confirmButton.disabled = true;
             return;
         }
         
-        // Hiển thị thông tin xác nhận
-        showConfirmModal();
-    });
-    
-        // Xác nhận đặt vé
-        $('#confirm-booking-btn').click(function() {
-            const paymentMethod = $('input[name="payment_method"]:checked').val();
-            const customerPhone = $('#customer_phone').val();
-            const customerName = $('#customer_name').val();
-            const staffNote = $('#staff_note').val();
+        // Group seats by type
+        const seatsByType = {
+            'thuong': [],
+            'vip': [],
+            'doi': []
+        };
+        
+        selectedSeats.forEach(seatId => {
+            const seatElement = document.querySelector(`[data-ghe-id="${seatId}"]`);
+            if (seatElement) {
+                const type = seatElement.dataset.loai || 'thuong';
+                const seatNumber = `${seatElement.dataset.hang}${seatElement.dataset.cot}`;
+                seatsByType[type].push(seatNumber);
+            }
+        });
+        
+        // Display selected seats with better formatting
+        Object.entries(seatsByType).forEach(([type, seats]) => {
+            if (seats.length > 0) {
+                const typeName = type === 'thuong' ? 'Thường' : (type === 'vip' ? 'VIP' : 'Đôi');
+                const typeClass = type === 'thuong' ? 'text-primary' : (type === 'vip' ? 'text-warning' : 'text-success');
+                
+                // Create a container for this seat type
+                const container = document.createElement('div');
+                container.className = 'd-flex flex-wrap align-items-center mb-2';
+                
+                // Add type label
+                const typeLabel = document.createElement('span');
+                typeLabel.className = `me-2 fw-bold ${typeClass}`;
+                typeLabel.textContent = `${typeName}:`;
+                container.appendChild(typeLabel);
+                
+                // Add each seat as a separate badge
+                seats.forEach(seatNumber => {
+                    const seatBadge = document.createElement('span');
+                    seatBadge.className = 'seat-badge me-2 mb-1';
+                    seatBadge.innerHTML = `
+                        <span class="seat-number">${seatNumber}</span>
+                        <span class="remove-seat" data-seat="${seatNumber}">&times;</span>
+                    `;
+                    container.appendChild(seatBadge);
+                });
+                
+                selectedSeatsContainer.appendChild(container);
+                
+                // Add event listeners to remove buttons
+                container.querySelectorAll('.remove-seat').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const seatNumber = this.dataset.seat;
+                        const seatElement = document.querySelector(`[data-hang="${seatNumber[0]}"][data-cot="${seatNumber.slice(1)}"]`);
+                        if (seatElement) {
+                            seatElement.click(); // Trigger click to deselect
+                        }
+                    });
+                });
+            }
+        });
+        
+        confirmButton.disabled = selectedSeats.size === 0;
+    }
+
+    // Calculate and update total amount
+    function updateTotal() {
+        let total = Array.from(selectedSeats).length * ticketPrice;
+        
+        // Add combo prices
+        document.querySelectorAll('[id^="combo-"]').forEach(input => {
+            if (input.id.endsWith('-qty')) {
+                const comboId = input.dataset.comboId;
+                const quantity = parseInt(input.value) || 0;
+                total += comboPrices[comboId] * quantity;
+            }
+        });
+        
+        totalAmountElement.textContent = total.toLocaleString('vi-VN') + 'đ';
+    }
+
+    // Handle combo quantity changes
+    function updateComboQuantity(e) {
+        const input = e.target;
+        const comboId = input.dataset.comboId;
+        let value = parseInt(input.value) || 0;
+        
+        // Validate max quantity
+        if (value > comboQuantities[comboId]) {
+            value = comboQuantities[comboId];
+            input.value = value;
+        }
+        
+        // Update total
+        updateTotal();
+    }
+
+    // Handle increase/decrease buttons
+    document.querySelectorAll('.btn-increase').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const comboId = this.dataset.comboId;
+            const input = document.getElementById(`combo-${comboId}-qty`);
+            let value = parseInt(input.value) || 0;
             
-            // Lấy danh sách combo đã chọn
-            const selectedCombos = [];
-            Object.keys(comboQuantities).forEach(comboId => {
-                const qty = comboQuantities[comboId];
-                if (qty > 0) {
-                    selectedCombos.push({
-                        combo_id: comboId,
-                        so_luong: qty
+            if (value < comboQuantities[comboId]) {
+                input.value = value + 1;
+                updateTotal();
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-decrease').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const comboId = this.dataset.comboId;
+            const input = document.getElementById(`combo-${comboId}-qty`);
+            let value = parseInt(input.value) || 0;
+            
+            if (value > 0) {
+                input.value = value - 1;
+                updateTotal();
+            }
+        });
+    });
+
+    // Handle form submission
+    document.getElementById('confirm-booking').addEventListener('click', function() {
+        const customerName = document.getElementById('customer-name').value.trim();
+        const customerPhone = document.getElementById('customer-phone').value.trim();
+        
+        if (!customerName || !customerPhone) {
+            alert('Vui lòng nhập đầy đủ thông tin khách hàng');
+            return;
+        }
+        
+        if (selectedSeats.size === 0) {
+            alert('Vui lòng chọn ít nhất một ghế');
+            return;
+        }
+        
+        // Prepare data
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('suat_chieu_id', '{{ $suatChieu->id }}');
+        formData.append('customer_name', customerName);
+        formData.append('customer_phone', customerPhone);
+        formData.append('customer_email', document.getElementById('customer-email').value.trim());
+        
+        // Add each seat ID as a separate form field
+        Array.from(selectedSeats).forEach((seatId, index) => {
+            formData.append(`ghe_ids[${index}]`, seatId);
+        });
+        
+        // Add combos to form data
+        const combos = [];
+        document.querySelectorAll('[id^="combo-"]').forEach(input => {
+            if (input.id.endsWith('-qty')) {
+                const comboId = input.dataset.comboId;
+                const quantity = parseInt(input.value) || 0;
+                if (quantity > 0) {
+                    combos.push({
+                        id: comboId,
+                        quantity: quantity
                     });
                 }
-            });
-            
-$.ajax({
-    url: '{{ route("staff.donve.store") }}',
-    type: 'POST',
-    data: {
-        _token: '{{ csrf_token() }}',
-        suat_chieu_id: {{ $suatChieu->id }},
-        ghe_ids: selectedSeats,
-        combo_items: selectedCombos,
-        payment_method: paymentMethod,
-        customer_phone: customerPhone,
-        customer_name: customerName,
-        staff_note: staffNote
-    },
-    beforeSend: function() {
-        $('#confirm-booking-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
-    },
-    success: function(response) {
-        if (response.success) {
-            // Hiển thị thông báo thành công, show details button
-            showMessage('Thành công', 'Đặt vé thành công!', true, response.redirect, function() {
-                // Optionally enable confirm button if needed
-                $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-            });
-        } else {
-            showMessage('Lỗi', response.message || 'Có lỗi xảy ra khi đặt vé!');
-            $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-        }
-    },
-    error: function(xhr) {
-        let errorMessage = 'Có lỗi xảy ra khi đặt vé!';
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMessage = xhr.responseJSON.message;
-        }
-        showMessage('Lỗi', errorMessage);
-        $('#confirm-booking-btn').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Xác nhận đặt vé');
-    }
-});
-        });
-    
-    // Cập nhật hiển thị ghế đã chọn
-    function updateSelectedSeatsDisplay() {
-        const selectedSeatsList = $('.seat-chon').map(function() {
-            const hang = $(this).data('hang') || '';
-            const cot = $(this).data('cot') || '';
-            const loai = $(this).data('loai');
-            const loaiText = loai === 'vip' ? 'VIP' : (loai === 'doi' ? 'Đôi' : 'Thường');
-            return `${hang}${cot} (${loaiText})`;
-        }).get().join(', ');
-        
-        if (selectedSeats.length > 0) {
-            $('#selected-seats').html(`
-                <div class="alert alert-info p-2 mb-0">
-                    <i class="bi bi-check2-circle me-1"></i>
-                    <strong>Đã chọn ${selectedSeats.length} ghế:</strong> ${selectedSeatsList}
-                </div>
-            `);
-        } else {
-            $('#selected-seats').html('<p class="text-muted mb-0">Chưa chọn ghế</p>');
-        }
-    }
-    // Lấy tổng tiền vé theo ghế đã chọn
-function getTicketTotal() {
-    let total = 0;
-    $('.seat-chon').each(function() {
-        const price = parseFloat($(this).data('gia')) || 0;
-        total += price;
-    });
-    return total;
-}
-
-// Cập nhật tổng tiền vé và combo
-function updateTotals() {
-    const ticketTotal = getTicketTotal();
-
-    // Tính tổng tiền combo
-    let comboTotal = 0;
-    Object.keys(comboQuantities).forEach(comboId => {
-        const combo = combosData.find(c => c.id == comboId);
-        if (combo) {
-            comboTotal += combo.gia * comboQuantities[comboId];
-        }
-    });
-
-    // Cập nhật giao diện tổng tiền vé
-    $('#ticket-summary').html(`
-        <div class="d-flex justify-content-between">
-            <span>Vé phim (${$('.seat-chon').length} ghế):</span>
-            <span>${formatCurrency(ticketTotal)}</span>
-        </div>
-    `);
-
-    // Cập nhật tổng tiền combo
-    $('#combo-total').text(formatCurrency(comboTotal));
-
-    // Tổng thanh toán
-    const totalAmount = ticketTotal + comboTotal;
-    $('#total-amount').text(formatCurrency(totalAmount));
-
-    // Cập nhật tổng tiền trong modal xác nhận
-    $('#confirm-total').text(formatCurrency(totalAmount));
-}
-
-// Cập nhật thanh toán bên phải
-function updatePaymentSummary() {
-    const ticketTotal = getTicketTotal();
-
-    // Tính tổng tiền combo và tạo HTML hiển thị
-    let comboTotal = 0;
-    let hasCombos = false;
-    let comboHtml = '';
-
-    Object.keys(comboQuantities).forEach(comboId => {
-        const qty = comboQuantities[comboId];
-        if (qty > 0) {
-            const combo = combosData.find(c => c.id == comboId);
-            if (combo) {
-                const comboAmount = combo.gia * qty;
-                comboTotal += comboAmount;
-                hasCombos = true;
-
-                comboHtml += `
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>${combo.ten} x${qty}</span>
-                        <span>${formatCurrency(comboAmount)}</span>
-                    </div>
-                `;
             }
-        }
-    });
-
-    // Cập nhật giao diện thanh toán
-    $('#payment-ticket-amount').text(formatCurrency(ticketTotal));
-    $('#payment-combo-amount').text(formatCurrency(comboTotal));
-
-    const totalAmount = ticketTotal + comboTotal;
-    $('#payment-total-amount').text(formatCurrency(totalAmount));
-
-    if (hasCombos) {
-        $('#selected-combos').html(comboHtml);
-    } else {
-        $('#selected-combos').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
-    }
-}
-
-// Khi click ghế hoặc thay đổi combo, gọi lại hai hàm trên
-$('.seat, .combo-input').on('click change', function() {
-    updateTotals();
-    updatePaymentSummary();
-});
-
-    
-    // Cập nhật danh sách combo đã chọn
-    function updateSelectedCombos() {
-        let comboListHtml = '';
-        let hasCombos = false;
+        });
+        formData.append('combos', JSON.stringify(combos));
         
-        Object.keys(comboQuantities).forEach(comboId => {
-            const qty = comboQuantities[comboId];
-            if (qty > 0) {
-                const combo = combosData.find(c => c.id == comboId);
-                if (combo) {
-                    comboListHtml += `
-                        <div class="d-flex justify-content-between">
-                            <span>${combo.ten} x${qty}</span>
-                            <span>${formatCurrency(combo.gia * qty)}</span>
-                        </div>
-                    `;
-                    hasCombos = true;
+        // Show loading state
+        const originalButtonText = confirmButton.innerHTML;
+        confirmButton.disabled = true;
+        confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...';
+        
+        // Submit form
+        fetch('{{ route("staff.donve.store") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = data.message || 'Đặt vé thành công!';
+                alert(successMessage);
+                
+                // Redirect to the ticket page or print page
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.href = '{{ route("staff.donve.index") }}';
                 }
+            } else {
+                // Show error message
+                const errorMessage = data.message || 'Đã xảy ra lỗi khi đặt vé. Vui lòng thử lại.';
+                alert(errorMessage);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message || 'Đã xảy ra lỗi. Vui lòng thử lại sau.');
+        })
+        .finally(() => {
+            // Restore button state
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = originalButtonText;
         });
-        
-        if (hasCombos) {
-            $('#selected-combos').html(comboListHtml);
-        } else {
-            $('#selected-combos').html('<p class="text-muted small mb-0">Chưa chọn combo</p>');
-        }
-        
-        updateTotals();
-        updatePaymentSummary();
-    }
-    
-    // Hiển thị modal xác nhận
-    function showConfirmModal() {
-        console.log('Selected seats for confirm modal:');
-        $('.seat-chon').each(function(index) {
-            console.log(`Seat ${index + 1}: hang=${$(this).data('hang')}, cot=${$(this).data('cot')}, loai=${$(this).data('loai')}`);
-        });
-        // Cập nhật thông tin ghế đã chọn
-        const selectedSeatsList = $('.seat-chon').map(function() {
-            const hang = $(this).data('hang') || '';
-            const cot = $(this).data('cot') || '';
-            const loai = $(this).data('loai');
-            const loaiText = loai === 'vip' ? 'VIP' : (loai === 'doi' ? 'Đôi' : 'Thường');
-            return `${hang}${cot} (${loaiText})`;
-        }).get().join(', ');
-        
-        $('#confirm-seats').html(`
-            <p class="mb-1"><strong>Ghế đã chọn (${selectedSeats.length}):</strong> ${selectedSeatsList}</p>
-            <p class="mb-1"><strong>Giá vé:</strong> ${formatCurrency(selectedSeats.length * baseTicketPrice)}</p>
-        `);
-        
-        // Cập nhật thông tin combo
-        let comboHtml = '';
-        let hasCombos = false;
-        
-        Object.keys(comboQuantities).forEach(comboId => {
-            const qty = comboQuantities[comboId];
-            if (qty > 0) {
-                const combo = combosData.find(c => c.id == comboId);
-                if (combo) {
-                    comboHtml += `
-                        <div class="d-flex justify-content-between">
-                            <span>${combo.ten} x${qty}</span>
-                            <span>${formatCurrency(combo.gia * qty)}</span>
-                        </div>
-                    `;
-                    hasCombos = true;
-                }
-            }
-        });
-        
-        if (hasCombos) {
-            $('#confirm-combos').html(`
-                <div class="mt-2">
-                    <strong>Combo & Đồ ăn:</strong>
-                    ${comboHtml}
-                </div>
-            `);
-        } else {
-            $('#confirm-combos').html('<p class="mt-2"><strong>Không có combo nào được chọn</strong></p>');
-        }
-        
-        // Hiển thị modal
-        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-        confirmModal.show();
-    }
-    
-    // Bật/tắt nút đặt vé
-    function toggleBookButton() {
-        const hasSelectedSeats = selectedSeats.length > 0;
-        $('#confirm-booking').prop('disabled', !hasSelectedSeats);
-    }
-    
-function showMessage(title, message, showDetailsBtn = false, detailsUrl = null, callback = null) {
-    $('#messageModalTitle').text(title);
-    $('#messageModalBody').html(message);
-
-    if(showDetailsBtn && detailsUrl){
-        $('#detailsBtn').show();
-        $('#detailsBtn').off('click').on('click', function(){
-            window.location.href = detailsUrl;
-        });
-    } else {
-        $('#detailsBtn').hide();
-        $('#detailsBtn').off('click');
-    }
-
-    const modal = new bootstrap.Modal(document.getElementById('messageModal'));
-
-    if (callback && typeof callback === 'function') {
-        $('#messageModal').on('hidden.bs.modal', function() {
-            callback();
-            $(this).off('hidden.bs.modal');
-        });
-    }
-
-    modal.show();
-}
-    
-    // Định dạng tiền tệ
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', '') + 'đ';
-    }
-    
-    // Khởi tạo ban đầu
-    updateSelectedSeatsDisplay();
-    updateTotals();
-    updatePaymentSummary();
-    toggleBookButton();
-
-    // Add explicit click handlers for cancel and close buttons to fix data-bs-dismiss issue
-    var confirmModalEl = document.getElementById('confirmModal');
-    var confirmModalInstance = new bootstrap.Modal(confirmModalEl);
-    $('#confirmModal .btn-secondary').click(function() {
-        confirmModalInstance.hide();
-        window.location.href = window.location.href;
-    });
-
-    var messageModalEl = document.getElementById('messageModal');
-    var messageModalInstance = new bootstrap.Modal(messageModalEl);
-    $('#messageModal .btn-secondary').click(function() {
-        messageModalInstance.hide();
-        window.location.href = window.location.href;
     });
 });
 </script>
 @endpush
-@endsection

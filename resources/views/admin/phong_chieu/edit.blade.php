@@ -112,7 +112,6 @@
 {{-- CSS giống file create --}}
 <style>
 .seat-preview { width: 35px; height: 35px; margin: 3px; border-radius: 6px; border: 2px solid #ddd; text-align: center; line-height: 35px; font-size: 11px; font-weight: 600; color: #333; display: inline-block; }
-.seat-aisle { width: 60px !important; background: #efefef; color: #666; font-size: 9px; font-weight: bold; border: 2px dashed #bbb; line-height: 12px; padding-top: 10px; }
 .seat-screen { background: #2c3e50; color: white; border-radius: 6px; border: 2px solid #2c3e50; font-weight: bold; }
 .seat-preview-container { display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 2px solid #e9ecef; }
 .seat-row { display: flex; align-items: center; margin-bottom: 8px; }
@@ -193,13 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 seat.className = "seat-preview";
                 seat.textContent = c;
                 row.appendChild(seat);
-
-                if (c % 8 === 0 && c < soCot) {
-                    const midAisle = document.createElement('div');
-                    midAisle.className = "seat-preview seat-aisle";
-                    midAisle.textContent = "LỐI ĐI";
-                    row.appendChild(midAisle);
-                }
             }
 
             seatPreview.appendChild(row);
