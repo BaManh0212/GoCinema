@@ -46,7 +46,18 @@ class DonDatVeController extends Controller
 
         return view('admin.donve.show', compact('donVe'));
     }
+public function showQr($ma_don)
+{
+    $donVe = DonDatVe::with([
+        'nguoiDung',
+        'suatChieu.phim',
+        'suatChieu.phongChieu',
+        'chiTietVes.ghe',
+        'combos' // nếu có
+    ])->where('ma_don', $ma_don)->firstOrFail();
 
+    return view('admin.donve.show', compact('donVe'));
+}
     /**
      * In vé (PDF)
      */

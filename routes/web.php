@@ -268,7 +268,15 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
     // RESOURCE SUẤT CHIẾU
     // =========================
     
+    // scan QR
+    Route::get('/admin/scan-qr', [\App\Http\Controllers\Admin\QRController::class, 'scanPage'])
+    ->name('admin.scan.qr');
 
+    Route::post('/admin/scan-qr/check', [\App\Http\Controllers\Admin\QRController::class, 'check'])
+    ->name('admin.scan.qr.check');
+
+    Route::get('/admin/orders/{ma_don}', [AdminDonDatVeController::class, 'showQR'])
+    ->name('admin.orders.showQR');
 
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');
