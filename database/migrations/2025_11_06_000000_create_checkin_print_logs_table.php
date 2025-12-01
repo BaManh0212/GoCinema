@@ -19,7 +19,7 @@ class CreateCheckinPrintLogsTable extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('nguoi_dung')->onDelete('cascade');
-            $table->foreign('don_dat_ve_id')->references('id')->on('don_dat_ves')->onDelete('cascade');
+            $table->foreign('don_dat_ve_id')->references('id')->on('don_dat_ve')->onDelete('cascade');
         });
     }
 
