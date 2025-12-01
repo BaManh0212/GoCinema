@@ -34,11 +34,45 @@ class CleanupPendingBookings extends Command
 
         $this->info("[Cleanup] Bắt đầu dọn dẹp. Hạn: {$deadline->toDateTimeString()}");
 
-        // 1) Xóa giữ tạm đã hết hạn
+        // 1) Xóa giữ tạm đã hết hạn (nhưng KHÔNG xóa ghế của đơn đang chờ thanh toán)
+        // Lấy danh sách ghế đang trong đơn chờ thanh toán
+        $gheIdsInPendingOrders = DB::table('chi_tiet_ve')
+            ->join('don_dat_ve', 'chi_tiet_ve.don_dat_ve_id', '=', 'don_dat_ve.id')
+            ->where('don_dat_ve.trang_thai', 'cho_thanh_toan')
+            ->where('chi_tiet_ve.trang_thai', 'cho_thanh_toan')
+            ->select('chi_tiet_ve.ghe_id', 'chi_tiet_ve.suat_chieu_id')
+            ->get()
+            ->map(function($item) {
+                return $item->suat_chieu_id . '_' . $item->ghe_id; // Tạo key duy nhất
+            })
+            ->toArray();
+
+        // Lấy tất cả ghế giữ tạm đã hết hạn
         $expiredHolds = DB::table('ghe_giu_tam')
             ->where('het_han', '<=', Carbon::now())
-            ->delete();
-        $this->info("[Cleanup] Đã xóa {$expiredHolds} giữ tạm đã hết hạn.");
+            ->get();
+
+        // Lọc ra các ghế giữ tạm KHÔNG thuộc đơn chờ thanh toán
+        $holdsToDelete = $expiredHolds->filter(function($hold) use ($gheIdsInPendingOrders) {
+            $key = $hold->suat_chieu_id . '_' . $hold->ghe_id;
+            return !in_array($key, $gheIdsInPendingOrders);
+        });
+
+        if ($holdsToDelete->isNotEmpty()) {
+            // Xóa các ghế giữ tạm đã hết hạn và không thuộc đơn chờ thanh toán
+            $gheIdsToDelete = $holdsToDelete->pluck('ghe_id')->toArray();
+            $suatChieuIdsToDelete = $holdsToDelete->pluck('suat_chieu_id')->toArray();
+            
+            $deletedCount = DB::table('ghe_giu_tam')
+                ->where('het_han', '<=', Carbon::now())
+                ->whereIn('ghe_id', $gheIdsToDelete)
+                ->whereIn('suat_chieu_id', $suatChieuIdsToDelete)
+                ->delete();
+            
+            $this->info("[Cleanup] Đã xóa {$deletedCount} giữ tạm đã hết hạn (bỏ qua ghế của đơn chờ thanh toán).");
+        } else {
+            $this->info("[Cleanup] Không có giữ tạm nào cần xóa.");
+        }
 
         // 2) Hủy đơn chờ thanh toán quá hạn
         DonDatVe::where('trang_thai', 'cho_thanh_toan')
