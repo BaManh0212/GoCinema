@@ -199,6 +199,19 @@
                     <div class="mt-4">
                         <h6>Ghế đã chọn: <span id="selected-seats">Chưa chọn ghế nào</span></h6>
                         <div id="selected-seats-list" class="d-flex flex-wrap gap-2"></div>
+
+                        {{-- Countdown timer --}}
+                        <div id="hold-timer-container" class="mt-3 d-none">
+                            <div class="alert alert-warning py-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-clock-fill me-2"></i>
+                                    <div>
+                                        <small class="text-balck">Thời gian giữ ghế:</small>
+                                        <div id="hold-timer" class="fw-bold text-warning">10:00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -439,6 +452,24 @@
         </div>
     </div>
 </div>
+
+{{-- Modal hết thời gian giữ ghế --}}
+<div class="modal fade" id="holdExpiredModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Hết thời gian giữ ghế</h5>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-clock-fill text-warning" style="font-size: 3rem;"></i>
+                <p class="mt-3">Thời gian giữ ghế tạm thời đã hết. Vui lòng chọn lại ghế.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="location.reload()">Chọn lại ghế</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -597,6 +628,11 @@ let appliedVoucherNdId = null; // id voucher_nguoi_dung nếu áp dụng VCxxxxx
 let appliedCode = null; // lưu lại mã đã áp dụng để gửi lên server
 let baseTicketPrice = {{ $suatChieu->gia_ve }};
 let combosData = @json($combos);
+
+// Seat hold timer variables
+let holdTimerInterval = null;
+let holdExpirationTime = null;
+let holdDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Initialize combo quantities
 combosData.forEach(combo => {
@@ -795,6 +831,41 @@ $(document).ready(function() {
         updateTotals();
         invalidateAppliedVoucher();
         toggleBookButton();
+
+        // Handle seat hold
+        if (selectedSeats.length > 0 && !holdTimerInterval) {
+            // Start hold when first seat is selected
+            startHoldTimer();
+            $.post('{{ route("booking.holdSeats") }}', {
+                _token: '{{ csrf_token() }}',
+                suat_chieu_id: {{ $suatChieu->id }},
+                ghe_ids: selectedSeats
+            })
+            .done(function(response) {
+                if (!response.success) {
+                    stopHoldTimer();
+                    selectedSeats = [];
+                    $('.seat.seat-chon').removeClass('seat-chon');
+                    updateSelectedSeatsDisplay();
+                    updateTotals();
+                    invalidateAppliedVoucher();
+                    toggleBookButton();
+                    showError(response.message);
+                }
+            })
+            .fail(function() {
+                stopHoldTimer();
+                selectedSeats = [];
+                $('.seat.seat-chon').removeClass('seat-chon');
+                updateSelectedSeatsDisplay();
+                updateTotals();
+                invalidateAppliedVoucher();
+                toggleBookButton();
+                showError('Không thể giữ ghế. Vui lòng thử lại.');
+            });
+        } else if (selectedSeats.length == 0) {
+            stopHoldTimer();
+        }
     });
 
     // Thêm/bớt combo
@@ -904,58 +975,47 @@ $(document).ready(function() {
         $('#confirmModal').modal('show');
     });
 
+    // Handle modal close - stop timer if user cancels
+    $('#confirmModal').on('hidden.bs.modal', function() {
+        stopHoldTimer();
+    });
+
     // Xác nhận đặt vé
     $('#confirm-book').click(function() {
         $('#confirm-book').prop('disabled', true).text('Đang xử lý...');
 
-        // Giữ tạm ghế trước
-        $.post('{{ route("booking.holdSeats") }}', {
+        // Đặt vé (seats are already held)
+        $.post('{{ route("booking.store") }}', {
             _token: '{{ csrf_token() }}',
             suat_chieu_id: {{ $suatChieu->id }},
-            ghe_ids: selectedSeats
+            ghe_ids: selectedSeats,
+            combo_items: getComboItems(),
+            // Nếu có voucher người dùng đã áp dụng thì gửi id, nếu không thì gửi mã đã áp dụng
+            voucher_nd_id: appliedVoucherNdId,
+            ma_giam_gia: appliedVoucherNdId ? null : (appliedCode || null)
         })
         .done(function(response) {
             if (response.success) {
-                // Đặt vé
-                $.post('{{ route("booking.store") }}', {
-                    _token: '{{ csrf_token() }}',
-                    suat_chieu_id: {{ $suatChieu->id }},
-                    ghe_ids: selectedSeats,
-                    combo_items: getComboItems(),
-                    // Nếu có voucher người dùng đã áp dụng thì gửi id, nếu không thì gửi mã đã áp dụng
-                    voucher_nd_id: appliedVoucherNdId,
-                    ma_giam_gia: appliedVoucherNdId ? null : (appliedCode || null)
-                })
-                .done(function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirect;
-                    } else {
-                        showError(response.message);
-                        if (response.redirect) {
-                            setTimeout(() => {
-                                window.location.href = response.redirect;
-                            }, 3000); // Chuyển hướng sau 3 giây
-                        }
-                    }
-                })
-                .fail(function(xhr) {
-                    const errorMessage = xhr.responseJSON && xhr.responseJSON.message 
-                        ? xhr.responseJSON.message 
-                        : 'Có lỗi xảy ra khi đặt vé!';
-                    showError(errorMessage);
-                })
-                .always(function() {
-                    $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
-                    $('#confirmModal').modal('hide');
-                });
+                // Stop timer on successful booking
+                stopHoldTimer();
+                window.location.href = response.redirect;
             } else {
                 showError(response.message);
-                $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
-                $('#confirmModal').modal('hide');
+                if (response.redirect) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 3000); // Chuyển hướng sau 3 giây
+                }
             }
         })
-        .fail(function() {
-            showError('Có lỗi xảy ra khi giữ ghế! Vui lòng thử lại.');
+        .fail(function(xhr) {
+            const errorMessage = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'Có lỗi xảy ra khi đặt vé!';
+            showError(errorMessage);
+            stopHoldTimer(); // Stop timer on booking failure
+        })
+        .always(function() {
             $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
             $('#confirmModal').modal('hide');
         });
@@ -1146,6 +1206,78 @@ function resetVoucher() {
     $('#voucher-select').val('');
     $('#applied-voucher-info').addClass('d-none');
     updateTotals();
+}
+
+// Seat hold timer functions
+function startHoldTimer() {
+    if (holdTimerInterval) {
+        clearInterval(holdTimerInterval);
+    }
+
+    holdExpirationTime = Date.now() + holdDuration;
+    $('#hold-timer-container').removeClass('d-none');
+
+    holdTimerInterval = setInterval(function() {
+        const now = Date.now();
+        const remaining = holdExpirationTime - now;
+
+        if (remaining <= 0) {
+            clearInterval(holdTimerInterval);
+            handleHoldExpired();
+            return;
+        }
+
+        const minutes = Math.floor(remaining / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        $('#hold-timer').text(timeString);
+
+        // Show warning when less than 2 minutes remaining
+        if (remaining <= 2 * 60 * 1000) {
+            $('#hold-timer').addClass('text-danger').removeClass('text-warning');
+            if (!$('#hold-timer-container .alert').hasClass('alert-danger')) {
+                $('#hold-timer-container .alert').removeClass('alert-warning').addClass('alert-danger');
+            }
+        } else {
+            $('#hold-timer').addClass('text-warning').removeClass('text-danger');
+            $('#hold-timer-container .alert').removeClass('alert-danger').addClass('alert-warning');
+        }
+    }, 1000);
+}
+
+function stopHoldTimer() {
+    if (holdTimerInterval) {
+        clearInterval(holdTimerInterval);
+        holdTimerInterval = null;
+    }
+    $('#hold-timer-container').addClass('d-none');
+    holdExpirationTime = null;
+}
+
+function handleHoldExpired() {
+    $('#hold-timer-container').addClass('d-none');
+
+    // Release held seats on server
+    $.post('{{ route("booking.releaseSeats") }}', {
+        _token: '{{ csrf_token() }}',
+        suat_chieu_id: {{ $suatChieu->id }},
+        ghe_ids: selectedSeats
+    });
+
+    // Show expired modal
+    const holdExpiredModal = new bootstrap.Modal(document.getElementById('holdExpiredModal'));
+    holdExpiredModal.show();
+
+    // Clear selected seats
+    selectedSeats = [];
+    updateSelectedSeatsDisplay();
+    updateTotals();
+    invalidateAppliedVoucher();
+    toggleBookButton();
+
+    // Remove seat selection styling
+    $('.seat.seat-chon').removeClass('seat-chon');
 }
 </script>
 @endpush

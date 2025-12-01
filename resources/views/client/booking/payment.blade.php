@@ -5,6 +5,13 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
+        <!-- Countdown Timer -->
+        <div id="countdown-timer" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
+            <h2 class="text-lg font-semibold text-blue-800 mb-2">Thời gian còn lại để thanh toán</h2>
+            <div id="timer-display" class="text-3xl font-bold text-blue-600">10:00</div>
+            <p class="text-sm text-blue-600 mt-2">Vui lòng hoàn tất thanh toán trước khi hết thời gian</p>
+        </div>
+
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Thanh toán</h1>
 
@@ -15,7 +22,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-gray-600">Mã đơn hàng:</p>
-                            <p class="font-semibold">{{ $donDatVe->ma_don }}</p>
+                            <p class="text-black">{{ $donDatVe->ma_don }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Trạng thái:</p>
@@ -160,6 +167,121 @@
                     </div>
                 </form>
             </div>
- 
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let timeLeft = 600; // 10 minutes in seconds
+    const timerDisplay = document.getElementById('timer-display');
+    const countdownTimer = document.getElementById('countdown-timer');
+    const paymentForm = document.getElementById('paymentForm');
+    const payButton = document.getElementById('payButton');
+
+    // Flag to prevent multiple cancellation calls
+    let bookingCancelled = false;
+
+    // Function to cancel booking when user leaves page
+    function cancelBookingOnExit() {
+        if (bookingCancelled) return;
+        bookingCancelled = true;
+
+        // Cancel booking via AJAX (synchronous to ensure it completes)
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/booking/ajax-cancel/{{ $donDatVe->id }}`, false); // Synchronous
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.send(JSON.stringify({ page_exit: true }));
+    }
+
+    // Detect when user is leaving the page
+    window.addEventListener('beforeunload', function(e) {
+        // Only cancel if booking is still unpaid
+        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            cancelBookingOnExit();
+        }
+    });
+
+    // Also detect visibility change (tab switching, minimizing, etc.)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden' && !bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            // Give user a moment to come back before cancelling
+            setTimeout(() => {
+                if (document.visibilityState === 'hidden' && !bookingCancelled) {
+                    cancelBookingOnExit();
+                }
+            }, 30000); // 30 seconds
+        }
+    });
+
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        timerDisplay.textContent = formattedTime;
+
+        // Turn red when 2 minutes remaining
+        if (timeLeft <= 120) {
+            countdownTimer.classList.remove('bg-blue-50', 'border-blue-200');
+            countdownTimer.classList.add('bg-red-50', 'border-red-200');
+            timerDisplay.classList.remove('text-blue-600');
+            timerDisplay.classList.add('text-red-600');
+            countdownTimer.querySelector('h2').classList.remove('text-blue-800');
+            countdownTimer.querySelector('h2').classList.add('text-red-800');
+            countdownTimer.querySelector('p').classList.remove('text-blue-600');
+            countdownTimer.querySelector('p').classList.add('text-red-600');
+        }
+
+        if (timeLeft <= 0) {
+            // Time expired - cancel booking
+            timerDisplay.textContent = '00:00';
+            countdownTimer.querySelector('h2').textContent = 'Thời gian thanh toán đã hết';
+            countdownTimer.querySelector('p').textContent = 'Đơn hàng sẽ được hủy và ghế sẽ được trả về';
+
+            // Disable form
+            paymentForm.style.pointerEvents = 'none';
+            paymentForm.style.opacity = '0.5';
+            payButton.disabled = true;
+            payButton.textContent = 'Đã hết thời gian thanh toán';
+
+            // Cancel booking via AJAX
+            fetch(`/booking/ajax-cancel/{{ $donDatVe->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error canceling booking:', error);
+                // Still redirect even if AJAX fails
+                setTimeout(() => {
+                    window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+                }, 3000);
+            });
+
+            return;
+        }
+
+        timeLeft--;
+        setTimeout(updateTimer, 1000);
+    }
+
+    updateTimer();
+});
+</script>
 
 @endsection
