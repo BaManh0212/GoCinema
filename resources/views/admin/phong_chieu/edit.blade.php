@@ -52,12 +52,6 @@
                     @enderror
                 </div>
 
-                {{-- Sơ đồ --}}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Sơ đồ (tùy chọn)</label>
-                    <input type="text" name="so_do" class="form-control" value="{{ old('so_do', $phongchieu->so_do) }}" placeholder="VD: A1-A10, B1-B10...">
-                </div>
-
                 {{-- Số hàng --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold">Số hàng <span class="text-danger">*</span></label>

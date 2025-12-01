@@ -107,7 +107,7 @@
 
     <!-- Success Message -->
     <div class="success-message">
-        <h3 style="margin: 0 0 5px 0;">Đặt vé thành công!</h3>
+        <!-- <h3 style="margin: 0 0 5px 0;">Đặt vé thành công!</h3> -->
         <p style="margin: 0;">Mã đơn hàng: <strong>{{ $donDatVe->ma_don }}</strong></p>
     </div>
 

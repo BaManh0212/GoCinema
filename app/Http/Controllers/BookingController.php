@@ -32,6 +32,9 @@ class BookingController extends Controller
             return redirect('/')->with('error', 'Vui lòng chọn suất chiếu.');
         }
 
+        // Dọn dẹp ghế giữ tạm đã hết hạn và đơn hàng chưa thanh toán quá 10 phút
+        $this->cleanupExpiredBookings();
+
         $suatChieu = SuatChieu::with(['phim', 'phong.rap'])->findOrFail($suatChieuId);
 
         // Kiểm tra suất chiếu có hoạt động không
@@ -104,6 +107,45 @@ class BookingController extends Controller
             'sanPhams',
             'availableVouchers'
         ));
+    }
+
+    /**
+     * Thả ghế giữ tạm
+     */
+    public function releaseSeats(Request $request)
+    {
+        $request->validate([
+            'suat_chieu_id' => 'required|exists:suat_chieu,id',
+            'ghe_ids' => 'required|array|min:1|max:8',
+            'ghe_ids.*' => 'exists:ghe,id',
+        ]);
+
+        $suatChieuId = $request->suat_chieu_id;
+        $gheIds = $request->ghe_ids;
+
+        DB::beginTransaction();
+        try {
+            // Xóa ghế giữ tạm của user này
+            DB::table('ghe_giu_tam')
+                ->where('nguoi_dung_id', auth()->id())
+                ->where('suat_chieu_id', $suatChieuId)
+                ->whereIn('ghe_id', $gheIds)
+                ->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã thả ghế giữ tạm thành công.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -464,6 +506,9 @@ class BookingController extends Controller
      */
     public function payment($id)
     {
+        // Dọn dẹp ghế giữ tạm đã hết hạn và đơn hàng chưa thanh toán quá 10 phút
+        $this->cleanupExpiredBookings();
+
         $donDatVe = DonDatVe::with([
             'suatChieu.phim',
             'suatChieu.phong.rap',
@@ -472,6 +517,12 @@ class BookingController extends Controller
         ])->where('id', $id)
           ->where('nguoi_dung_id', auth()->id())
           ->firstOrFail();
+
+        // Kiểm tra nếu đơn hàng đã bị hủy tự động do hết thời gian thanh toán
+        if ($donDatVe->trang_thai === 'da_huy') {
+            return redirect()->route('booking.index', ['suat_chieu_id' => $donDatVe->suat_chieu_id])
+                ->with('error', 'Đơn hàng của bạn đã hết thời gian thanh toán và đã được hủy tự động. Vui lòng đặt vé lại.');
+        }
 
         // Lấy combo đã đặt
         $combos = DB::table('don_dat_ve_combo as ddvc')
@@ -1003,6 +1054,79 @@ if ($paymentMethod === 'vnpay') {
     }
 
     /**
+     * Dọn dẹp ghế giữ tạm đã hết hạn và đơn hàng chưa thanh toán quá 10 phút
+     */
+    private function cleanupExpiredBookings()
+    {
+        $now = Carbon::now();
+        $tenMinutesAgo = $now->copy()->subMinutes(10);
+
+        DB::beginTransaction();
+        try {
+            // 1. Xóa ghế giữ tạm đã hết hạn
+            $expiredHolds = DB::table('ghe_giu_tam')
+                ->where('het_han', '<', $now)
+                ->get();
+
+            if ($expiredHolds->isNotEmpty()) {
+                DB::table('ghe_giu_tam')
+                    ->where('het_han', '<', $now)
+                    ->delete();
+
+                Log::info('Cleaned up expired temporary holds', [
+                    'count' => $expiredHolds->count(),
+                    'expired_holds' => $expiredHolds->toArray()
+                ]);
+            }
+
+            // 2. Hủy đơn hàng chưa thanh toán quá 10 phút
+            $expiredOrders = DonDatVe::where('trang_thai', 'cho_thanh_toan')
+                ->where('created_at', '<', $tenMinutesAgo)
+                ->with(['chiTietVes', 'suatChieu'])
+                ->get();
+
+            foreach ($expiredOrders as $order) {
+                // Lấy danh sách ghế để trả về trạng thái trống
+                $gheIds = $order->chiTietVes()->pluck('ghe_id')->toArray();
+
+                // Đánh dấu chi tiết vé đã hủy
+                $order->chiTietVes()->update(['trang_thai' => 'da_huy']);
+
+                // Cập nhật trạng thái đơn
+                $order->update(['trang_thai' => 'da_huy']);
+
+                // Xóa combo đã đặt (nếu có)
+                DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $order->id)->delete();
+
+                // Trả ghế về trạng thái trống trong GheSuatChieu
+                foreach ($gheIds as $gheId) {
+                    $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $order->suat_chieu_id)
+                        ->where('ghe_id', $gheId)
+                        ->first();
+                    if ($gheSuatChieu) {
+                        $gheSuatChieu->update(['trang_thai' => 'hoat_dong']);
+                    }
+                }
+
+                Log::info('Auto-cancelled expired unpaid order', [
+                    'order_id' => $order->id,
+                    'ma_don' => $order->ma_don,
+                    'created_at' => $order->created_at,
+                    'seats_returned' => $gheIds
+                ]);
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error during cleanupExpiredBookings: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
      * Hủy đặt vé
      */
     public function cancel($id)
@@ -1040,7 +1164,7 @@ if ($paymentMethod === 'vnpay') {
     }
 
     /**
-     * API hủy đơn đặt vé qua AJAX (dùng khi huỷ do thoát trang thanh toán)
+     * API hủy đơn đặt vé qua AJAX (dùng khi huỷ do hết thời gian thanh toán hoặc thoát trang)
      */
     public function ajaxCancel(Request $request, $id)
     {
@@ -1063,35 +1187,62 @@ if ($paymentMethod === 'vnpay') {
             ], 404);
         }
 
-        // Kiểm tra thời gian hủy (trước 2 giờ chiếu)
-        $suatChieu = $donDatVe->suatChieu;
-        if (Carbon::now()->addHours(2)->gte($suatChieu->gio_bat_dau)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể hủy vé trong vòng 2 giờ trước khi chiếu.',
-            ], 403);
+        // Kiểm tra thời gian hủy (trước 2 giờ chiếu) - chỉ áp dụng cho hủy thủ công
+        $isPageExit = $request->input('page_exit', false);
+        if (!$isPageExit) {
+            $suatChieu = $donDatVe->suatChieu;
+            if (Carbon::now()->addHours(2)->gte($suatChieu->gio_bat_dau)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể hủy vé trong vòng 2 giờ trước khi chiếu.',
+                ], 403);
+            }
         }
 
         DB::beginTransaction();
         try {
-            // Cập nhật trạng thái vé chi tiết thành đã hủy
-            $donDatVe->chiTietVes()->update(['trang_thai' => 'da_huy']);
+            // Lấy danh sách ghế để trả về trạng thái trống
+            $gheIds = $donDatVe->chiTietVes()->pluck('ghe_id')->toArray();
 
-            // Cập nhật trạng thái đơn thành đã hủy
-            $donDatVe->trang_thai = 'da_huy';
-            $donDatVe->save();
+            if ($isPageExit) {
+                // Khi thoát trang: Xóa hoàn toàn đơn hàng, không lưu lịch sử
+                // Xóa chi tiết vé trước
+                $donDatVe->chiTietVes()->delete();
+
+                // Xóa combo đã đặt
+                DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
+
+                // Xóa đơn đặt vé
+                $donDatVe->delete();
+
+                Log::info('Booking completely deleted due to page exit', [
+                    'booking_id' => $id,
+                    'user_id' => auth()->id(),
+                    'seats_returned' => $gheIds
+                ]);
+            } else {
+                // Hủy thủ công: Giữ lịch sử
+                // Đánh dấu chi tiết vé đã hủy để giữ lịch sử
+                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_huy']);
+
+                // Cập nhật trạng thái đơn
+                $donDatVe->trang_thai = 'da_huy';
+                $donDatVe->save();
+
+                // Xóa combo đã đặt (nếu có)
+                DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
+            }
 
             // Xóa các bản ghi giữ tạm ghế của người dùng cho suất chiếu này
             DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
-                ->where('suat_chieu_id', $suatChieu->id)
+                ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
                 ->delete();
 
-            // Cập nhật trạng thái ghế trong GheSuatChieu về trạng thái 'hoat_dong'
-            $chiTietVes = $donDatVe->chiTietVes()->get();
-            foreach ($chiTietVes as $chiTietVe) {
-                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $suatChieu->id)
-                    ->where('ghe_id', $chiTietVe->ghe_id)
+            // Trả ghế về trạng thái trống (hoat_dong) trong GheSuatChieu
+            foreach ($gheIds as $gheId) {
+                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                    ->where('ghe_id', $gheId)
                     ->first();
                 if ($gheSuatChieu) {
                     $gheSuatChieu->trang_thai = 'hoat_dong';
@@ -1103,7 +1254,7 @@ if ($paymentMethod === 'vnpay') {
 
             return response()->json([
                 'success' => true,
-                'message' => 'Đã hủy đơn và trả ghế thành công.',
+                'message' => $isPageExit ? 'Đã hủy đơn do thoát trang.' : 'Đã hủy đơn và trả ghế về trạng thái trống.',
             ]);
 
         } catch (\Exception $e) {
@@ -1259,23 +1410,46 @@ if ($paymentMethod === 'vnpay') {
 
         // resultCode !== 0: thanh toán thất bại
         Log::warning('MoMo payment failed', ['orderId' => $orderId, 'resultCode' => $resultCode]);
-        
-        // ✅ Nếu thanh toán thất bại, cập nhật lại trạng thái "cho_thanh_toan"
+
+        // ✅ Nếu thanh toán thất bại, xóa hoàn toàn đơn hàng (không lưu lịch sử)
         DB::beginTransaction();
         try {
-            $donDatVe->update([
-                'trang_thai' => 'cho_thanh_toan',
-                'phuong_thuc_thanh_toan' => null,
-            ]);
-            $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
+            // Lấy danh sách ghế để trả về trạng thái trống
+            $gheIds = $donDatVe->chiTietVes()->pluck('ghe_id')->toArray();
+
+            // Xóa chi tiết vé trước
+            $donDatVe->chiTietVes()->delete();
+
+            // Xóa combo đã đặt
+            DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
+
+            // Xóa đơn đặt vé
+            $donDatVe->delete();
+
+            // Trả ghế về trạng thái trống (hoat_dong) trong GheSuatChieu
+            foreach ($gheIds as $gheId) {
+                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                    ->where('ghe_id', $gheId)
+                    ->first();
+                if ($gheSuatChieu) {
+                    $gheSuatChieu->trang_thai = 'hoat_dong';
+                    $gheSuatChieu->save();
+                }
+            }
+
             DB::commit();
-            Log::info('Order reset to cho_thanh_toan after payment failure', ['id' => $id]);
+            Log::info('Booking completely deleted due to MoMo payment failure', [
+                'booking_id' => $id,
+                'user_id' => auth()->id(),
+                'seats_returned' => $gheIds
+            ]);
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Error resetting order status: ' . $e->getMessage());
+            Log::error('Error deleting booking after MoMo payment failure: ' . $e->getMessage());
         }
-        
-        return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công. Vui lòng thử lại.');
+
+        return redirect()->route('booking.index', ['suat_chieu_id' => $donDatVe->suat_chieu_id ?? null])
+            ->with('error', 'Thanh toán MoMo không thành công. Đơn hàng đã được hủy. Vui lòng đặt vé lại.');
     }
 
  /**
@@ -1367,22 +1541,45 @@ if ($paymentMethod === 'vnpay') {
     // ===== Thanh toán thất bại =====
     Log::warning("VNPay return failed for order $id");
 
+    // ✅ Nếu thanh toán thất bại, xóa hoàn toàn đơn hàng (không lưu lịch sử)
     DB::beginTransaction();
     try {
-        $donDatVe->update([
-            'trang_thai' => 'cho_thanh_toan',
-            'phuong_thuc_thanh_toan' => null,
-        ]);
+        // Lấy danh sách ghế để trả về trạng thái trống
+        $gheIds = $donDatVe->chiTietVes()->pluck('ghe_id')->toArray();
 
-        $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
+        // Xóa chi tiết vé trước
+        $donDatVe->chiTietVes()->delete();
+
+        // Xóa combo đã đặt
+        DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
+
+        // Xóa đơn đặt vé
+        $donDatVe->delete();
+
+        // Trả ghế về trạng thái trống (hoat_dong) trong GheSuatChieu
+        foreach ($gheIds as $gheId) {
+            $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                ->where('ghe_id', $gheId)
+                ->first();
+            if ($gheSuatChieu) {
+                $gheSuatChieu->trang_thai = 'hoat_dong';
+                $gheSuatChieu->save();
+            }
+        }
+
         DB::commit();
+        Log::info('Booking completely deleted due to VNPay payment failure', [
+            'booking_id' => $id,
+            'user_id' => auth()->id(),
+            'seats_returned' => $gheIds
+        ]);
     } catch (\Exception $e) {
         DB::rollback();
-        Log::error("VNPay reset error: " . $e->getMessage());
+        Log::error('Error deleting booking after VNPay payment failure: ' . $e->getMessage());
     }
 
-    return redirect()->route('booking.payment', $id)
-        ->with('error', 'Thanh toán VNPay thất bại. Vui lòng thử lại.');
+    return redirect()->route('booking.index', ['suat_chieu_id' => $donDatVe->suat_chieu_id ?? null])
+        ->with('error', 'Thanh toán VNPay thất bại. Đơn hàng đã được hủy. Vui lòng đặt vé lại.');
 }
 
 /**
