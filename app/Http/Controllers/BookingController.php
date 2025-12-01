@@ -73,12 +73,40 @@ class BookingController extends Controller
             ->pluck('ghe_id')
             ->toArray();
 
-        // Lấy ghế giữ tạm (trong 10 phút)
+        // Lấy ghế giữ tạm (trong 10 phút) - tất cả ghế
+        // Bao gồm cả ghế trong đơn chờ thanh toán (dù có thể đã hết hạn trong ghe_giu_tam)
         $giuTamIds = DB::table('ghe_giu_tam')
             ->where('suat_chieu_id', $suatChieuId)
             ->where('het_han', '>', Carbon::now())
             ->pluck('ghe_id')
             ->toArray();
+        
+        // Thêm ghế đang chờ thanh toán vào danh sách giữ tạm (để đảm bảo hiển thị đúng)
+        // Ghế đang chờ thanh toán cũng cần được hiển thị là giữ tạm
+        $giuTamIds = array_unique(array_merge($giuTamIds, $gheChoThanhToan));
+
+        // Lấy ghế giữ tạm của user hiện tại (để restore state khi load trang)
+        $myHeldSeats = [];
+        if (auth()->check()) {
+            // Ghế đang giữ tạm
+            $heldSeats = DB::table('ghe_giu_tam')
+                ->where('suat_chieu_id', $suatChieuId)
+                ->where('nguoi_dung_id', auth()->id())
+                ->where('het_han', '>', Carbon::now())
+                ->pluck('ghe_id')
+                ->toArray();
+
+            // Ghế trong đơn chờ thanh toán của user (để đảm bảo hiển thị đúng khi load lại trang)
+            $pendingOrderSeats = ChiTietVe::where('suat_chieu_id', $suatChieuId)
+                ->whereHas('donDatVe', function($query) {
+                    $query->where('nguoi_dung_id', auth()->id())
+                          ->where('trang_thai', 'cho_thanh_toan');
+                })
+                ->pluck('ghe_id')
+                ->toArray();
+
+            $myHeldSeats = array_unique(array_merge($heldSeats, $pendingOrderSeats));
+        }
 
         // Lấy combo và sản phẩm
         $combos = Combo::all();
@@ -104,6 +132,7 @@ class BookingController extends Controller
             'gheDaDat',
             'gheChoThanhToan',
             'giuTamIds',
+            'myHeldSeats',
             'combos',
             'sanPhams',
             'availableVouchers'
@@ -117,21 +146,27 @@ class BookingController extends Controller
     {
         $request->validate([
             'suat_chieu_id' => 'required|exists:suat_chieu,id',
-            'ghe_ids' => 'required|array|min:1|max:8',
+            'ghe_ids' => 'nullable|array|max:8', // Cho phép mảng rỗng khi không còn ghế nào
             'ghe_ids.*' => 'exists:ghe,id',
         ]);
 
         $suatChieuId = $request->suat_chieu_id;
-        $gheIds = $request->ghe_ids;
+        $gheIds = $request->ghe_ids ?? [];
 
         DB::beginTransaction();
         try {
             // Xóa ghế giữ tạm của user này
-            DB::table('ghe_giu_tam')
+            $query = DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
-                ->where('suat_chieu_id', $suatChieuId)
-                ->whereIn('ghe_id', $gheIds)
-                ->delete();
+                ->where('suat_chieu_id', $suatChieuId);
+            
+            // Nếu có danh sách ghế cụ thể, chỉ xóa những ghế đó
+            if (!empty($gheIds)) {
+                $query->whereIn('ghe_id', $gheIds);
+            }
+            // Nếu không có danh sách ghế, xóa tất cả ghế giữ tạm của user cho suất chiếu này
+            
+            $query->delete();
 
             DB::commit();
 
@@ -160,6 +195,13 @@ class BookingController extends Controller
             'ghe_ids.*' => 'exists:ghe,id',
         ]);
 
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập để giữ ghế.',
+            ]);
+        }
+
         $suatChieuId = $request->suat_chieu_id;
         $gheIds = $request->ghe_ids;
 
@@ -179,11 +221,12 @@ class BookingController extends Controller
                     throw new \Exception('Ghế ' . Ghe::find($gheId)->so_ghe_ngoi . ' đã được đặt.');
                 }
 
-                // Kiểm tra ghế giữ tạm
+                // Kiểm tra ghế giữ tạm (bỏ qua nếu đang được chính user này giữ)
                 $giuTam = DB::table('ghe_giu_tam')
                     ->where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
                     ->where('het_han', '>', Carbon::now())
+                    ->where('nguoi_dung_id', '!=', auth()->id()) // Bỏ qua ghế đang được chính user này giữ
                     ->exists();
 
                 if ($giuTam) {
@@ -200,9 +243,10 @@ class BookingController extends Controller
                 }
             }
 
-            // Xóa ghế giữ tạm cũ của user này (nếu có)
+            // Xóa ghế giữ tạm cũ của user này cho suất chiếu này (nếu có)
             DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
+                ->where('suat_chieu_id', $suatChieuId)
                 ->delete();
 
             // Thêm ghế giữ tạm mới (bắt duplicate nếu có race)
@@ -212,7 +256,7 @@ class BookingController extends Controller
                         'suat_chieu_id' => $suatChieuId,
                         'ghe_id' => $gheId,
                         'nguoi_dung_id' => auth()->id(),
-                        'het_han' => Carbon::now()->addMinutes(10),
+                        'het_han' => Carbon::now()->addMinutes(11), // Tăng lên 11 phút để tránh hết hạn sớm do delay load trang
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
                     ]);
@@ -479,10 +523,24 @@ class BookingController extends Controller
                 $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
             }
 
-            // Xóa ghế giữ tạm sau khi tạo đơn đặt vé
+            // Tạo lại ghế giữ tạm với thời gian 10 phút từ lúc tạo đơn (để user có 10 phút thanh toán)
+            // Xóa ghế giữ tạm cũ của user này cho suất chiếu này
             DB::table('ghe_giu_tam')
                 ->where('nguoi_dung_id', auth()->id())
+                ->where('suat_chieu_id', $suatChieuId)
                 ->delete();
+            
+            // Tạo lại ghế giữ tạm với thời gian hết hạn là 11 phút từ bây giờ
+            foreach ($gheIds as $gheId) {
+                DB::table('ghe_giu_tam')->insert([
+                    'suat_chieu_id' => $suatChieuId,
+                    'ghe_id' => $gheId,
+                    'nguoi_dung_id' => auth()->id(),
+                    'het_han' => Carbon::now()->addMinutes(11),
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
 
             DB::commit();
 
@@ -1064,20 +1122,50 @@ if ($paymentMethod === 'vnpay') {
 
         DB::beginTransaction();
         try {
-            // 1. Xóa ghế giữ tạm đã hết hạn
-            $expiredHolds = DB::table('ghe_giu_tam')
+            // 1. Xóa ghế giữ tạm đã hết hạn (nhưng KHÔNG xóa ghế của đơn đang chờ thanh toán)
+            // Lấy danh sách ghế đang trong đơn chờ thanh toán (kèm suat_chieu_id để đảm bảo đúng)
+            $gheIdsInPendingOrders = DB::table('chi_tiet_ve')
+                ->join('don_dat_ve', 'chi_tiet_ve.don_dat_ve_id', '=', 'don_dat_ve.id')
+                ->where('don_dat_ve.trang_thai', 'cho_thanh_toan')
+                ->where('chi_tiet_ve.trang_thai', 'cho_thanh_toan')
+                ->select('chi_tiet_ve.ghe_id', 'chi_tiet_ve.suat_chieu_id')
+                ->get()
+                ->map(function($item) {
+                    return $item->suat_chieu_id . '_' . $item->ghe_id; // Tạo key duy nhất
+                })
+                ->toArray();
+
+            // Xóa ghế giữ tạm đã hết hạn, nhưng bỏ qua ghế đang trong đơn chờ thanh toán hoặc có nguoi_dung_id
+            $expiredHoldsQuery = DB::table('ghe_giu_tam')
                 ->where('het_han', '<', $now)
-                ->get();
+                ->whereNull('nguoi_dung_id'); // Chỉ xóa holds không có user (anonymous holds)
 
-            if ($expiredHolds->isNotEmpty()) {
-                DB::table('ghe_giu_tam')
-                    ->where('het_han', '<', $now)
-                    ->delete();
+            $expiredHoldsData = $expiredHoldsQuery->get();
 
-                Log::info('Cleaned up expired temporary holds', [
-                    'count' => $expiredHolds->count(),
-                    'expired_holds' => $expiredHolds->toArray()
-                ]);
+            if ($expiredHoldsData->isNotEmpty()) {
+                // Lọc ra các ghế giữ tạm KHÔNG thuộc đơn chờ thanh toán
+                $holdsToDelete = $expiredHoldsData->filter(function($hold) use ($gheIdsInPendingOrders) {
+                    $key = $hold->suat_chieu_id . '_' . $hold->ghe_id;
+                    return !in_array($key, $gheIdsInPendingOrders);
+                });
+
+                if ($holdsToDelete->isNotEmpty()) {
+                    // Xóa các ghế giữ tạm đã hết hạn và không thuộc đơn chờ thanh toán
+                    $gheIdsToDelete = $holdsToDelete->pluck('ghe_id')->toArray();
+                    $suatChieuIdsToDelete = $holdsToDelete->pluck('suat_chieu_id')->toArray();
+
+                    DB::table('ghe_giu_tam')
+                        ->where('het_han', '<', $now)
+                        ->whereNull('nguoi_dung_id')
+                        ->whereIn('ghe_id', $gheIdsToDelete)
+                        ->whereIn('suat_chieu_id', $suatChieuIdsToDelete)
+                        ->delete();
+
+                    Log::info('Cleaned up expired anonymous temporary holds', [
+                        'count' => $holdsToDelete->count(),
+                        'expired_holds' => $holdsToDelete->toArray()
+                    ]);
+                }
             }
 
             // 2. Hủy đơn hàng chưa thanh toán quá 10 phút
@@ -1087,21 +1175,33 @@ if ($paymentMethod === 'vnpay') {
                 ->get();
 
             foreach ($expiredOrders as $order) {
-                // Lấy danh sách ghế để trả về trạng thái trống
+                // Lấy danh sách ghế để trả về trạng thái trống (trước khi xóa)
                 $gheIds = $order->chiTietVes()->pluck('ghe_id')->toArray();
+                $suatChieuId = $order->suat_chieu_id;
+                $orderId = $order->id;
+                $maDon = $order->ma_don;
+                $userId = $order->nguoi_dung_id;
+                $createdAt = $order->created_at;
 
-                // Đánh dấu chi tiết vé đã hủy
-                $order->chiTietVes()->update(['trang_thai' => 'da_huy']);
-
-                // Cập nhật trạng thái đơn
-                $order->update(['trang_thai' => 'da_huy']);
+                // Xóa hoàn toàn đơn hàng, không lưu lịch sử
+                // Xóa chi tiết vé trước
+                $order->chiTietVes()->delete();
 
                 // Xóa combo đã đặt (nếu có)
-                DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $order->id)->delete();
+                DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $orderId)->delete();
+
+                // Xóa các bản ghi giữ tạm ghế của người dùng cho suất chiếu này
+                DB::table('ghe_giu_tam')
+                    ->where('nguoi_dung_id', $userId)
+                    ->where('suat_chieu_id', $suatChieuId)
+                    ->delete();
+
+                // Xóa đơn đặt vé
+                $order->delete();
 
                 // Trả ghế về trạng thái trống trong GheSuatChieu
                 foreach ($gheIds as $gheId) {
-                    $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $order->suat_chieu_id)
+                    $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $suatChieuId)
                         ->where('ghe_id', $gheId)
                         ->first();
                     if ($gheSuatChieu) {
@@ -1109,10 +1209,10 @@ if ($paymentMethod === 'vnpay') {
                     }
                 }
 
-                Log::info('Auto-cancelled expired unpaid order', [
-                    'order_id' => $order->id,
-                    'ma_don' => $order->ma_don,
-                    'created_at' => $order->created_at,
+                Log::info('Auto-deleted expired unpaid order (completely removed)', [
+                    'order_id' => $orderId,
+                    'ma_don' => $maDon,
+                    'created_at' => $createdAt,
                     'seats_returned' => $gheIds
                 ]);
             }
@@ -1169,7 +1269,11 @@ if ($paymentMethod === 'vnpay') {
      */
     public function ajaxCancel(Request $request, $id)
     {
-        if (!$request->ajax()) {
+        // Accept both AJAX requests and FormData (from sendBeacon)
+        // sendBeacon doesn't send X-Requested-With header, so we check for either
+        $isAjax = $request->ajax() || $request->has('page_exit') || $request->has('time_expired');
+        
+        if (!$isAjax) {
             return response()->json([
                 'success' => false,
                 'message' => 'Yêu cầu không hợp lệ.',
@@ -1189,8 +1293,17 @@ if ($paymentMethod === 'vnpay') {
         }
 
         // Kiểm tra thời gian hủy (trước 2 giờ chiếu) - chỉ áp dụng cho hủy thủ công
+        // Handle both JSON (from XHR) and FormData (from sendBeacon)
         $isPageExit = $request->input('page_exit', false);
-        if (!$isPageExit) {
+        $isPageExit = $isPageExit === true || $isPageExit === '1' || $isPageExit === 1;
+        
+        $isTimeExpired = $request->input('time_expired', false);
+        $isTimeExpired = $isTimeExpired === true || $isTimeExpired === '1' || $isTimeExpired === 1;
+        
+        $shouldDeleteCompletely = $isPageExit || $isTimeExpired; // Xóa hoàn toàn khi thoát trang hoặc hết thời gian
+        
+        if (!$shouldDeleteCompletely) {
+            // Chỉ kiểm tra thời gian hủy cho hủy thủ công
             $suatChieu = $donDatVe->suatChieu;
             if (Carbon::now()->addHours(2)->gte($suatChieu->gio_bat_dau)) {
                 return response()->json([
@@ -1205,8 +1318,8 @@ if ($paymentMethod === 'vnpay') {
             // Lấy danh sách ghế để trả về trạng thái trống
             $gheIds = $donDatVe->chiTietVes()->pluck('ghe_id')->toArray();
 
-            if ($isPageExit) {
-                // Khi thoát trang: Xóa hoàn toàn đơn hàng, không lưu lịch sử
+            if ($shouldDeleteCompletely) {
+                // Khi thoát trang hoặc hết thời gian: Xóa hoàn toàn đơn hàng, không lưu lịch sử
                 // Xóa chi tiết vé trước
                 $donDatVe->chiTietVes()->delete();
 
@@ -1216,10 +1329,11 @@ if ($paymentMethod === 'vnpay') {
                 // Xóa đơn đặt vé
                 $donDatVe->delete();
 
-                Log::info('Booking completely deleted due to page exit', [
+                Log::info('Booking completely deleted', [
                     'booking_id' => $id,
                     'user_id' => auth()->id(),
-                    'seats_returned' => $gheIds
+                    'seats_returned' => $gheIds,
+                    'reason' => $isPageExit ? 'page_exit' : 'time_expired'
                 ]);
             } else {
                 // Hủy thủ công: Giữ lịch sử
@@ -1255,7 +1369,9 @@ if ($paymentMethod === 'vnpay') {
 
             return response()->json([
                 'success' => true,
-                'message' => $isPageExit ? 'Đã hủy đơn do thoát trang.' : 'Đã hủy đơn và trả ghế về trạng thái trống.',
+                'message' => $shouldDeleteCompletely 
+                    ? ($isPageExit ? 'Đã hủy đơn do thoát trang.' : 'Đã hủy đơn do hết thời gian thanh toán.')
+                    : 'Đã hủy đơn và trả ghế về trạng thái trống.',
             ]);
 
         } catch (\Exception $e) {

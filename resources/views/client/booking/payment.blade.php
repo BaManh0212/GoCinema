@@ -181,26 +181,114 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Flag to prevent multiple cancellation calls
     let bookingCancelled = false;
+    let isNavigatingAway = false;
+
+    // Refresh seat holds every 5 minutes to keep them active during payment
+    let holdRefreshInterval = setInterval(function() {
+        if (bookingCancelled) return;
+
+        fetch('/booking/hold-seats', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                suat_chieu_id: {{ $donDatVe->suat_chieu_id }},
+                ghe_ids: {{ json_encode($donDatVe->chiTietVes->pluck('ghe_id')->toArray()) }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Seat holds refreshed successfully');
+            } else {
+                console.error('Failed to refresh seat holds:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing seat holds:', error);
+        });
+    }, 2 * 60 * 1000); // 2 minutes
+
+    // Check if page was loaded from cache (back button) and booking should be cancelled
+    // This handles the case where user pressed back button and page was restored from cache
+    if (performance.navigation && performance.navigation.type === 2) {
+        // Page was loaded via back/forward button
+        if ('{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan' && !bookingCancelled) {
+            cancelBookingOnExit();
+        }
+    }
 
     // Function to cancel booking when user leaves page
     function cancelBookingOnExit() {
         if (bookingCancelled) return;
         bookingCancelled = true;
 
-        // Cancel booking via AJAX (synchronous to ensure it completes)
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `/booking/ajax-cancel/{{ $donDatVe->id }}`, false); // Synchronous
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.send(JSON.stringify({ page_exit: true }));
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const url = `/booking/ajax-cancel/{{ $donDatVe->id }}`;
+        
+        // Use sendBeacon for reliable delivery when page is unloading
+        // sendBeacon doesn't support custom headers, so we use FormData
+        if (navigator.sendBeacon && csrfToken) {
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('page_exit', '1');
+            
+            // Try sendBeacon first (most reliable for page unload)
+            if (navigator.sendBeacon(url, formData)) {
+                return;
+            }
+        }
+
+        // Fallback to synchronous XHR (for browsers without sendBeacon)
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, false); // Synchronous
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            if (csrfToken) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            }
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.send(JSON.stringify({ page_exit: true }));
+        } catch (e) {
+            console.error('Error canceling booking:', e);
+        }
     }
 
-    // Detect when user is leaving the page
+    // Detect when user is leaving the page (multiple events for reliability)
     window.addEventListener('beforeunload', function(e) {
-        // Only cancel if booking is still unpaid
         if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
             cancelBookingOnExit();
+        }
+    });
+
+    // pagehide is more reliable than beforeunload for mobile browsers
+    window.addEventListener('pagehide', function(e) {
+        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            cancelBookingOnExit();
+        }
+    });
+
+    // Detect back/forward button navigation
+    window.addEventListener('popstate', function(e) {
+        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            isNavigatingAway = true;
+            cancelBookingOnExit();
+        }
+    });
+
+    // Detect when page is shown from cache (user came back via back button)
+    window.addEventListener('pageshow', function(e) {
+        // If page was loaded from cache (back/forward navigation) and booking wasn't cancelled, cancel it now
+        if (e.persisted && !bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            // Cancel immediately when page is restored from cache
+            cancelBookingOnExit();
+            // Redirect back to booking page
+            setTimeout(() => {
+                window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+            }, 100);
         }
     });
 
@@ -212,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.visibilityState === 'hidden' && !bookingCancelled) {
                     cancelBookingOnExit();
                 }
-            }, 30000); // 30 seconds
+            }, 5000); // Reduced to 5 seconds for faster response
         }
     });
 
@@ -247,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
             payButton.disabled = true;
             payButton.textContent = 'Đã hết thời gian thanh toán';
 
-            // Cancel booking via AJAX
+            // Cancel booking via AJAX (hết thời gian - xóa hoàn toàn)
             fetch(`/booking/ajax-cancel/{{ $donDatVe->id }}`, {
                 method: 'POST',
                 headers: {
@@ -255,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({})
+                body: JSON.stringify({ time_expired: true })
             })
             .then(response => response.json())
             .then(data => {

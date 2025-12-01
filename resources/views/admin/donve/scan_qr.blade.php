@@ -1,46 +1,5 @@
 @extends('admin.layouts.admin')
 
-@section('content')
-<h3>Quét QR đơn đặt vé</h3>
-
-<div id="reader" style="width: 400px;"></div>
-<div id="result" class="mt-3"></div>
-
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
-<script>
-    function onScanSuccess(decodedText) {
-        document.getElementById('result').innerHTML = "Đang kiểm tra đơn...";
-
-        fetch("{{ route('admin.admin.scan.qr.check') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ ma_don: decodedText })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status) {
-                window.location.href = data.redirect;
-            } else {
-                document.getElementById('result').innerHTML = "<span style='color:red'>" + data.message + "</span>";
-            }
-        });
-    }
-
-    const html5QrCode = new Html5Qrcode("reader");
-    Html5Qrcode.getCameras().then(cameras => {
-        html5QrCode.start(
-            cameras[0].id, 
-            { fps: 10, qrbox: 250 },
-            onScanSuccess
-        );
-    });
-</script>
-@endsection@extends('admin.layouts.admin')
-
 @section('title', '🎫 Quét QR đơn đặt vé')
 
 @section('content')
@@ -107,17 +66,35 @@ function onScanSuccess(decodedText) {
     });
 }
 
-Html5Qrcode.getCameras().then(cameras => {
-    if(cameras && cameras.length){
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            cameras[0].id,
-            { fps: 10, qrbox: 250 },
-            onScanSuccess
-        );
-    } else {
-        resultEl.innerHTML = "<span class='text-warning fw-bold'>Không tìm thấy camera</span>";
-    }
+// Request camera permission first
+navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    // Stop the stream immediately after permission is granted
+    stream.getTracks().forEach(track => track.stop());
+
+    // Now proceed to get cameras and start scanning
+    Html5Qrcode.getCameras().then(cameras => {
+        if(cameras && cameras.length){
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                cameras[0].id,
+                { fps: 10, qrbox: 250 },
+                onScanSuccess
+            ).then(() => {
+                resultEl.innerHTML = "<span class='text-info fw-bold'>Camera đã sẵn sàng. Hãy quét QR code.</span>";
+            }).catch(err => {
+                console.error(err);
+                resultEl.innerHTML = "<span class='text-danger fw-bold'>Không thể khởi động camera: " + err.message + "</span>";
+            });
+        } else {
+            resultEl.innerHTML = "<span class='text-warning fw-bold'>Không tìm thấy camera</span>";
+        }
+    }).catch(err => {
+        console.error(err);
+        resultEl.innerHTML = "<span class='text-danger fw-bold'>Lỗi khi truy cập camera: " + err.message + "</span>";
+    });
+}).catch(err => {
+    console.error(err);
+    resultEl.innerHTML = "<span class='text-danger fw-bold'>Quyền truy cập camera bị từ chối: " + err.message + "</span>";
 });
 
 document.getElementById('stopScan').addEventListener('click', () => {
@@ -129,4 +106,3 @@ document.getElementById('stopScan').addEventListener('click', () => {
 });
 </script>
 @endsection
-
