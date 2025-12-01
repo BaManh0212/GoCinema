@@ -66,12 +66,14 @@ Route::get('/lich-chieu', [PhimController::class, 'schedule'])->name('schedule.i
 // Đặt vé
 Route::get('/booking', [App\Http\Controllers\BookingController::class, 'index'])->name('booking.index');
 Route::post('/booking/hold-seats', [App\Http\Controllers\BookingController::class, 'holdSeats'])->name('booking.holdSeats');
+Route::post('/booking/release-seats', [App\Http\Controllers\BookingController::class, 'releaseSeats'])->name('booking.releaseSeats');
 Route::post('/booking/check-voucher', [App\Http\Controllers\BookingController::class, 'checkVoucher'])->name('booking.check-voucher');
 Route::get('/booking/payment/{id}', [App\Http\Controllers\BookingController::class, 'payment'])->whereNumber('id')->name('booking.payment');
 Route::post('/booking/process-payment/{id}', [BookingController::class, 'processPayment'])->name('booking.process-payment');
 Route::get('/booking/confirm/{id}', [App\Http\Controllers\BookingController::class, 'confirm'])->whereNumber('id')->name('booking.confirm');
 Route::post('/booking', [App\Http\Controllers\BookingController::class, 'store'])->name('booking.store');
 Route::delete('/booking/{id}', [App\Http\Controllers\BookingController::class, 'cancel'])->whereNumber('id')->name('booking.cancel');
+Route::post('/booking/ajax-cancel/{id}', [App\Http\Controllers\BookingController::class, 'ajaxCancel'])->whereNumber('id')->name('booking.ajax-cancel');
 Route::post('/booking/momo-callback', [BookingController::class, 'momoCallback'])->name('booking.momo-callback');
 Route::get('/booking/momo-return', [BookingController::class, 'momoReturn'])->name('booking.momo-return');
 Route::get('/booking/vnpay-return', [BookingController::class, 'vnpayReturn'])->name('booking.vnpay-return');
@@ -268,7 +270,15 @@ Route::post('phongchieu/{id}/ghe/update-map', [GheController::class, 'updateMap'
     // RESOURCE SUẤT CHIẾU
     // =========================
     
+    // scan QR
+    Route::get('/admin/scan-qr', [\App\Http\Controllers\Admin\QRController::class, 'scanPage'])
+    ->name('admin.scan.qr');
 
+    Route::post('/admin/scan-qr/check', [\App\Http\Controllers\Admin\QRController::class, 'check'])
+    ->name('admin.scan.qr.check');
+
+    Route::get('/admin/orders/{ma_don}', [AdminDonDatVeController::class, 'showQR'])
+    ->name('admin.orders.showQR');
 
         // Quản lý danh mục
         Route::get('danhmuc/thung-rac', [AdminDanhMucController::class, 'trashed'])->name('danhmuc.trashed');

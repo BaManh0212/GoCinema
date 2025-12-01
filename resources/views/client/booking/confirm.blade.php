@@ -107,7 +107,7 @@
 
     <!-- Success Message -->
     <div class="success-message">
-        <h3 style="margin: 0 0 5px 0;">Đặt vé thành công!</h3>
+        <!-- <h3 style="margin: 0 0 5px 0;">Đặt vé thành công!</h3> -->
         <p style="margin: 0;">Mã đơn hàng: <strong>{{ $donDatVe->ma_don }}</strong></p>
     </div>
 
@@ -115,11 +115,12 @@
     <div style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
         <div class="qr-section">
             @php
-                $qrData = [
-                    'ma_don' => $donDatVe->ma_don,
-                    'ngay_dat' => now()->format('Y-m-d H:i:s')
-                ];
-                $qrCode = QrCode::size(180)->generate(json_encode($qrData));
+                // $qrData = [
+                //     'ma_don' => $donDatVe->ma_don,
+                //     'ngay_dat' => now()->format('Y-m-d H:i:s')
+                // ];
+                // $qrCode = QrCode::size(180)->generate(json_encode($qrData));
+                $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->generate($donDatVe->ma_don);
             @endphp
             <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 {!! $qrCode !!}
