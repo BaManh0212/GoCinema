@@ -18,6 +18,7 @@ use App\Models\ChiTietVe;
 use App\Models\MaGiamGia;
 use App\Models\Combo;
 use App\Models\SanPham;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 
 class BookingController extends Controller
