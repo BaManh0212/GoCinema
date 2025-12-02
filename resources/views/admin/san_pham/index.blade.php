@@ -9,7 +9,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0 text-gradient">
-                <i class="bi bi-basket3-fill"></i> Danh sách đồ ăn & đồ lưu niệm
+                <i class="bi bi-basket3-fill"></i> Sản phẩm
             </h2>
             <small class="text-muted">Xem, quản lý và lọc các sản phẩm hiện có</small>
         </div>
