@@ -581,75 +581,82 @@ class BookingController extends Controller
         }
      
         //===== Xử lý thanh toán VNPay ======//
-if ($paymentMethod === 'vnpay') {
+        if ($paymentMethod === 'vnpay') {
+            // ✅ FIX: Dùng đúng tên biến từ .env
+            $vnp_Url = env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+            $vnp_TmnCode = env('VNPAY_TMN_CODE');
+            $vnp_HashSecret = env('VNPAY_HASH_SECRET', '');
+            $vnp_ReturnUrl = route('booking.vnpay-return');
 
-    $vnp_TmnCode = env('VNP_TMNCODE');
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
-    $vnp_Url = env('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
-    $vnp_Returnurl = route('booking.vnpay-return');
+            // Validate required env
+            if (empty($vnp_TmnCode) || empty($vnp_HashSecret)) {
+                Log::error('[VNPAY] Missing config', [
+                    'tmn_code' => $vnp_TmnCode ? 'SET' : 'MISSING',
+                    'hash_secret' => $vnp_HashSecret ? 'SET' : 'MISSING'
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cấu hình VNPay chưa đầy đủ. Vui lòng kiểm tra file .env'
+                ], 400);
+            }
 
-    $vnp_TxnRef = 'BOOKING_' . $donDatVe->id . '_' . time();
-    $vnp_OrderInfo = 'Thanh toan don ' . preg_replace('/[^A-Za-z0-9 ]/', '', $donDatVe->ma_don);
-    $vnp_Amount = $donDatVe->tong_tien * 100; // VNPay nhân 100
-    $vnp_Locale = 'vn';
+            $vnp_TxnRef = 'BOOKING_' . $donDatVe->id . '_' . time();
+            $vnp_OrderInfo = 'Thanh toan don ' . preg_replace('/[^A-Za-z0-9 ]/', '', $donDatVe->ma_don);
+            $vnp_Amount = (int) round($donDatVe->tong_tien * 100);
+            $vnp_Locale = 'vn';
+            $vnp_IpAddr = request()->ip();
+            $vnp_CreateDate = date('YmdHis');
 
-    $inputData = [
-        "vnp_Version" => "2.1.0",
-        "vnp_TmnCode" => $vnp_TmnCode,
-        "vnp_Amount" => $vnp_Amount,
-        "vnp_Command" => "pay",
-        "vnp_CreateDate" => date('YmdHis'),
-        "vnp_CurrCode" => "VND",
-        "vnp_IpAddr" => request()->ip(),
-        "vnp_Locale" => $vnp_Locale,
-        "vnp_OrderInfo" => $vnp_OrderInfo,
-        "vnp_OrderType" => "billpayment",
-        "vnp_ReturnUrl" => $vnp_Returnurl,
-        "vnp_TxnRef" => $vnp_TxnRef,
-        "vnp_BankCode" => "NCB"
-    ];
+            $inputData = [
+                "vnp_Version" => "2.1.0",
+                "vnp_TmnCode" => $vnp_TmnCode,
+                "vnp_Amount" => $vnp_Amount,
+                "vnp_Command" => "pay",
+                "vnp_CreateDate" => $vnp_CreateDate,
+                "vnp_CurrCode" => "VND",
+                "vnp_IpAddr" => $vnp_IpAddr,
+                "vnp_Locale" => $vnp_Locale,
+                "vnp_OrderInfo" => $vnp_OrderInfo,
+                "vnp_OrderType" => "billpayment",
+                "vnp_ReturnUrl" => $vnp_ReturnUrl,
+                "vnp_TxnRef" => $vnp_TxnRef,
+            ];
 
-    // Sort & hash giống MoMo
-    ksort($inputData);
-    $query = http_build_query($inputData);
-    $vnp_SecureHash = hash_hmac('sha512', urldecode($query), $vnp_HashSecret);
+            ksort($inputData);
+            $hashData = urldecode(http_build_query($inputData));
+            $vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-    // URL thanh toán
-    $paymentUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $vnp_SecureHash;
+            $query = http_build_query($inputData, '', '&', PHP_QUERY_RFC3986);
+            $paymentUrl = rtrim($vnp_Url, '?') . '?' . $query . '&vnp_SecureHash=' . $vnp_SecureHash;
 
-    Log::info('[VNPAY] Request tạo thanh toán', [
-        'txnRef' => $vnp_TxnRef,
-        'amount' => $vnp_Amount,
-        'url' => $paymentUrl
-    ]);
+            Log::info('[VNPAY] Request', [
+                'txnRef' => $vnp_TxnRef,
+                'amount' => $vnp_Amount,
+                'returnUrl' => $vnp_ReturnUrl
+            ]);
 
-    try {
-        DB::beginTransaction();
+            try {
+                DB::beginTransaction();
+                $donDatVe->update([
+                    'phuong_thuc_thanh_toan' => 'vnpay',
+                    'ma_giao_dich' => $vnp_TxnRef
+                ]);
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Lỗi lưu VNPAY info: ' . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'Lỗi hệ thống'], 500);
+            }
 
-        // Lưu phương thức trước khi redirect
-        $donDatVe->update([
-            'phuong_thuc_thanh_toan' => 'vnpay',
-            'ma_giao_dich' => $vnp_TxnRef
-        ]);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'payUrl' => $paymentUrl
+                ]);
+            }
 
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Lỗi lưu thông tin VNPay: ' . $e->getMessage());
-        return response()->json(['success' => false, 'message' => 'Lỗi tạo thanh toán VNPay']);
-    }
-
-    // Nếu là AJAX → trả JSON để FE redirect
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'payUrl' => $paymentUrl
-        ]);
-    }
-
-    // Không AJAX → redirect ngay
-    return redirect()->away($paymentUrl);
-}
+            return redirect()->away($paymentUrl);
+        }
 
 
         try {
@@ -1258,27 +1265,12 @@ if ($paymentMethod === 'vnpay') {
         }
 
         // resultCode !== 0: thanh toán thất bại
-        Log::warning('MoMo payment failed', ['orderId' => $orderId, 'resultCode' => $resultCode]);
-        
-        // ✅ Nếu thanh toán thất bại, cập nhật lại trạng thái "cho_thanh_toan"
-        DB::beginTransaction();
-        try {
-            $donDatVe->update([
-                'trang_thai' => 'cho_thanh_toan',
-                'phuong_thuc_thanh_toan' => null,
-            ]);
-            $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
-            DB::commit();
-            Log::info('Order reset to cho_thanh_toan after payment failure', ['id' => $id]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error resetting order status: ' . $e->getMessage());
-        }
-        
-        return redirect()->route('booking.payment', $id)->with('error', 'Thanh toán MoMo không thành công. Vui lòng thử lại.');
+        Log::warning('MoMo payment failed', ['txnRef' => $vnp_TxnRef, 'responseCode' => $vnp_ResponseCode]);
+        return redirect()->route('booking.payment', $id)
+            ->with('error', 'Thanh toán VNPay không thành công.');
     }
 
- /**
+    /**
 
 * Handle VNPay return URL
   */
@@ -1295,9 +1287,8 @@ if ($paymentMethod === 'vnpay') {
             ->with('error', 'Thiếu mã giao dịch từ VNPay.');
     }
 
-    // Tách ID đơn hàng
     $parts = explode('_', $vnp_TxnRef);
-    $id = (int)$parts[0];
+    $id = isset($parts[1]) ? (int)$parts[1] : 0;
 
     $donDatVe = DonDatVe::find($id);
     if (!$donDatVe) {
@@ -1305,8 +1296,7 @@ if ($paymentMethod === 'vnpay') {
             ->with('error', 'Đơn đặt vé không tồn tại.');
     }
 
-    // ===== Xác thực hash =====
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $vnp_HashSecret = env('VNPAY_HASH_SECRET');
     $inputData = $request->except(['vnp_SecureHash']);
     ksort($inputData);
 
@@ -1314,13 +1304,13 @@ if ($paymentMethod === 'vnpay') {
     $verifyHash = hash_hmac('sha512', $hashString, $vnp_HashSecret);
 
     if ($verifyHash !== $vnp_SecureHash) {
+        Log::warning('VNPay invalid hash');
         return redirect()->route('booking.payment', $id)
             ->with('error', 'Dữ liệu trả về không hợp lệ.');
     }
 
-    // ===== Thanh toán thành công =====
     if ($vnp_ResponseCode === "00") {
-        Log::info("VNPay Return indicates success for order $id");
+        Log::info("VNPay payment success for order $id");
 
         DB::beginTransaction();
         try {
@@ -1333,56 +1323,29 @@ if ($paymentMethod === 'vnpay') {
 
             $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
 
-            // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
-            $diemTichLuy = floor($donDatVe->tong_tien / 1000);
-            if ($diemTichLuy > 0) {
-                $user = $donDatVe->nguoiDung;
-                $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
-            }
-
-            // Clear dashboard cache to update statistics
-            Cache::increment('dashboard_version', 1);
-
             DB::commit();
 
-            // Gửi email
             try {
                 Mail::to($donDatVe->nguoiDung->email)
                     ->sendNow(new BookingConfirmation($donDatVe));
             } catch (\Exception $e) {
-                Log::error("Email send error in VNPay Return: " . $e->getMessage());
+                Log::error("Email error: " . $e->getMessage());
             }
 
             return redirect()->route('booking.confirm', $id)
                 ->with('success', 'Thanh toán VNPay thành công!');
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error("VNPay Return DB error: " . $e->getMessage());
-
+            Log::error("VNPay return error: " . $e->getMessage());
             return redirect()->route('booking.payment', $id)
-                ->with('error', 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage());
+                ->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
 
-    // ===== Thanh toán thất bại =====
-    Log::warning("VNPay return failed for order $id");
-
-    DB::beginTransaction();
-    try {
-        $donDatVe->update([
-            'trang_thai' => 'cho_thanh_toan',
-            'phuong_thuc_thanh_toan' => null,
-        ]);
-
-        $donDatVe->chiTietVes()->update(['trang_thai' => 'cho_thanh_toan']);
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollback();
-        Log::error("VNPay reset error: " . $e->getMessage());
-    }
-
+    // ✅ FIX: Bỏ biến $orderId chưa được định nghĩa
+    Log::warning("VNPay payment failed", ['txnRef' => $vnp_TxnRef, 'responseCode' => $vnp_ResponseCode]);
     return redirect()->route('booking.payment', $id)
-        ->with('error', 'Thanh toán VNPay thất bại. Vui lòng thử lại.');
+        ->with('error', 'Thanh toán VNPay không thành công.');
 }
 
 /**
@@ -1400,22 +1363,19 @@ if ($paymentMethod === 'vnpay') {
     $vnp_SecureHash = $request->input('vnp_SecureHash');
 
     if (!$vnp_TxnRef) {
-        Log::warning('VNPay missing vnp_TxnRef');
         return response('Missing TxnRef', 400);
     }
 
-    // Tách ID đơn hàng
     $parts = explode('_', $vnp_TxnRef);
-    $id = (int)$parts[0];
+    $id = isset($parts[1]) ? (int)$parts[1] : 0;
 
     $donDatVe = DonDatVe::find($id);
     if (!$donDatVe) {
-        Log::warning("VNPay IPN order not found: $vnp_TxnRef");
         return response('Order not found', 404);
     }
 
-    // ===== Xác thực Secure Hash =====
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    // ✅ FIX: Dùng VNPAY_HASH_SECRET
+    $vnp_HashSecret = env('VNPAY_HASH_SECRET');
     $inputData = $request->except(['vnp_SecureHash']);
     ksort($inputData);
 
@@ -1423,7 +1383,7 @@ if ($paymentMethod === 'vnpay') {
     $verifyHash = hash_hmac('sha512', $hashString, $vnp_HashSecret);
 
     if ($verifyHash !== $vnp_SecureHash) {
-        Log::warning("VNPay IPN invalid hash for order $id");
+        Log::warning("VNPay IPN invalid hash");
         return response("Invalid hash", 400);
     }
 
@@ -1466,5 +1426,4 @@ if ($paymentMethod === 'vnpay') {
         return response("Internal error", 500);
     }
 }
-
 }
