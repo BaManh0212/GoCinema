@@ -24,7 +24,7 @@
                             <p class="text-sm text-gray-600">Mã đơn hàng:</p>
                             <p class="text-black">{{ $donDatVe->ma_don }}</p>
                         </div>
-                        <div>
+                        <!-- <div>
                             <p class="text-sm text-gray-600">Trạng thái:</p>
                             <span class="px-2 py-1 rounded-full text-xs font-medium
                                 @if($donDatVe->trang_thai === 'cho_thanh_toan') bg-yellow-100 text-yellow-800
@@ -32,7 +32,7 @@
                                 @else bg-red-100 text-red-800 @endif">
                                 {{ $donDatVe->trang_thai }}
                             </span>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                         <div class="bg-white rounded-lg p-3 border">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">{{ $chiTietVe->ghe->so_ghe_ngoi }}</p>
+                                    <p class="text-primary text-sm">{{ $chiTietVe->ghe->so_ghe_ngoi ?: ($chiTietVe->ghe->hang . $chiTietVe->ghe->cot) }}</p>
                                     <p class="text-sm text-gray-600">{{ ucfirst($chiTietVe->loai_ghe) }}</p>
                                 </div>
                                 <div class="text-right">
@@ -88,7 +88,7 @@
                     @foreach($combos as $combo)
                     <div class="flex justify-between items-center py-2">
                         <div>
-                            <p class="font-semibold">{{ $combo->ten }}</p>
+                            <p cclass="text-primary text-sm">{{ $combo->ten }}</p>
                             <p class="text-sm text-gray-600">Số lượng: {{ $combo->so_luong }}</p>
                         </div>
                         <div class="text-right">
@@ -158,6 +158,8 @@
                                 </div> 
                             </label> 
                         </div>
+                    </div>
+                    
                     <!-- Nút thanh toán -->
                     <div class="text-center mt-8">
                         <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
@@ -182,6 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Flag to prevent multiple cancellation calls
     let bookingCancelled = false;
     let isNavigatingAway = false;
+    let isSubmittingPayment = false; // ← NEW: Flag to prevent cancel during payment submission
+
+    // Prevent booking cancellation when user submits payment form
+    paymentForm.addEventListener('submit', function(e) {
+        isSubmittingPayment = true;
+        bookingCancelled = true; // Mark as cancelled to prevent other events from triggering
+        console.log('Payment form submitted - preventing booking cancellation');
+    });
 
     // Refresh seat holds every 5 minutes to keep them active during payment
     let holdRefreshInterval = setInterval(function() {
@@ -223,26 +233,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to cancel booking when user leaves page
     function cancelBookingOnExit() {
-        if (bookingCancelled) return;
+        if (bookingCancelled || isSubmittingPayment) return; // ← UPDATED: Don't cancel if submitting payment
         bookingCancelled = true;
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const url = `/booking/ajax-cancel/{{ $donDatVe->id }}`;
         
-        // Use sendBeacon for reliable delivery when page is unloading
-        // sendBeacon doesn't support custom headers, so we use FormData
+        // Use fetch with keepalive (modern, reliable replacement for sendBeacon)
+        if (window.fetch && csrfToken) {
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('page_exit', '1');
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                keepalive: true, // Critical for page unload requests
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).catch(e => console.error('Error canceling booking (fetch):', e));
+            
+            return;
+        }
+        
+        // Fallback to sendBeacon if fetch keepalive not supported (rare)
         if (navigator.sendBeacon && csrfToken) {
             const formData = new FormData();
             formData.append('_token', csrfToken);
             formData.append('page_exit', '1');
             
-            // Try sendBeacon first (most reliable for page unload)
             if (navigator.sendBeacon(url, formData)) {
                 return;
             }
         }
 
-        // Fallback to synchronous XHR (for browsers without sendBeacon)
+        // Fallback to synchronous XHR (legacy)
         try {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', url, false); // Synchronous
@@ -253,27 +279,27 @@ document.addEventListener('DOMContentLoaded', function() {
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.send(JSON.stringify({ page_exit: true }));
         } catch (e) {
-            console.error('Error canceling booking:', e);
+            console.error('Error canceling booking (xhr):', e);
         }
     }
 
     // Detect when user is leaving the page (multiple events for reliability)
     window.addEventListener('beforeunload', function(e) {
-        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
             cancelBookingOnExit();
         }
     });
 
     // pagehide is more reliable than beforeunload for mobile browsers
     window.addEventListener('pagehide', function(e) {
-        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
             cancelBookingOnExit();
         }
     });
 
     // Detect back/forward button navigation
     window.addEventListener('popstate', function(e) {
-        if (!bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
             isNavigatingAway = true;
             cancelBookingOnExit();
         }
@@ -281,23 +307,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Detect when page is shown from cache (user came back via back button)
     window.addEventListener('pageshow', function(e) {
-        // If page was loaded from cache (back/forward navigation) and booking wasn't cancelled, cancel it now
-        if (e.persisted && !bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
-            // Cancel immediately when page is restored from cache
+        // Reset flags to ensure we can process cancellation if needed
+        isSubmittingPayment = false;
+        
+        // Force reset bookingCancelled to allow cancellation to run again
+        // This is crucial because it was set to true during form submission
+        bookingCancelled = false;
+
+        // Check if this is a back/forward navigation
+        // Support both modern and legacy APIs
+        let isBackNavigation = e.persisted || 
+                               (window.performance && window.performance.navigation && window.performance.navigation.type === 2);
+                               
+        // Modern API check
+        if (!isBackNavigation && window.performance && window.performance.getEntriesByType) {
+            const navEntries = window.performance.getEntriesByType('navigation');
+            if (navEntries.length > 0 && navEntries[0].type === 'back_forward') {
+                isBackNavigation = true;
+            }
+        }
+
+        // If page was loaded from cache or back button and booking is still pending
+        if (isBackNavigation && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            console.log('Returned from payment gateway or back button - cancelling booking');
+            
+            // Cancel immediately
             cancelBookingOnExit();
-            // Redirect back to booking page
+            
+            // Redirect back to booking page after a short delay
             setTimeout(() => {
                 window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
-            }, 100);
+            }, 300);
         }
     });
 
     // Also detect visibility change (tab switching, minimizing, etc.)
     document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden' && !bookingCancelled && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+        if (document.visibilityState === 'hidden' && !bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
             // Give user a moment to come back before cancelling
             setTimeout(() => {
-                if (document.visibilityState === 'hidden' && !bookingCancelled) {
+                if (document.visibilityState === 'hidden' && !bookingCancelled && !isSubmittingPayment) {
                     cancelBookingOnExit();
                 }
             }, 5000); // Reduced to 5 seconds for faster response
