@@ -80,7 +80,6 @@
                         <th>Giờ kết thúc</th>
                         <th>Giá vé (VNĐ)</th>
                         <th>Trạng thái</th>
-                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,13 +115,6 @@
                                     </form>
                                 @endif
                             </td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-<a href="{{ route('staff.suatchieu.ghe', $s->id) }}"
-   class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
-    <i class="bi bi-eye"></i> Ghế
-</a>
-</td>
                         </tr>
                     @empty
                         <tr>

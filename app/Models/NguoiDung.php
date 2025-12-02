@@ -140,8 +140,15 @@ class NguoiDung extends Authenticatable
         return asset('uploads/avatars/' . $this->avatar);
     }
 
-    // Ảnh mặc định
-    return asset('uploads/avatars/default.png');
+    // Ảnh mặc định - sử dụng data URI hoặc ảnh placeholder để tránh lỗi 404
+    // Nếu file không tồn tại, trả về ảnh placeholder từ data URI
+    $defaultPath = public_path('uploads/avatars/default.png');
+    if (file_exists($defaultPath)) {
+        return asset('uploads/avatars/default.png');
+    }
+    
+    // Trả về ảnh placeholder SVG nếu không có file default.png
+    return 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#ddd"/><text x="50%" y="50%" font-family="Arial" font-size="40" fill="#999" text-anchor="middle" dominant-baseline="middle">?</text></svg>');
 }
 
 }

@@ -132,15 +132,23 @@
                                         $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
                                         $disabled = false;
 
+                                        // Kiểm tra xem ghế có phải của user hiện tại đang giữ không
+                                        $isMyHeldSeat = $ghe && auth()->check() && isset($myHeldSeats) && in_array($ghe->id, $myHeldSeats);
+                                        
                                         if ($ghe && in_array($ghe->id, $gheDaDat)) {
                                             $trangthai = 'da_dat';
                                             $disabled = true;
                                         } elseif ($ghe && in_array($ghe->id, $gheChoThanhToan)) {
                                             $trangthai = 'cho_thanh_toan';
                                             $disabled = true;
-                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds)) {
+                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds) && !$isMyHeldSeat) {
+                                            // Ghế đang được user khác giữ tạm -> disabled
                                             $trangthai = 'giu_tam';
                                             $disabled = true;
+                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds) && $isMyHeldSeat) {
+                                            // Ghế đang được user hiện tại giữ -> có thể bỏ chọn
+                                            $trangthai = 'giu_tam';
+                                            $disabled = false; // Cho phép bỏ chọn
                                         } elseif ($trangthai === 'bao_tri') {
                                             $disabled = true;
                                         } elseif ($trangthai === 'vo_hieu_hoa') {
@@ -154,7 +162,11 @@
                                             $classes = 'seat seat-da-thanh-toan disabled';
                                         } elseif ($trangthai === 'cho_thanh_toan') {
                                             $classes = 'seat seat-giu-tam disabled';
-                                        } elseif ($trangthai === 'giu_tam') {
+                                        } elseif ($trangthai === 'giu_tam' && $isMyHeldSeat) {
+                                            // Ghế của user hiện tại đang giữ -> hiển thị như đã chọn, không disabled
+                                            $classes = 'seat seat-giu-tam seat-chon';
+                                        } elseif ($trangthai === 'giu_tam' && !$isMyHeldSeat) {
+                                            // Ghế của user khác đang giữ -> disabled
                                             $classes = 'seat seat-giu-tam disabled';
                                         } elseif ($trangthai === 'vo_hieu_hoa') {
                                             $classes = 'seat seat-vo-hieu-hoa disabled';
@@ -170,7 +182,8 @@
                                             data-cot="{{ $cot }}"
                                             data-loai="{{ $currentLoai }}"
                                             data-trangthai="{{ $trangthai }}"
-                                            {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}>
+                                            {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}
+                                            {{ $isMyHeldSeat ? 'data-my-held="true"' : '' }}>
                                         @if($isDouble)
                                             💑
                                             @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
@@ -199,6 +212,19 @@
                     <div class="mt-4">
                         <h6>Ghế đã chọn: <span id="selected-seats">Chưa chọn ghế nào</span></h6>
                         <div id="selected-seats-list" class="d-flex flex-wrap gap-2"></div>
+
+                        {{-- Countdown timer --}}
+                        <div id="hold-timer-container" class="mt-3 d-none">
+                            <div class="alert alert-warning py-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-clock-fill me-2"></i>
+                                    <div>
+                                        <small class="text-balck">Thời gian giữ ghế:</small>
+                                        <div id="hold-timer" class="fw-bold text-warning">10:00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -439,6 +465,24 @@
         </div>
     </div>
 </div>
+
+{{-- Modal hết thời gian giữ ghế --}}
+<div class="modal fade" id="holdExpiredModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Hết thời gian giữ ghế</h5>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-clock-fill text-warning" style="font-size: 3rem;"></i>
+                <p class="mt-3">Thời gian giữ ghế tạm thời đã hết. Vui lòng chọn lại ghế.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="location.reload()">Chọn lại ghế</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -597,6 +641,14 @@ let appliedVoucherNdId = null; // id voucher_nguoi_dung nếu áp dụng VCxxxxx
 let appliedCode = null; // lưu lại mã đã áp dụng để gửi lên server
 let baseTicketPrice = {{ $suatChieu->gia_ve }};
 let combosData = @json($combos);
+
+// Ghế đã giữ tạm của user hiện tại (để restore khi load trang)
+let myHeldSeats = @json($myHeldSeats ?? []);
+
+// Seat hold timer variables
+let holdTimerInterval = null;
+let holdExpirationTime = null;
+let holdDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Initialize combo quantities
 combosData.forEach(combo => {
@@ -769,9 +821,43 @@ $(document).ready(function() {
         comboQuantities[combo.id] = 0;
     });
 
-    // Click ghế
-    $('.seat-map').on('click', '.seat:not(.disabled)', function() {
-        const gheId = $(this).data('ghe-id');
+    // Restore ghế đã giữ tạm khi load trang (khi mở tab mới cùng URL)
+    if (myHeldSeats && myHeldSeats.length > 0) {
+        // Convert to array of numbers to ensure proper comparison
+        selectedSeats = myHeldSeats.map(id => parseInt(id));
+        
+        // Highlight các ghế đã giữ tạm (force add class seat-chon)
+        myHeldSeats.forEach(gheId => {
+            const seatId = parseInt(gheId);
+            const seat = $(`.seat[data-ghe-id="${seatId}"]`);
+            if (seat.length) {
+                // Force add class seat-chon và remove disabled nếu là ghế của user hiện tại
+                seat.addClass('seat-chon');
+                seat.removeClass('disabled');
+                seat.prop('disabled', false);
+                seat.css('pointer-events', 'auto');
+            }
+        });
+        
+        // Update UI
+        updateSelectedSeatsDisplay();
+        updateTotals();
+        toggleBookButton();
+        
+        // Start timer nếu có ghế đã giữ
+        if (selectedSeats.length > 0 && !holdTimerInterval) {
+            startHoldTimer();
+        }
+    }
+
+    // Click ghế - cho phép click cả ghế đã giữ tạm của user hiện tại
+    $('.seat-map').on('click', '.seat', function() {
+        // Bỏ qua nếu ghế bị disabled và không phải ghế đã chọn của user hiện tại
+        if ($(this).hasClass('disabled') && !$(this).hasClass('seat-chon')) {
+            return;
+        }
+        
+        const gheId = parseInt($(this).data('ghe-id'));
         const hang = $(this).data('hang');
         const cot = $(this).data('cot');
         const seatLabel = hang + cot;
@@ -779,7 +865,7 @@ $(document).ready(function() {
         if ($(this).hasClass('seat-chon')) {
             // Bỏ chọn
             $(this).removeClass('seat-chon');
-            selectedSeats = selectedSeats.filter(id => id !== gheId);
+            selectedSeats = selectedSeats.filter(id => parseInt(id) !== gheId);
         } else {
             // Chọn (kiểm tra tối đa 8 ghế cho 1 tài khoản)
             if (selectedSeats.length >= 8) {
@@ -788,6 +874,9 @@ $(document).ready(function() {
             }
 
             $(this).addClass('seat-chon');
+            $(this).removeClass('disabled');
+            $(this).prop('disabled', false);
+            $(this).css('pointer-events', 'auto');
             selectedSeats.push(gheId);
         }
 
@@ -795,6 +884,51 @@ $(document).ready(function() {
         updateTotals();
         invalidateAppliedVoucher();
         toggleBookButton();
+
+        // Handle seat hold - gọi lại mỗi khi thay đổi ghế để cập nhật danh sách
+        if (selectedSeats.length > 0) {
+            // Start timer nếu chưa có
+            if (!holdTimerInterval) {
+                startHoldTimer();
+            }
+            
+            // Gọi holdSeats với toàn bộ danh sách ghế đã chọn
+            $.post('{{ route("booking.holdSeats") }}', {
+                _token: '{{ csrf_token() }}',
+                suat_chieu_id: {{ $suatChieu->id }},
+                ghe_ids: selectedSeats
+            })
+            .done(function(response) {
+                if (!response.success) {
+                    stopHoldTimer();
+                    selectedSeats = [];
+                    $('.seat.seat-chon').removeClass('seat-chon');
+                    updateSelectedSeatsDisplay();
+                    updateTotals();
+                    invalidateAppliedVoucher();
+                    toggleBookButton();
+                    showError(response.message);
+                }
+            })
+            .fail(function() {
+                stopHoldTimer();
+                selectedSeats = [];
+                $('.seat.seat-chon').removeClass('seat-chon');
+                updateSelectedSeatsDisplay();
+                updateTotals();
+                invalidateAppliedVoucher();
+                toggleBookButton();
+                showError('Không thể giữ ghế. Vui lòng thử lại.');
+            });
+        } else {
+            // Nếu không còn ghế nào, dừng timer và release ghế
+            stopHoldTimer();
+            $.post('{{ route("booking.releaseSeats") }}', {
+                _token: '{{ csrf_token() }}',
+                suat_chieu_id: {{ $suatChieu->id }},
+                ghe_ids: []
+            });
+        }
     });
 
     // Thêm/bớt combo
@@ -904,58 +1038,47 @@ $(document).ready(function() {
         $('#confirmModal').modal('show');
     });
 
+    // Handle modal close - stop timer if user cancels
+    $('#confirmModal').on('hidden.bs.modal', function() {
+        stopHoldTimer();
+    });
+
     // Xác nhận đặt vé
     $('#confirm-book').click(function() {
         $('#confirm-book').prop('disabled', true).text('Đang xử lý...');
 
-        // Giữ tạm ghế trước
-        $.post('{{ route("booking.holdSeats") }}', {
+        // Đặt vé (seats are already held)
+        $.post('{{ route("booking.store") }}', {
             _token: '{{ csrf_token() }}',
             suat_chieu_id: {{ $suatChieu->id }},
-            ghe_ids: selectedSeats
+            ghe_ids: selectedSeats,
+            combo_items: getComboItems(),
+            // Nếu có voucher người dùng đã áp dụng thì gửi id, nếu không thì gửi mã đã áp dụng
+            voucher_nd_id: appliedVoucherNdId,
+            ma_giam_gia: appliedVoucherNdId ? null : (appliedCode || null)
         })
         .done(function(response) {
             if (response.success) {
-                // Đặt vé
-                $.post('{{ route("booking.store") }}', {
-                    _token: '{{ csrf_token() }}',
-                    suat_chieu_id: {{ $suatChieu->id }},
-                    ghe_ids: selectedSeats,
-                    combo_items: getComboItems(),
-                    // Nếu có voucher người dùng đã áp dụng thì gửi id, nếu không thì gửi mã đã áp dụng
-                    voucher_nd_id: appliedVoucherNdId,
-                    ma_giam_gia: appliedVoucherNdId ? null : (appliedCode || null)
-                })
-                .done(function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirect;
-                    } else {
-                        showError(response.message);
-                        if (response.redirect) {
-                            setTimeout(() => {
-                                window.location.href = response.redirect;
-                            }, 3000); // Chuyển hướng sau 3 giây
-                        }
-                    }
-                })
-                .fail(function(xhr) {
-                    const errorMessage = xhr.responseJSON && xhr.responseJSON.message 
-                        ? xhr.responseJSON.message 
-                        : 'Có lỗi xảy ra khi đặt vé!';
-                    showError(errorMessage);
-                })
-                .always(function() {
-                    $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
-                    $('#confirmModal').modal('hide');
-                });
+                // Stop timer on successful booking
+                stopHoldTimer();
+                window.location.href = response.redirect;
             } else {
                 showError(response.message);
-                $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
-                $('#confirmModal').modal('hide');
+                if (response.redirect) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 3000); // Chuyển hướng sau 3 giây
+                }
             }
         })
-        .fail(function() {
-            showError('Có lỗi xảy ra khi giữ ghế! Vui lòng thử lại.');
+        .fail(function(xhr) {
+            const errorMessage = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'Có lỗi xảy ra khi đặt vé!';
+            showError(errorMessage);
+            stopHoldTimer(); // Stop timer on booking failure
+        })
+        .always(function() {
             $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
             $('#confirmModal').modal('hide');
         });
@@ -982,9 +1105,13 @@ function updateSelectedSeatsDisplay() {
 
 function getSelectedSeatsLabels() {
     return selectedSeats.map(gheId => {
-        const seat = $('.seat[data-ghe-id="' + gheId + '"]');
-        return seat.data('hang') + seat.data('cot');
-    });
+        const seatId = parseInt(gheId);
+        const seat = $(`.seat[data-ghe-id="${seatId}"]`);
+        if (seat.length) {
+            return seat.data('hang') + seat.data('cot');
+        }
+        return '';
+    }).filter(label => label !== '');
 }
 
 function updateComboDisplay(comboId) {
@@ -1032,9 +1159,12 @@ function getSeatPrice(seatType) {
 function calculateTotal() {
     let ticketTotal = 0;
     selectedSeats.forEach(gheId => {
-        const seat = $('.seat[data-ghe-id="' + gheId + '"]');
-        const seatType = seat.data('loai');
-        ticketTotal += getSeatPrice(seatType);
+        const seatId = parseInt(gheId);
+        const seat = $(`.seat[data-ghe-id="${seatId}"]`);
+        if (seat.length) {
+            const seatType = seat.data('loai');
+            ticketTotal += getSeatPrice(seatType);
+        }
     });
 
     let comboTotal = 0;
@@ -1052,12 +1182,15 @@ function updateTotals() {
 
     if (selectedSeats.length > 0) {
         selectedSeats.forEach(gheId => {
-            const seat = $('.seat[data-ghe-id="' + gheId + '"]');
-            const seatType = seat.data('loai');
-            const seatLabel = seat.data('hang') + seat.data('cot');
-            const price = getSeatPrice(seatType);
-            ticketTotal += price;
-            ticketSummaryHtml += '<div>' + seatLabel + ' (' + getSeatTypeName(seatType) + ') = ' + formatCurrency(price) + '</div>';
+            const seatId = parseInt(gheId);
+            const seat = $(`.seat[data-ghe-id="${seatId}"]`);
+            if (seat.length) {
+                const seatType = seat.data('loai');
+                const seatLabel = seat.data('hang') + seat.data('cot');
+                const price = getSeatPrice(seatType);
+                ticketTotal += price;
+                ticketSummaryHtml += '<div>' + seatLabel + ' (' + getSeatTypeName(seatType) + ') = ' + formatCurrency(price) + '</div>';
+            }
         });
     } else {
         ticketSummaryHtml = '<p class="text-muted">Chưa chọn ghế</p>';
@@ -1146,6 +1279,78 @@ function resetVoucher() {
     $('#voucher-select').val('');
     $('#applied-voucher-info').addClass('d-none');
     updateTotals();
+}
+
+// Seat hold timer functions
+function startHoldTimer() {
+    if (holdTimerInterval) {
+        clearInterval(holdTimerInterval);
+    }
+
+    holdExpirationTime = Date.now() + holdDuration;
+    $('#hold-timer-container').removeClass('d-none');
+
+    holdTimerInterval = setInterval(function() {
+        const now = Date.now();
+        const remaining = holdExpirationTime - now;
+
+        if (remaining <= 0) {
+            clearInterval(holdTimerInterval);
+            handleHoldExpired();
+            return;
+        }
+
+        const minutes = Math.floor(remaining / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        $('#hold-timer').text(timeString);
+
+        // Show warning when less than 2 minutes remaining
+        if (remaining <= 2 * 60 * 1000) {
+            $('#hold-timer').addClass('text-danger').removeClass('text-warning');
+            if (!$('#hold-timer-container .alert').hasClass('alert-danger')) {
+                $('#hold-timer-container .alert').removeClass('alert-warning').addClass('alert-danger');
+            }
+        } else {
+            $('#hold-timer').addClass('text-warning').removeClass('text-danger');
+            $('#hold-timer-container .alert').removeClass('alert-danger').addClass('alert-warning');
+        }
+    }, 1000);
+}
+
+function stopHoldTimer() {
+    if (holdTimerInterval) {
+        clearInterval(holdTimerInterval);
+        holdTimerInterval = null;
+    }
+    $('#hold-timer-container').addClass('d-none');
+    holdExpirationTime = null;
+}
+
+function handleHoldExpired() {
+    $('#hold-timer-container').addClass('d-none');
+
+    // Release held seats on server
+    $.post('{{ route("booking.releaseSeats") }}', {
+        _token: '{{ csrf_token() }}',
+        suat_chieu_id: {{ $suatChieu->id }},
+        ghe_ids: selectedSeats
+    });
+
+    // Show expired modal
+    const holdExpiredModal = new bootstrap.Modal(document.getElementById('holdExpiredModal'));
+    holdExpiredModal.show();
+
+    // Clear selected seats
+    selectedSeats = [];
+    updateSelectedSeatsDisplay();
+    updateTotals();
+    invalidateAppliedVoucher();
+    toggleBookButton();
+
+    // Remove seat selection styling
+    $('.seat.seat-chon').removeClass('seat-chon');
 }
 </script>
 @endpush

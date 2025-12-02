@@ -1,46 +1,32 @@
-# Booking Page Interface Optimization
+# Countdown Timer Implementation for Payment Page
 
 ## Completed Tasks
-- [ ] Create TODO list for tracking progress
+- [x] Add route for ajaxCancel in routes/web.php
+- [x] Add countdown timer display to payment.blade.php
+- [x] Implement JavaScript countdown logic with visual changes
+- [x] Add AJAX call to cancel booking when timer expires
+- [x] Add form disabling when timer expires
+- [x] Verify CSRF token is available in layout
 
-## In Progress
-- [ ] Visual Design Overhaul
-  - [ ] Modern color scheme and accessibility
-  - [ ] Improved typography and spacing
-  - [ ] Enhanced card designs with shadows/gradients
+## Features Implemented
+- 10-minute countdown timer displayed at top of payment page
+- Timer turns red when 2 minutes remaining
+- Automatic booking cancellation when timer reaches 00:00
+- Complete deletion of booking (no history saved)
+- Seats returned to fully available status (hoat_dong)
+- Form disabled and payment button disabled when expired
+- AJAX call to cancel booking with proper error handling
+- Redirect to booking page after cancellation
 
-## Pending Tasks
-- [ ] Seat Selection Improvements
-  - [ ] Better visual feedback and animations
-  - [ ] Improved legend design
-  - [ ] Enhanced mobile responsiveness
+## Testing Required
+- [ ] Test timer countdown functionality
+- [ ] Test color change at 2-minute mark
+- [ ] Test automatic cancellation when timer reaches 0
+- [ ] Test form disabling
+- [ ] Test redirect after cancellation
+- [ ] Test AJAX error handling
 
-- [ ] Combo Selection Redesign
-  - [ ] Modern card layout
-  - [ ] Improved quantity controls
-  - [ ] Better stock indicators
-
-- [ ] Voucher Section Simplification
-  - [ ] Cleaner input design
-  - [ ] Better messaging
-  - [ ] Improved applied voucher display
-
-- [ ] Payment Summary Enhancement
-  - [ ] More prominent total display
-  - [ ] Better cost breakdown
-  - [ ] Progress indicators
-
-- [ ] UX Improvements
-  - [ ] Loading states for AJAX
-  - [ ] Better error handling
-  - [ ] Smooth animations
-  - [ ] Mobile experience
-
-- [ ] Performance Optimizations
-  - [ ] Code cleanup
-  - [ ] Reduced JavaScript redundancy
-
-## Testing
-- [ ] Test on various devices
-- [ ] Ensure functionality works
-- [ ] Performance check
+## Additional Features Implemented
+- [x] **Page Exit Cancellation**: Automatic booking deletion when users leave payment page (no history saved)
+- [x] **Failed Payment Cleanup**: Complete booking deletion when MoMo/VNPay payments fail (no history saved)
+- [x] **Seat Status Management**: Seats properly returned to 'hoat_dong' status in all cancellation scenarios

@@ -59,6 +59,7 @@
                         <th>Loại</th>
                         <th>Giá trị</th>
                         <th>Giảm tối đa</th>
+                        <th>Đơn tối thiểu</th>
                         <th>Áp dụng</th>
                         <th>Trạng thái</th>
                         <th>Thời gian</th>
@@ -103,6 +104,9 @@
                                 {{ $item->loai == 'phan_tram' 
                                     ? ($item->giam_toi_da ? number_format($item->giam_toi_da).'đ' : '—')
                                     : '—' }}
+                            </td>
+                            <td>
+                                {{ $item->gia_tri_don_hang_toi_thieu ? number_format($item->gia_tri_don_hang_toi_thieu).'đ' : '—' }}
                             </td>
                             <td class="text-capitalize">{{ $item->ap_dung_cho }}</td>
 

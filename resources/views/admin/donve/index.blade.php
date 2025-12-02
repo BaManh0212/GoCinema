@@ -35,7 +35,9 @@
                         <option value="da_checkin" {{ request('trang_thai_ve') == 'da_checkin' ? 'selected' : '' }}>Đã check-in</option>
                     </select>
                 </div>
-
+                <a href="{{ route('admin.admin.scan.qr') }}" class="btn btn-primary">
+                    <i class="bi bi-qr-code-scan"></i> Quét mã QR
+                </a>
                 <div class="ms-auto text-end">
                     <button type="submit" class="btn btn-primary rounded-pill shadow-sm px-4 me-2">
                         <i class="bi bi-funnel"></i> Lọc

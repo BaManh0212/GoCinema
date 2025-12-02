@@ -5,6 +5,13 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
+        <!-- Countdown Timer -->
+        <div id="countdown-timer" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
+            <h2 class="text-lg font-semibold text-blue-800 mb-2">Thời gian còn lại để thanh toán</h2>
+            <div id="timer-display" class="text-3xl font-bold text-blue-600">10:00</div>
+            <p class="text-sm text-blue-600 mt-2">Vui lòng hoàn tất thanh toán trước khi hết thời gian</p>
+        </div>
+
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Thanh toán</h1>
 
@@ -15,9 +22,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-gray-600">Mã đơn hàng:</p>
-                            <p class="font-semibold">{{ $donDatVe->ma_don }}</p>
+                            <p class="text-black">{{ $donDatVe->ma_don }}</p>
                         </div>
-                        <div>
+                        <!-- <div>
                             <p class="text-sm text-gray-600">Trạng thái:</p>
                             <span class="px-2 py-1 rounded-full text-xs font-medium
                                 @if($donDatVe->trang_thai === 'cho_thanh_toan') bg-yellow-100 text-yellow-800
@@ -25,7 +32,7 @@
                                 @else bg-red-100 text-red-800 @endif">
                                 {{ $donDatVe->trang_thai }}
                             </span>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -60,7 +67,7 @@
                         <div class="bg-white rounded-lg p-3 border">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">{{ $chiTietVe->ghe->so_ghe_ngoi }}</p>
+                                    <p class="text-primary text-sm">{{ $chiTietVe->ghe->so_ghe_ngoi ?: ($chiTietVe->ghe->hang . $chiTietVe->ghe->cot) }}</p>
                                     <p class="text-sm text-gray-600">{{ ucfirst($chiTietVe->loai_ghe) }}</p>
                                 </div>
                                 <div class="text-right">
@@ -81,7 +88,7 @@
                     @foreach($combos as $combo)
                     <div class="flex justify-between items-center py-2">
                         <div>
-                            <p class="font-semibold">{{ $combo->ten }}</p>
+                            <p cclass="text-primary text-sm">{{ $combo->ten }}</p>
                             <p class="text-sm text-gray-600">Số lượng: {{ $combo->so_luong }}</p>
                         </div>
                         <div class="text-right">
@@ -151,6 +158,8 @@
                                 </div> 
                             </label> 
                         </div>
+                    </div>
+                    
                     <!-- Nút thanh toán -->
                     <div class="text-center mt-8">
                         <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
@@ -160,6 +169,256 @@
                     </div>
                 </form>
             </div>
- 
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let timeLeft = 600; // 10 minutes in seconds
+    const timerDisplay = document.getElementById('timer-display');
+    const countdownTimer = document.getElementById('countdown-timer');
+    const paymentForm = document.getElementById('paymentForm');
+    const payButton = document.getElementById('payButton');
+
+    // Flag to prevent multiple cancellation calls
+    let bookingCancelled = false;
+    let isNavigatingAway = false;
+    let isSubmittingPayment = false; // ← NEW: Flag to prevent cancel during payment submission
+
+    // Prevent booking cancellation when user submits payment form
+    paymentForm.addEventListener('submit', function(e) {
+        isSubmittingPayment = true;
+        bookingCancelled = true; // Mark as cancelled to prevent other events from triggering
+        console.log('Payment form submitted - preventing booking cancellation');
+    });
+
+    // Refresh seat holds every 5 minutes to keep them active during payment
+    let holdRefreshInterval = setInterval(function() {
+        if (bookingCancelled) return;
+
+        fetch('/booking/hold-seats', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                suat_chieu_id: {{ $donDatVe->suat_chieu_id }},
+                ghe_ids: {{ json_encode($donDatVe->chiTietVes->pluck('ghe_id')->toArray()) }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Seat holds refreshed successfully');
+            } else {
+                console.error('Failed to refresh seat holds:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing seat holds:', error);
+        });
+    }, 2 * 60 * 1000); // 2 minutes
+
+    // Check if page was loaded from cache (back button) and booking should be cancelled
+    // This handles the case where user pressed back button and page was restored from cache
+    if (performance.navigation && performance.navigation.type === 2) {
+        // Page was loaded via back/forward button
+        if ('{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan' && !bookingCancelled) {
+            cancelBookingOnExit();
+        }
+    }
+
+    // Function to cancel booking when user leaves page
+    function cancelBookingOnExit() {
+        if (bookingCancelled || isSubmittingPayment) return; // ← UPDATED: Don't cancel if submitting payment
+        bookingCancelled = true;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const url = `/booking/ajax-cancel/{{ $donDatVe->id }}`;
+        
+        // Use fetch with keepalive (modern, reliable replacement for sendBeacon)
+        if (window.fetch && csrfToken) {
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('page_exit', '1');
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                keepalive: true, // Critical for page unload requests
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).catch(e => console.error('Error canceling booking (fetch):', e));
+            
+            return;
+        }
+        
+        // Fallback to sendBeacon if fetch keepalive not supported (rare)
+        if (navigator.sendBeacon && csrfToken) {
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('page_exit', '1');
+            
+            if (navigator.sendBeacon(url, formData)) {
+                return;
+            }
+        }
+
+        // Fallback to synchronous XHR (legacy)
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, false); // Synchronous
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            if (csrfToken) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            }
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.send(JSON.stringify({ page_exit: true }));
+        } catch (e) {
+            console.error('Error canceling booking (xhr):', e);
+        }
+    }
+
+    // Detect when user is leaving the page (multiple events for reliability)
+    window.addEventListener('beforeunload', function(e) {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            cancelBookingOnExit();
+        }
+    });
+
+    // pagehide is more reliable than beforeunload for mobile browsers
+    window.addEventListener('pagehide', function(e) {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            cancelBookingOnExit();
+        }
+    });
+
+    // Detect back/forward button navigation
+    window.addEventListener('popstate', function(e) {
+        if (!bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            isNavigatingAway = true;
+            cancelBookingOnExit();
+        }
+    });
+
+    // Detect when page is shown from cache (user came back via back button)
+    window.addEventListener('pageshow', function(e) {
+        // Reset flags to ensure we can process cancellation if needed
+        isSubmittingPayment = false;
+        
+        // Force reset bookingCancelled to allow cancellation to run again
+        // This is crucial because it was set to true during form submission
+        bookingCancelled = false;
+
+        // Check if this is a back/forward navigation
+        // Support both modern and legacy APIs
+        let isBackNavigation = e.persisted || 
+                               (window.performance && window.performance.navigation && window.performance.navigation.type === 2);
+                               
+        // Modern API check
+        if (!isBackNavigation && window.performance && window.performance.getEntriesByType) {
+            const navEntries = window.performance.getEntriesByType('navigation');
+            if (navEntries.length > 0 && navEntries[0].type === 'back_forward') {
+                isBackNavigation = true;
+            }
+        }
+
+        // If page was loaded from cache or back button and booking is still pending
+        if (isBackNavigation && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            console.log('Returned from payment gateway or back button - cancelling booking');
+            
+            // Cancel immediately
+            cancelBookingOnExit();
+            
+            // Redirect back to booking page after a short delay
+            setTimeout(() => {
+                window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+            }, 300);
+        }
+    });
+
+    // Also detect visibility change (tab switching, minimizing, etc.)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden' && !bookingCancelled && !isSubmittingPayment && '{{ $donDatVe->trang_thai }}' === 'cho_thanh_toan') {
+            // Give user a moment to come back before cancelling
+            setTimeout(() => {
+                if (document.visibilityState === 'hidden' && !bookingCancelled && !isSubmittingPayment) {
+                    cancelBookingOnExit();
+                }
+            }, 5000); // Reduced to 5 seconds for faster response
+        }
+    });
+
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        timerDisplay.textContent = formattedTime;
+
+        // Turn red when 2 minutes remaining
+        if (timeLeft <= 120) {
+            countdownTimer.classList.remove('bg-blue-50', 'border-blue-200');
+            countdownTimer.classList.add('bg-red-50', 'border-red-200');
+            timerDisplay.classList.remove('text-blue-600');
+            timerDisplay.classList.add('text-red-600');
+            countdownTimer.querySelector('h2').classList.remove('text-blue-800');
+            countdownTimer.querySelector('h2').classList.add('text-red-800');
+            countdownTimer.querySelector('p').classList.remove('text-blue-600');
+            countdownTimer.querySelector('p').classList.add('text-red-600');
+        }
+
+        if (timeLeft <= 0) {
+            // Time expired - cancel booking
+            timerDisplay.textContent = '00:00';
+            countdownTimer.querySelector('h2').textContent = 'Thời gian thanh toán đã hết';
+            countdownTimer.querySelector('p').textContent = 'Đơn hàng sẽ được hủy và ghế sẽ được trả về';
+
+            // Disable form
+            paymentForm.style.pointerEvents = 'none';
+            paymentForm.style.opacity = '0.5';
+            payButton.disabled = true;
+            payButton.textContent = 'Đã hết thời gian thanh toán';
+
+            // Cancel booking via AJAX (hết thời gian - xóa hoàn toàn)
+            fetch(`/booking/ajax-cancel/{{ $donDatVe->id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ time_expired: true })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error canceling booking:', error);
+                // Still redirect even if AJAX fails
+                setTimeout(() => {
+                    window.location.href = '/booking?suat_chieu_id={{ $donDatVe->suat_chieu_id }}';
+                }, 3000);
+            });
+
+            return;
+        }
+
+        timeLeft--;
+        setTimeout(updateTimer, 1000);
+    }
+
+    updateTimer();
+});
+</script>
 
 @endsection

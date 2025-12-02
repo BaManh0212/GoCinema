@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
                 'vai_tro_id' => $manager->id,
             ]);
         }
-    $this->call(PhimSeeder::class);
+    // $this->call(PhimSeeder::class); // PhimSeeder doesn't exist
 
     // Seed sample orders for admin testing
     $this->call(OrdersSeeder::class);

@@ -59,6 +59,16 @@
                     @error('giam_toi_da') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- Giá trị đơn hàng tối thiểu --}}
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-primary">Đơn hàng tối thiểu (VNĐ)</label>
+                    <input type="number" min="0" name="gia_tri_don_hang_toi_thieu"
+                        class="form-control form-control-lg @error('gia_tri_don_hang_toi_thieu') is-invalid @enderror"
+                        placeholder="Để trống nếu không yêu cầu" value="{{ old('gia_tri_don_hang_toi_thieu', $maGiamGia->gia_tri_don_hang_toi_thieu) }}">
+                    @error('gia_tri_don_hang_toi_thieu') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <small class="text-muted">Giá trị đơn hàng tối thiểu để áp dụng mã</small>
+                </div>
+
                 {{-- Áp dụng cho --}}
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-primary">Áp dụng cho</label>
