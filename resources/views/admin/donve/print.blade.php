@@ -116,8 +116,15 @@
     .qr-section svg {
         width: 100% !important;
         height: 100% !important;
-        max-width: 200px;
-        max-height: 200px;
+        max-width: 100px;
+        max-height: 100px;
+    }
+    .two-columns {
+        display: flex;
+        gap: 20px;
+    }
+    .column {
+        flex: 1;
     }
     </style>
 </head>
@@ -148,7 +155,7 @@
             $svgData = $qrCodes[$ct->id];
             $base64Svg = 'data:image/svg+xml;base64,' . base64_encode($svgData);
         @endphp
-        <img src="{{ $base64Svg }}" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
+        <img src="{{ $base64Svg }}" alt="QR Code" style="width: 100px; height: 100px; display: block; margin: 0 auto;">
     @else
         <div style="color: #666; font-style: italic; padding: 20px;">
             <div>QR Code không khả dụng</div>
@@ -161,28 +168,15 @@
         <!-- Movie Information -->
         <div class="section">
             <h3>THÔNG TIN PHIM</h3>
-            <div class="info-row">
-                <div class="info-label">Phim:</div>
-                <div><strong>{{ $donVe->suatChieu->phim->tieu_de ?? 'N/A' }}</strong></div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Rạp:</div>
-                <div>{{ $donVe->suatChieu->phongChieu->rap->ten ?? 'N/A' }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Phòng:</div>
-                <div>{{ $donVe->suatChieu->phongChieu->ten ?? 'N/A' }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Ngày chiếu:</div>
-                <div>{{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('l, d/m/Y') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Giờ chiếu:</div>
-                <div>
-                    {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('H:i') }} -
-                    {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_ket_thuc)->format('H:i') }}
-                    ({{ $donVe->suatChieu->phim->thoi_luong ?? 'N/A' }} phút)
+            <div class="two-columns">
+                <div class="column">
+                    <p><strong>Phim:</strong> {{ $donVe->suatChieu->phim->tieu_de ?? 'N/A' }}</p>
+                    <p><strong>Rạp:</strong> {{ $donVe->suatChieu->phongChieu->rap->ten ?? 'N/A' }}</p>
+                    <p><strong>Phòng:</strong> {{ $donVe->suatChieu->phongChieu->ten ?? 'N/A' }}</p>
+                </div>
+                <div class="column">
+                    <p><strong>Ngày chiếu:</strong> {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('l, d/m/Y') }}</p>
+                    <p><strong>Giờ chiếu:</strong> {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_bat_dau)->format('H:i') }} - {{ \Carbon\Carbon::parse($donVe->suatChieu->gio_ket_thuc)->format('H:i') }} ({{ $donVe->suatChieu->phim->thoi_luong ?? 'N/A' }} phút)</p>
                 </div>
             </div>
         </div>
@@ -190,23 +184,20 @@
         <!-- Seat Information -->
         <div class="section">
             <h3>THÔNG TIN GHẾ NGỒI</h3>
-            <div class="info-row">
-                <div class="info-label">Ghế:</div>
-                <div>{{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }} - {{ ucfirst($ct->loai_ghe) }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Đơn giá:</div>
-                <div>{{ number_format($ct->gia, 0, ',', '.') }} đ</div>
+            <div class="two-columns">
+                <div class="column">
+                    <p><strong>Ghế: {{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }} - {{ ucfirst($ct->loai_ghe) }}</p>
+                </div>
+                <div class="column">
+                    <p><strong>Đơn giá: {{ number_format($ct->gia, 0, ',', '.') }} đ</p>
+                </div>
             </div>
         </div>
 
         <!-- Payment Information -->
         <div class="section">
             <h3>THANH TOÁN</h3>
-            <div class="info-row">
-                <div class="info-label">Giá vé:</div>
-                <div><strong>{{ number_format($ct->gia, 0, ',', '.') }} đ</strong></div>
-            </div>
+            <p>Giá vé: <strong>{{ number_format($ct->gia, 0, ',', '.') }} đ</strong></p>
         </div>
 
         <!-- Footer -->
