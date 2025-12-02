@@ -46,7 +46,7 @@ class AuthenticatedSessionController extends Controller
 
             case 'nhan_vien':
                 return redirect()
-                    ->intended(route('staff.dashboard', absolute: false))
+                    ->intended(route('staff.donve.index', absolute: false))
                     ->with('success', $successMessage);
 
             default:

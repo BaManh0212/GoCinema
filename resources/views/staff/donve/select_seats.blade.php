@@ -150,6 +150,14 @@
         border-color: #4ecdc4;
     }
 
+    .row-label {
+        font-weight: bold;
+        font-size: 1.1em;
+        color: #333;
+        min-width: 20px;
+        text-align: center;
+    }
+
     @media (max-width: 768px) {
         .seat {
             width: 30px;
@@ -269,12 +277,13 @@
                         @endphp
 
                         @foreach ($hangLetters as $hang)
-                            <div class="d-flex justify-content-center mb-2">
+                            <div class="d-flex justify-content-center align-items-center mb-2">
+                                <div class="row-label me-3">{{ $hang }}</div>
                                 @php
                                     $danhSachGhe = $ghes->get($hang, collect());
                                     $cot = 1;
                                     $seatCount = 0;
-                                    
+
                                     // First pass to check for double seats
                                     $doubleSeats = [];
                                     for ($c = 1; $c <= $suatChieu->phong->so_cot; $c++) {

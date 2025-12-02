@@ -49,6 +49,15 @@ class BookingController extends Controller
             return redirect('/')->with('error', 'Suất chiếu đã bắt đầu hoặc đã kết thúc.');
         }
 
+        // ✅ YÊU CẦU: Reload/F5 trang -> Xóa ghế giữ tạm (bắt chọn lại)
+        // Chỉ xóa ghế giữ tạm (chưa tạo đơn hàng), không ảnh hưởng đơn chờ thanh toán
+        if (auth()->check()) {
+            DB::table('ghe_giu_tam')
+                ->where('suat_chieu_id', $suatChieuId)
+                ->where('nguoi_dung_id', auth()->id())
+                ->delete();
+        }
+
         // Lấy sơ đồ ghế
         $ghes = $suatChieu->phong->ghes()
             ->orderBy('hang')
@@ -106,6 +115,11 @@ class BookingController extends Controller
                 ->toArray();
 
             $myHeldSeats = array_unique(array_merge($heldSeats, $pendingOrderSeats));
+            
+            // ✅ Fix: Loại bỏ các ghế đã đặt thành công khỏi danh sách giữ tạm
+            // Điều này đảm bảo ghế hiển thị màu đỏ (đã đặt) thay vì màu xanh (đang chọn)
+            // ngay cả khi bản ghi ghe_giu_tam chưa kịp xóa
+            $myHeldSeats = array_diff($myHeldSeats, $gheDaDat);
         }
 
         // Lấy combo và sản phẩm
@@ -606,7 +620,19 @@ class BookingController extends Controller
         $donDatVe = DonDatVe::where('id', $id)
             ->where('nguoi_dung_id', auth()->id())
             ->where('trang_thai', 'cho_thanh_toan')
-            ->firstOrFail();
+            ->first();
+
+        if (!$donDatVe) {
+            Log::warning('Booking not found or not accessible', [
+                'booking_id' => $id,
+                'user_id' => auth()->id()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn đặt vé không tồn tại hoặc đã được xử lý.',
+                'redirect' => route('home')
+            ], 404);
+        }
 
         $paymentMethod = $request->payment_method;
 
@@ -693,10 +719,22 @@ class BookingController extends Controller
         //===== Xử lý thanh toán VNPay ======//
 if ($paymentMethod === 'vnpay') {
 
-    $vnp_TmnCode = env('VNP_TMNCODE');
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
-    $vnp_Url = env('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+    $vnp_TmnCode = config('services.vnpay.tmn_code');
+    $vnp_HashSecret = config('services.vnpay.hash_secret');
+    $vnp_Url = config('services.vnpay.url', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
     $vnp_Returnurl = route('booking.vnpay-return');
+
+    // Validate VnPay configuration
+    if (!$vnp_TmnCode || !$vnp_HashSecret) {
+        Log::error('VnPay configuration missing', [
+            'tmn_code' => $vnp_TmnCode ? 'set' : 'missing',
+            'hash_secret' => $vnp_HashSecret ? 'set' : 'missing'
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Cấu hình VnPay chưa đầy đủ. Vui lòng liên hệ quản trị viên.'
+        ], 500);
+    }
 
     $vnp_TxnRef = 'BOOKING_' . $donDatVe->id . '_' . time();
     $vnp_OrderInfo = 'Thanh toan don ' . preg_replace('/[^A-Za-z0-9 ]/', '', $donDatVe->ma_don);
@@ -1515,6 +1553,12 @@ if ($paymentMethod === 'vnpay') {
                 } catch (\Exception $e) {
                     Log::error('Error sending confirmation email: ' . $e->getMessage());
                 }
+
+                // ✅ Xóa ghế giữ tạm của người dùng cho suất chiếu này
+                DB::table('ghe_giu_tam')
+                    ->where('nguoi_dung_id', $donDatVe->nguoi_dung_id)
+                    ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                    ->delete();
                 
                 return redirect()->route('booking.confirm', $id)->with('success', 'Thanh toán MoMo thành công!');
                 
@@ -1586,9 +1630,9 @@ if ($paymentMethod === 'vnpay') {
             ->with('error', 'Thiếu mã giao dịch từ VNPay.');
     }
 
-    // Tách ID đơn hàng
+    // Tách ID đơn hàng từ format BOOKING_{id}_{timestamp}
     $parts = explode('_', $vnp_TxnRef);
-    $id = (int)$parts[0];
+    $id = isset($parts[1]) ? (int)$parts[1] : 0;
 
     $donDatVe = DonDatVe::find($id);
     if (!$donDatVe) {
@@ -1597,7 +1641,7 @@ if ($paymentMethod === 'vnpay') {
     }
 
     // ===== Xác thực hash =====
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $vnp_HashSecret = config('services.vnpay.hash_secret');
     $inputData = $request->except(['vnp_SecureHash']);
     ksort($inputData);
 
@@ -1643,6 +1687,12 @@ if ($paymentMethod === 'vnpay') {
             } catch (\Exception $e) {
                 Log::error("Email send error in VNPay Return: " . $e->getMessage());
             }
+
+            // ✅ Xóa ghế giữ tạm của người dùng cho suất chiếu này
+            DB::table('ghe_giu_tam')
+                ->where('nguoi_dung_id', $donDatVe->nguoi_dung_id)
+                ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                ->delete();
 
             return redirect()->route('booking.confirm', $id)
                 ->with('success', 'Thanh toán VNPay thành công!');
@@ -1718,9 +1768,9 @@ if ($paymentMethod === 'vnpay') {
         return response('Missing TxnRef', 400);
     }
 
-    // Tách ID đơn hàng
+    // Tách ID đơn hàng từ format BOOKING_{id}_{timestamp}
     $parts = explode('_', $vnp_TxnRef);
-    $id = (int)$parts[0];
+    $id = isset($parts[1]) ? (int)$parts[1] : 0;
 
     $donDatVe = DonDatVe::find($id);
     if (!$donDatVe) {
@@ -1729,7 +1779,7 @@ if ($paymentMethod === 'vnpay') {
     }
 
     // ===== Xác thực Secure Hash =====
-    $vnp_HashSecret = env('VNP_HASH_SECRET');
+    $vnp_HashSecret = config('services.vnpay.hash_secret');
     $inputData = $request->except(['vnp_SecureHash']);
     ksort($inputData);
 
@@ -1761,11 +1811,17 @@ if ($paymentMethod === 'vnpay') {
                 try {
                     Mail::to($donDatVe->nguoiDung->email)
                         ->sendNow(new BookingConfirmation($donDatVe));
-
-                    Log::info("Email sent for VNPay callback order $id");
                 } catch (\Exception $e) {
-                    Log::error("Email error VNPay callback: " . $e->getMessage());
+                    Log::error("VNPay IPN email error: " . $e->getMessage());
                 }
+
+                // ✅ Xóa ghế giữ tạm
+                DB::table('ghe_giu_tam')
+                    ->where('nguoi_dung_id', $donDatVe->nguoi_dung_id)
+                    ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                    ->delete();
+
+
             }
         } else {
             Log::warning("VNPay IPN payment failed: $vnp_ResponseCode");
