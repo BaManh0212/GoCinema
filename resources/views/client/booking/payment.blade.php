@@ -150,7 +150,7 @@
                             <label class="flex items-center"> 
                                 <input type="radio" name="payment_method" value="vnpay" class="mr-3"> 
                                 <div class="flex items-center"> 
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/VNPay_logo.png" alt="VNPay" class="w-8 h-8 mr-3"> 
+                                    <img src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg" alt="VNPay" class="w-8 h-8 mr-3"> 
                                     <div> 
                                         <p class="font-semibold">VNPay</p> 
                                         <p class="text-sm text-gray-600">Thanh toán nhanh qua cổng VNPay</p> 
