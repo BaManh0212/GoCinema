@@ -25,7 +25,7 @@ class BookingConfirmation extends Mailable
 
     public function __construct(DonDatVe $donDatVe)
     {
-        $this->donDatVe = $donDatVe->load(['suatChieu.phim', 'suatChieu.phong.rap', 'chiTietVes.ghe', 'maGiamGia']);
+        $this->donDatVe = $donDatVe->load(['suatChieu.phim', 'suatChieu.phong.rap', 'chiTietVes.ghe', 'maGiamGia', 'combos']);
         $this->calculateTotalTicketPrice();
         $this->generateQrCode();
     }
@@ -52,7 +52,7 @@ class BookingConfirmation extends Mailable
             'trang_thai' => $this->donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán'
         ];
 
-        $qrText = json_encode($data);
+        $qrText = $this->donDatVe->qrString();
 
         try {
             // 1) Nếu Endroid\QrCode có sẵn -> dùng Endroid writer (PNG)
