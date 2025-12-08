@@ -367,31 +367,6 @@
         </div>
 
         <div class="col-lg-4">
-            <!-- Customer Information -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-person-lines-fill me-2"></i>
-                        Thông tin khách hàng
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form id="customer-form">
-                        <div class="mb-3">
-                            <label for="customer-name" class="form-label">Họ tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="customer-name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="customer-phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="customer-phone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="customer-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="customer-email">
-                        </div>
-                    </form>
-                </div>
-            </div>
 
             <!-- Combo & Food -->
             <div class="card shadow-sm">
@@ -490,6 +465,8 @@
     </div>
 </div>
 
+
+
 <style>
     .selected-seats-container {
         min-height: 60px;
@@ -574,16 +551,82 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalAmountElement = document.getElementById('total-amount');
     const confirmButton = document.getElementById('confirm-booking');
     const ticketPrice = {{ $suatChieu->gia_ve }};
-    let comboQuantities = {!! $combos->pluck('so_luong', 'id') !!};
-    let comboPrices = {!! $combos->pluck('gia', 'id') !!};
+    let comboQuantities = {!! json_encode($combos->pluck('so_luong', 'id')) !!};
+    let comboPrices = {!! json_encode($combos->pluck('gia', 'id')) !!};
+    let comboNames = {!! json_encode($combos->pluck('ten', 'id')) !!};
 
-    // Initialize combo quantities
+    // Initialize combo quantities and attach change listeners
     Object.keys(comboQuantities).forEach(comboId => {
         const input = document.getElementById(`combo-${comboId}-qty`);
         if (input) {
             input.addEventListener('change', updateComboQuantity);
         }
     });
+
+    // Update selected combos display
+    function updateSelectedCombos() {
+        const container = document.getElementById('selected-combos');
+        container.innerHTML = '';
+
+        const selected = [];
+
+        document.querySelectorAll('[id^="combo-"]').forEach(input => {
+            if (!input) return;
+            if (input.id && input.id.endsWith('-qty')) {
+                const comboId = input.dataset.comboId;
+                const qty = parseInt(input.value || 0) || 0;
+                if (qty > 0) {
+                    selected.push({ id: comboId, qty: qty });
+                }
+            }
+        });
+
+        if (selected.length === 0) {
+            container.innerHTML = '<span class="text-muted">Chưa chọn combo nào</span>';
+            return;
+        }
+
+        selected.forEach(item => {
+            const id = item.id;
+            const qty = item.qty;
+            const name = comboNames[id] || 'Combo';
+            const price = comboPrices[id] || 0;
+
+            const badge = document.createElement('div');
+            badge.className = 'combo-badge d-inline-flex align-items-center';
+            badge.innerHTML = `
+                <span class="combo-name">${escapeHtml(name)}</span>
+                <span class="combo-qty">x${qty}</span>
+                <span class="combo-price">${(price * qty).toLocaleString('vi-VN')}đ</span>
+                <button type="button" class="btn btn-sm btn-link text-danger ms-2 remove-combo" data-combo-id="${id}" style="padding:0">&times;</button>
+            `;
+
+            container.appendChild(badge);
+        });
+
+        // attach remove handlers
+        container.querySelectorAll('.remove-combo').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const comboId = this.dataset.comboId;
+                const input = document.getElementById(`combo-${comboId}-qty`);
+                if (input) {
+                    input.value = 0;
+                    updateTotal();
+                    updateSelectedCombos();
+                }
+            });
+        });
+    }
+
+    // simple escape to avoid HTML injection from server-provided names
+    function escapeHtml(unsafe) {
+        return String(unsafe)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     // Handle seat selection
     function toggleSeatSelection(seatElement) {
@@ -695,19 +738,54 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmButton.disabled = selectedSeats.size === 0;
     }
 
+    // Calculate and update total amount (match client booking logic)
+    function getSeatPrice(seatType) {
+        let price = parseFloat(ticketPrice) || 0;
+
+        // Tăng giá cuối tuần (thứ 7, Chủ nhật): +20%
+        const showDate = new Date('{{ $suatChieu->gio_bat_dau }}');
+        if (showDate.getDay() === 0 || showDate.getDay() === 6) {
+            price *= 1.2;
+        }
+
+        // Tăng giá buổi tối từ 18h trở đi: +15%
+        if (showDate.getHours() >= 18) {
+            price *= 1.15;
+        }
+
+        // Áp dụng loại ghế
+        switch(seatType) {
+            case 'vip':
+                return price * 1.5;
+            case 'doi':
+                return price * 2;
+            default:
+                return price;
+        }
+    }
+
     // Calculate and update total amount
     function updateTotal() {
-        let total = Array.from(selectedSeats).length * ticketPrice;
-        
+        let total = 0;
+
+        // Sum selected seats with correct per-seat price
+        Array.from(selectedSeats).forEach(seatId => {
+            const el = document.querySelector(`[data-ghe-id="${seatId}"]`);
+            if (el) {
+                const seatType = el.dataset.loai || 'thuong';
+                total += getSeatPrice(seatType);
+            }
+        });
+
         // Add combo prices
         document.querySelectorAll('[id^="combo-"]').forEach(input => {
             if (input.id.endsWith('-qty')) {
                 const comboId = input.dataset.comboId;
                 const quantity = parseInt(input.value) || 0;
-                total += comboPrices[comboId] * quantity;
+                total += (parseFloat(comboPrices[comboId]) || 0) * quantity;
             }
         });
-        
+
         totalAmountElement.textContent = total.toLocaleString('vi-VN') + 'đ';
     }
 
@@ -715,7 +793,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateComboQuantity(e) {
         const input = e.target;
         const comboId = input.dataset.comboId;
-        let value = parseInt(input.value) || 0;
+        if (!input) return;
+        let value = parseInt(input.value || 0) || 0;
         
         // Validate max quantity
         if (value > comboQuantities[comboId]) {
@@ -723,8 +802,9 @@ document.addEventListener('DOMContentLoaded', function() {
             input.value = value;
         }
         
-        // Update total
+        // Update total and combo display
         updateTotal();
+        updateSelectedCombos();
     }
 
     // Handle increase/decrease buttons
@@ -732,11 +812,13 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const comboId = this.dataset.comboId;
             const input = document.getElementById(`combo-${comboId}-qty`);
-            let value = parseInt(input.value) || 0;
+            if (!input) return;
+            let value = parseInt(input.value || 0) || 0;
             
             if (value < comboQuantities[comboId]) {
                 input.value = value + 1;
                 updateTotal();
+                updateSelectedCombos();
             }
         });
     });
@@ -745,60 +827,50 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const comboId = this.dataset.comboId;
             const input = document.getElementById(`combo-${comboId}-qty`);
-            let value = parseInt(input.value) || 0;
+            if (!input) return;
+            let value = parseInt(input.value || 0) || 0;
             
             if (value > 0) {
                 input.value = value - 1;
                 updateTotal();
+                updateSelectedCombos();
             }
         });
     });
 
-    // Handle form submission
+    // Handle confirm booking button click - create booking and redirect to payment
     document.getElementById('confirm-booking').addEventListener('click', function() {
-        const customerName = document.getElementById('customer-name').value.trim();
-        const customerPhone = document.getElementById('customer-phone').value.trim();
-        
-        if (!customerName || !customerPhone) {
-            alert('Vui lòng nhập đầy đủ thông tin khách hàng');
-            return;
-        }
-        
         if (selectedSeats.size === 0) {
             alert('Vui lòng chọn ít nhất một ghế');
             return;
         }
-        
+
         // Prepare data
         const formData = new FormData();
         formData.append('_token', '{{ csrf_token() }}');
         formData.append('suat_chieu_id', '{{ $suatChieu->id }}');
-        formData.append('customer_name', customerName);
-        formData.append('customer_phone', customerPhone);
-        formData.append('customer_email', document.getElementById('customer-email').value.trim());
         
         // Add each seat ID as a separate form field
         Array.from(selectedSeats).forEach((seatId, index) => {
             formData.append(`ghe_ids[${index}]`, seatId);
         });
         
-        // Add combos to form data
-        const combos = [];
+        // Add combos to form data in the correct format expected by controller
+        let comboIndex = 0;
         document.querySelectorAll('[id^="combo-"]').forEach(input => {
             if (input.id.endsWith('-qty')) {
                 const comboId = input.dataset.comboId;
                 const quantity = parseInt(input.value) || 0;
                 if (quantity > 0) {
-                    combos.push({
-                        id: comboId,
-                        quantity: quantity
-                    });
+                    formData.append(`combo_items[${comboIndex}][combo_id]`, comboId);
+                    formData.append(`combo_items[${comboIndex}][so_luong]`, quantity);
+                    comboIndex++;
                 }
             }
         });
-        formData.append('combos', JSON.stringify(combos));
         
         // Show loading state
+        const confirmButton = document.getElementById('confirm-booking');
         const originalButtonText = confirmButton.innerHTML;
         confirmButton.disabled = true;
         confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...';
@@ -824,32 +896,28 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.success) {
-                // Show success message
-                const successMessage = data.message || 'Đặt vé thành công!';
-                alert(successMessage);
-                
-                // Redirect to the ticket page or print page
-                if (data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    window.location.href = '{{ route("staff.donve.index") }}';
-                }
+                const donDatVeId = data.don_dat_ve_id;
+                // Redirect to payment page
+                window.location.href = `{{ route('staff.donve.payment', ['id' => '__ID_PLACEHOLDER__']) }}`.replace('__ID_PLACEHOLDER__', donDatVeId);
             } else {
                 // Show error message
                 const errorMessage = data.message || 'Đã xảy ra lỗi khi đặt vé. Vui lòng thử lại.';
                 alert(errorMessage);
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = originalButtonText;
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert(error.message || 'Đã xảy ra lỗi. Vui lòng thử lại sau.');
-        })
-        .finally(() => {
-            // Restore button state
             confirmButton.disabled = false;
             confirmButton.innerHTML = originalButtonText;
         });
     });
+
+    // initialize displays
+    updateTotal();
+    updateSelectedCombos();
 });
 </script>
 @endpush

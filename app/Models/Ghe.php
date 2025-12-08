@@ -15,4 +15,11 @@ class Ghe extends Model
         'phong_id', 'hang', 'cot', 'loai', 'trang_thai'
     ];
 
+    /**
+     * Relationship: Ghế thuộc về một phòng chiếu
+     */
+    public function phongChieu()
+    {
+        return $this->belongsTo(PhongChieu::class, 'phong_id');
+    }
 }

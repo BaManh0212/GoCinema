@@ -416,8 +416,14 @@ Route::prefix('staff')
             Route::get('create', [StaffDonDatVeController::class, 'create'])->name('create');
             Route::get('select-suat/{phim_id}', [StaffDonDatVeController::class, 'selectSuat'])->name('selectSuat');
             Route::get('select-seats/{suat_chieu_id}', [StaffDonDatVeController::class, 'selectSeats'])->name('selectSeats');
-            Route::get('{id}', [StaffDonDatVeController::class, 'show'])->name('show');
+            
+            // MoMo routes - MUST be before {id} route
+            Route::post('momo-callback', [StaffDonDatVeController::class, 'momoCallback'])->name('momo-callback');
+            Route::get('momo-return', [StaffDonDatVeController::class, 'momoReturn'])->name('momo-return');
+            
             Route::post('store', [StaffDonDatVeController::class, 'store'])->name('store');
+            Route::get('payment/{id}', [StaffDonDatVeController::class, 'payment'])->name('payment');
+            Route::post('process-payment/{id}', [StaffDonDatVeController::class, 'processPayment'])->name('processPayment');
             Route::get('confirm/{id}', [StaffDonDatVeController::class, 'confirm'])->name('confirm');
 
             // Trang check-in (form)
@@ -431,6 +437,9 @@ Route::prefix('staff')
 
             // In vé (PDF)
             Route::get('{id}/print', [StaffDonDatVeController::class, 'print'])->name('print');
+            
+            // {id} route MUST be last to avoid catching other routes
+            Route::get('{id}', [StaffDonDatVeController::class, 'show'])->name('show');
         });
         // Quản lý phòng chiếu
         Route::resource('phongchieu', StaffPhongChieuController::class)->names('phongchieu');

@@ -71,38 +71,6 @@
             </form>
         </div>
     </div>
-    {{-- ⚙️ Cập nhật trạng thái hàng loạt --}} 
-    <div class="card mb-4 border-0 shadow-sm"> 
-        <div class="card-body py-3"> 
-            <form action="{{ route('admin.suatchieu.bulkUpdate') }}" method="POST" class="row g-3 align-items-end"> 
-                @csrf 
-                <div class="col-md-3"> 
-                    <label class="form-label mb-0 fw-semibold">Ngày chiếu</label> 
-                    <input type="date" name="ngay" class="form-control" required> 
-                </div> 
-                <div class="col-md-3"> 
-                    <label class="form-label mb-0 fw-semibold">Phòng chiếu</label> 
-                    <select name="phong_id" class="form-select rounded-pill"> 
-                        <option value="">-- Tất cả phòng --</option> 
-                        @foreach ($phongs as $phong) 
-                        <option value="{{ $phong->id }}">{{ $phong->ten }}</option> 
-                        @endforeach </select> </div> <div class="col-md-3"> 
-                            <label class="form-label mb-0 fw-semibold">Trạng thái mới</label> 
-                            <select name="trang_thai" class="form-select rounded-pill" required> 
-                                <option value="hoat_dong">🟢 Hoạt động</option> 
-                                <option value="tam_dung">⏸️ Tạm dừng</option> 
-                                <option value="huy">❌ Hủy</option> </select> 
-                            </div> <div class="col-md-3"> 
-                                <label class="form-label mb-0 fw-semibold">Lý do (nếu có)</label> 
-                                <input type="text" name="ly_do_huy" class="form-control" placeholder="VD: Bảo trì, sự cố, ..."> 
-                            </div> 
-                            <div class="col-12 text-end mt-3"> 
-                                <button type="submit" class="btn btn-warning rounded-pill px-4 shadow-sm"> 
-                                    <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái hàng loạt </button> 
-                                </div> 
-                            </form> 
-                        </div> 
-                    </div>
 
     {{-- 📋 Danh sách suất chiếu --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">

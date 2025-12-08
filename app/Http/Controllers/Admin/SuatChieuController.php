@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
-use App\Models\GheSuatChieu;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -270,8 +270,9 @@ class SuatChieuController extends Controller
             ->groupBy('hang');
 
         // Lấy trạng thái ghế theo suất chiếu
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
-            ->pluck('trang_thai', 'ghe_id')
+        // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng)
+        $gheStatuses = Ghe::where('phong_id', $suatchieu->phong_id)
+            ->pluck('trang_thai', 'id')
             ->toArray();
 
         $giuTamIds = DB::table('ghe_giu_tam')
@@ -303,9 +304,12 @@ class SuatChieuController extends Controller
      */
     public function seatStatus($id)
     {
+        $suatchieu = SuatChieu::findOrFail($id);
+        
         // Tổng hợp trạng thái mới nhất
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
-            ->pluck('trang_thai', 'ghe_id')
+        // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng)
+        $gheStatuses = Ghe::where('phong_id', $suatchieu->phong_id)
+            ->pluck('trang_thai', 'id')
             ->toArray();
 
         $giuTamIds = DB::table('ghe_giu_tam')
@@ -557,33 +561,26 @@ class SuatChieuController extends Controller
 }
 
     /**
-     * 🎭 Cập nhật trạng thái ghế theo suất chiếu
+     * 🎭 Cập nhật trạng thái ghế theo phòng chiếu
+     * Lưu ý: Bảo trì ghế nên quản lý ở GheController (theo phòng), không phải theo suất chiếu
      */
     public function updateGheTrangThai(Request $request, $id)
     {
         $request->validate([
             'ghe_id' => 'required|exists:ghe,id',
-            'trang_thai' => 'required|in:hoat_dong,bao_tri,vo_hieu_hoa',
+            'trang_thai' => 'required|in:hoat_dong,bao_tri',
         ]);
 
         $suatChieu = SuatChieu::findOrFail($id);
+        $ghe = Ghe::findOrFail($request->ghe_id);
 
         // Kiểm tra ghế có thuộc phòng của suất chiếu không
-        $ghe = GheSuatChieu::where('suat_chieu_id', $id)
-            ->where('ghe_id', $request->ghe_id)
-            ->first();
-
-        if (!$ghe) {
-            // Nếu chưa có bản ghi, tạo mới
-            GheSuatChieu::create([
-                'suat_chieu_id' => $id,
-                'ghe_id' => $request->ghe_id,
-                'trang_thai' => $request->trang_thai,
-            ]);
-        } else {
-            // Cập nhật trạng thái
-            $ghe->update(['trang_thai' => $request->trang_thai]);
+        if ($ghe->phong_id !== $suatChieu->phong_id) {
+            return response()->json(['success' => false, 'message' => 'Ghế không thuộc phòng này'], 400);
         }
+
+        // Cập nhật trạng thái ghế ở bảng ghe (theo phòng)
+        $ghe->update(['trang_thai' => $request->trang_thai]);
 
         return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
     }
