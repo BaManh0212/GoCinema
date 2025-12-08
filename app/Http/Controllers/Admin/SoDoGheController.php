@@ -83,10 +83,8 @@ public function show1(Request $request)
         };
     }
 
-    // Ghế đã đặt
-    $trangThaiGhe = DB::table('ghe_suat_chieu')
-        ->where('suat_chieu_id', $suatChieu->id)
-        ->pluck('trang_thai', 'so_do_id'); // chú ý key phải đúng với matrix['id'] hoặc so_do_id
+    // Lấy trạng thái ghế từ bảng ghe (bảo trì là thuộc tính của phòng)
+    // Không cần query ghe_suat_chieu nữa
 
     // Combo
     // $combos = Combo::all();

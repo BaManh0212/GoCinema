@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\DonDatVe;
-use App\Models\GheSuatChieu;
+
 use App\Models\DonDatVeCombo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -45,12 +45,8 @@ class CancelPendingBookings extends Command
                 // Cập nhật trạng thái chi tiết vé thành 'da_huy'
                 $booking->chiTietVes()->update(['trang_thai' => 'da_huy']);
 
-                // Trả lại ghế: cập nhật trạng thái ghế trong GheSuatChieu về 'hoat_dong'
-                foreach ($booking->chiTietVes as $chiTietVe) {
-                    GheSuatChieu::where('suat_chieu_id', $booking->suat_chieu_id)
-                        ->where('ghe_id', $chiTietVe->ghe_id)
-                        ->update(['trang_thai' => 'hoat_dong']);
-                }
+                // Ghế sẽ tự động khả dụng vì không còn trong chi_tiet_ve
+                // Không cần cập nhật ghe_suat_chieu nữa vì đã xóa bảng này
 
                 // Trả lại combo: tăng lại số lượng combo
                 $donDatVeCombos = DonDatVeCombo::where('don_dat_ve_id', $booking->id)->get();

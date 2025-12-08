@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
-use App\Models\GheSuatChieu;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -177,61 +177,19 @@ class SuatChieuController extends Controller
         return back()->with('error', '⚠️ Không thể sửa suất chiếu đã bắt đầu hoặc đã kết thúc.');
     }
 
-    // --- Tiếp tục validate và update như bình thường ---
-    $phim_id = $request->input('phim_id');
-    if (!$phim_id || !Phim::find($phim_id)) {
-        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phim hợp lệ.');
-    }
-
-    $phong_id = $request->input('phong_id');
-    if (!$phong_id || !PhongChieu::find($phong_id)) {
-        return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
-    }
-
-    try {
-        $gio_bat_dau = Carbon::parse($request->input('gio_bat_dau'));
-        $gio_ket_thuc = Carbon::parse($request->input('gio_ket_thuc'));
-    } catch (\Exception $e) {
-        return back()->withInput()->with('error', '⚠️ Ngày/giờ không hợp lệ.');
-    }
-
-    if ($gio_ket_thuc->lt($gio_bat_dau)) {
-        return back()->withInput()->with('error', '❌ Ngày/giờ kết thúc phải sau ngày/giờ bắt đầu.');
-    }
-
+    // Only allow editing ticket price (gia_ve)
     $gia_ve = $request->input('gia_ve');
     if (!is_numeric($gia_ve) || $gia_ve < 0) {
         return back()->withInput()->with('error', '⚠️ Giá vé phải là số lớn hơn hoặc bằng 0.');
     }
 
-    // Kiểm tra trùng suất (bỏ qua chính suất đang update)
-    $trung = SuatChieu::where('phong_id', $phong_id)
-        ->where('id', '!=', $suatchieu->id)
-        ->where(function ($query) use ($gio_bat_dau, $gio_ket_thuc) {
-            $query->whereBetween('gio_bat_dau', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhereBetween('gio_ket_thuc', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhere(function ($q) use ($gio_bat_dau, $gio_ket_thuc) {
-                      $q->where('gio_bat_dau', '<=', $gio_bat_dau)
-                        ->where('gio_ket_thuc', '>=', $gio_ket_thuc);
-                  });
-        })
-        ->exists();
-
-    if ($trung) {
-        return back()->withInput()->with('error', '⚠️ Thời gian chiếu bị trùng với một suất chiếu khác trong cùng phòng!');
-    }
-
-    // Cập nhật
+    // Cập nhật chỉ giá vé
     $suatchieu->update([
-        'phim_id' => $phim_id,
-        'phong_id' => $phong_id,
-        'gio_bat_dau' => $gio_bat_dau,
-        'gio_ket_thuc' => $gio_ket_thuc,
         'gia_ve' => $gia_ve,
     ]);
 
     return redirect()->route('staff.suatchieu.index')
-                     ->with('success', '✅ Cập nhật suất chiếu thành công!');
+                     ->with('success', '✅ Cập nhật giá vé thành công!');
 }
 
     /**
@@ -270,8 +228,9 @@ class SuatChieuController extends Controller
             ->groupBy('hang');
 
         // Lấy trạng thái ghế theo suất chiếu
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
-            ->pluck('trang_thai', 'ghe_id')
+        // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng)
+        $gheStatuses = Ghe::where('phong_id', $suatchieu->phong_id)
+            ->pluck('trang_thai', 'id')
             ->toArray();
 
         $giuTamIds = DB::table('ghe_giu_tam')
@@ -293,9 +252,12 @@ class SuatChieuController extends Controller
      */
     public function seatStatus($id)
     {
+        $suatchieu = SuatChieu::findOrFail($id);
+        
         // Tổng hợp trạng thái mới nhất
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $id)
-            ->pluck('trang_thai', 'ghe_id')
+        // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng)
+        $gheStatuses = Ghe::where('phong_id', $suatchieu->phong_id)
+            ->pluck('trang_thai', 'id')
             ->toArray();
 
         $giuTamIds = DB::table('ghe_giu_tam')
@@ -371,14 +333,15 @@ class SuatChieuController extends Controller
         if (!empty($gioCoDinh)) {
             foreach ($gioCoDinh as $gio) {
                 $start = Carbon::parse($ngayStr . ' ' . $gio);
-                $end = (clone $start)->addMinutes($thoiLuong + $khoangNghi);
+                $end = (clone $start)->addMinutes($thoiLuong); // Thời gian kết thúc phim (không bao gồm dọn phòng)
 
                 // Bỏ qua nếu suất chiếu kết thúc sau 23:59
                 if ($end->gt($endOfDay)) continue;
 
-                // Kiểm tra trùng với DB
+                // Kiểm tra trùng với DB (bao gồm cả thời gian dọn phòng)
+                $endWithCleanup = (clone $end)->addMinutes($khoangNghi);
                 $conflict = SuatChieu::where('phong_id', $phong_id)
-                    ->where('gio_bat_dau', '<', $end)
+                    ->where('gio_bat_dau', '<', $endWithCleanup)
                     ->where('gio_ket_thuc', '>', $start)
                     ->exists();
 
@@ -399,12 +362,13 @@ class SuatChieuController extends Controller
             $start = Carbon::parse($ngayStr . ' ' . $gio_bat_dau_ngay);
 
             while ($start->lte(Carbon::parse($ngayStr . ' 23:00'))) {
-                $end = (clone $start)->addMinutes($thoiLuong);
+                $end = (clone $start)->addMinutes($thoiLuong); // Thời gian kết thúc phim
                 if ($end->gt($endOfDay)) break;
 
-                // Kiểm tra trùng với DB
+                // Kiểm tra trùng với DB (bao gồm cả thời gian dọn phòng)
+                $endWithCleanup = (clone $end)->addMinutes($khoangNghi);
                 $conflict = SuatChieu::where('phong_id', $phong_id)
-                    ->where('gio_bat_dau', '<', $end)
+                    ->where('gio_bat_dau', '<', $endWithCleanup)
                     ->where('gio_ket_thuc', '>', $start)
                     ->exists();
 
@@ -420,7 +384,8 @@ class SuatChieuController extends Controller
                     'phong_ten' => $phong->ten,
                 ];
 
-                $start = $end->addMinutes($khoangNghi);
+                // Suất chiếu tiếp theo bắt đầu sau khi dọn phòng xong
+                $start = $endWithCleanup;
             }
         }
     }
@@ -538,33 +503,26 @@ class SuatChieuController extends Controller
 }
 
     /**
-     * 🎭 Cập nhật trạng thái ghế theo suất chiếu
+     * 🎭 Cập nhật trạng thái ghế theo phòng chiếu
+     * Lưu ý: Bảo trì ghế nên quản lý ở GheController (theo phòng), không phải theo suất chiếu
      */
     public function updateGheTrangThai(Request $request, $id)
     {
         $request->validate([
             'ghe_id' => 'required|exists:ghe,id',
-            'trang_thai' => 'required|in:hoat_dong,bao_tri,vo_hieu_hoa',
+            'trang_thai' => 'required|in:hoat_dong,bao_tri',
         ]);
 
         $suatChieu = SuatChieu::findOrFail($id);
+        $ghe = Ghe::findOrFail($request->ghe_id);
 
         // Kiểm tra ghế có thuộc phòng của suất chiếu không
-        $ghe = GheSuatChieu::where('suat_chieu_id', $id)
-            ->where('ghe_id', $request->ghe_id)
-            ->first();
-
-        if (!$ghe) {
-            // Nếu chưa có bản ghi, tạo mới
-            GheSuatChieu::create([
-                'suat_chieu_id' => $id,
-                'ghe_id' => $request->ghe_id,
-                'trang_thai' => $request->trang_thai,
-            ]);
-        } else {
-            // Cập nhật trạng thái
-            $ghe->update(['trang_thai' => $request->trang_thai]);
+        if ($ghe->phong_id !== $suatChieu->phong_id) {
+            return response()->json(['success' => false, 'message' => 'Ghế không thuộc phòng này'], 400);
         }
+
+        // Cập nhật trạng thái ghế ở bảng ghe (theo phòng)
+        $ghe->update(['trang_thai' => $request->trang_thai]);
 
         return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái ghế thành công']);
     }

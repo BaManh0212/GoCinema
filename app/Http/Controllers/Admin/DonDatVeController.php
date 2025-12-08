@@ -13,6 +13,7 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Writer;
 use App\Models\CheckinPrintLog;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DonDatVeController extends Controller
 {
@@ -77,6 +78,15 @@ public function print($id)
             ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
 
+    // Check if screening time has passed and order is not yet checked in
+    $now = Carbon::now();
+    $thoiGianBatDau = Carbon::parse($donVe->suatChieu->gio_bat_dau);
+    
+    if ($now->gte($thoiGianBatDau) && $donVe->trang_thai !== 'da_checkin') {
+        return redirect()->route('admin.donve.index')
+            ->withErrors(['error' => 'Không thể in vé sau khi suất chiếu bắt đầu nếu chưa check-in.']);
+    }
+
     // Log print action
     $user = Auth::user();
     CheckinPrintLog::create([
@@ -84,6 +94,29 @@ public function print($id)
         'don_dat_ve_id' => $donVe->id,
         'action_type' => 'print',
     ]);
+
+    // Update order status to 'da_checkin' if currently 'da_thanh_toan'
+    if ($donVe->trang_thai === 'da_thanh_toan') {
+        DB::beginTransaction();
+        try {
+            // Update order status
+            $donVe->trang_thai = 'da_checkin';
+            $donVe->save();
+
+            // Update all seat details status to 'da_su_dung'
+            foreach ($donVe->chiTietVes as $ct) {
+                if ($ct->trang_thai !== 'da_su_dung') {
+                    $ct->trang_thai = 'da_su_dung';
+                    $ct->save();
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Failed to update status when printing: ' . $e->getMessage());
+        }
+    }
 
     // Tạo writer dùng SVG backend
     $renderer = new ImageRenderer(
@@ -220,7 +253,15 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
     }
 
-    // Kiểm tra trạng thái thanh toán
+    // Check if already checked in
+    if ($don->trang_thai === 'da_checkin') {
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Đơn này đã được check-in rồi.'], 422);
+        }
+        return back()->withErrors(['ma_don' => 'Đơn này đã được check-in rồi.']);
+    }
+
+    // Kiểm tra trạng thái thanh toán - chỉ 'da_thanh_toan' mới được check-in
     if ($don->trang_thai !== 'da_thanh_toan') {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);

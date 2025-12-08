@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use App\Mail\BookingConfirmation;
 use App\Models\SuatChieu;
 use App\Models\Ghe;
-use App\Models\GheSuatChieu;
+
 use App\Models\DonDatVe;
 use App\Models\ChiTietVe;
 use App\Models\MaGiamGia;
@@ -65,9 +65,9 @@ class BookingController extends Controller
             ->get()
             ->groupBy('hang');
 
-        // Lấy trạng thái ghế theo suất chiếu
-        $gheStatuses = GheSuatChieu::where('suat_chieu_id', $suatChieuId)
-            ->pluck('trang_thai', 'ghe_id')
+        // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng, không phải suất chiếu)
+        $gheStatuses = Ghe::where('phong_id', $suatChieu->phong_id)
+            ->pluck('trang_thai', 'id')
             ->toArray();
 
         // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
@@ -247,13 +247,76 @@ class BookingController extends Controller
                     throw new \Exception('Ghế ' . Ghe::find($gheId)->so_ghe_ngoi . ' đang được giữ tạm.');
                 }
 
-                // Kiểm tra trạng thái ghế theo suất chiếu
-                $gheStatus = GheSuatChieu::where('suat_chieu_id', $suatChieuId)
-                    ->where('ghe_id', $gheId)
-                    ->value('trang_thai');
+                // Kiểm tra trạng thái ghế (bảo trì là thuộc tính của phòng)
+                $ghe = Ghe::find($gheId);
+                if ($ghe->trang_thai === 'bao_tri') {
+                    throw new \Exception('Ghế ' . $ghe->so_ghe_ngoi . ' đang bảo trì.');
+                }
+            }
 
-                if ($gheStatus === 'bao_tri' || $gheStatus === 'vo_hieu_hoa') {
-                    throw new \Exception('Ghế ' . Ghe::find($gheId)->so_ghe_ngoi . ' không khả dụng.');
+            // Kiểm tra quy tắc: Không cho đặt 1 vé ở ghế ngoài cùng nếu sẽ bỏ trống 1 ghế lẻ
+            if (count($gheIds) === 1) {
+                $gheId = $gheIds[0];
+                $ghe = Ghe::find($gheId);
+                
+                // Lấy tất cả ghế trong hàng
+                $ghesTrongHang = Ghe::where('phong_id', $ghe->phong_id)
+                    ->where('hang', $ghe->hang)
+                    ->orderBy('cot')
+                    ->get();
+                
+                // Lấy danh sách ghế đã đặt hoặc giữ tạm trong hàng này
+                $gheIdsInRow = $ghesTrongHang->pluck('id')->toArray();
+                $gheDaDatTrongHang = ChiTietVe::where('suat_chieu_id', $suatChieuId)
+                    ->whereIn('ghe_id', $gheIdsInRow)
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
+                    ->pluck('ghe_id')
+                    ->toArray();
+                
+                $gheGiuTamTrongHang = DB::table('ghe_giu_tam')
+                    ->where('suat_chieu_id', $suatChieuId)
+                    ->whereIn('ghe_id', $gheIdsInRow)
+                    ->where('het_han', '>', Carbon::now())
+                    ->where('nguoi_dung_id', '!=', auth()->id())
+                    ->pluck('ghe_id')
+                    ->toArray();
+                
+                $gheKhongKhaDung = array_unique(array_merge($gheDaDatTrongHang, $gheGiuTamTrongHang));
+                
+                // Tìm vị trí của ghế đang chọn trong danh sách
+                $viTri = $ghesTrongHang->search(function($item) use ($gheId) {
+                    return $item->id == $gheId;
+                });
+                
+                // Đếm số ghế khả dụng liên tiếp bên trái
+                $soGheKhaDungBenTrai = 0;
+                for ($i = $viTri - 1; $i >= 0; $i--) {
+                    $gheCheck = $ghesTrongHang[$i];
+                    if (in_array($gheCheck->id, $gheKhongKhaDung) || $gheCheck->trang_thai === 'bao_tri') {
+                        break;
+                    }
+                    $soGheKhaDungBenTrai++;
+                }
+                
+                // Đếm số ghế khả dụng liên tiếp bên phải
+                $soGheKhaDungBenPhai = 0;
+                for ($i = $viTri + 1; $i < count($ghesTrongHang); $i++) {
+                    $gheCheck = $ghesTrongHang[$i];
+                    if (in_array($gheCheck->id, $gheKhongKhaDung) || $gheCheck->trang_thai === 'bao_tri') {
+                        break;
+                    }
+                    $soGheKhaDungBenPhai++;
+                }
+                
+                // Nếu có đúng 1 ghế khả dụng bên trái hoặc bên phải -> Không cho đặt
+                if ($soGheKhaDungBenTrai === 1) {
+                    $gheBenTrai = $ghesTrongHang[$viTri - 1];
+                    throw new \Exception('Đặt 1 vé ở vị trí này sẽ bỏ trống ghế ' . $gheBenTrai->so_ghe_ngoi . '. Vui lòng chọn ghế khác hoặc đặt thêm ghế.');
+                }
+                
+                if ($soGheKhaDungBenPhai === 1) {
+                    $gheBenPhai = $ghesTrongHang[$viTri + 1];
+                    throw new \Exception('Đặt 1 vé ở vị trí này sẽ bỏ trống ghế ' . $gheBenPhai->so_ghe_ngoi . '. Vui lòng chọn ghế khác hoặc đặt thêm ghế.');
                 }
             }
 
@@ -392,6 +455,69 @@ class BookingController extends Controller
                 if ($giuTamKhac) {
                     $ghe = Ghe::find($gheId);
                     throw new \Exception('Ghế ' . $ghe->so_ghe_ngoi . ' đang được giữ tạm bởi người khác.');
+                }
+            }
+
+            // Kiểm tra quy tắc: Không cho đặt 1 vé ở ghế ngoài cùng nếu sẽ bỏ trống 1 ghế lẻ
+            if (count($gheIds) === 1) {
+                $gheId = $gheIds[0];
+                $ghe = Ghe::find($gheId);
+                
+                $ghesTrongHang = Ghe::where('phong_id', $suatChieu->phong_id)
+                    ->where('hang', $ghe->hang)
+                    ->orderBy('cot')
+                    ->get();
+                
+                $gheIdsInRow = $ghesTrongHang->pluck('id')->toArray();
+                $gheDaDatTrongHang = ChiTietVe::where('suat_chieu_id', $suatChieuId)
+                    ->whereIn('ghe_id', $gheIdsInRow)
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
+                    ->pluck('ghe_id')
+                    ->toArray();
+                
+                $gheGiuTamTrongHang = DB::table('ghe_giu_tam')
+                    ->where('suat_chieu_id', $suatChieuId)
+                    ->whereIn('ghe_id', $gheIdsInRow)
+                    ->where('het_han', '>', Carbon::now())
+                    ->where('nguoi_dung_id', '!=', auth()->id())
+                    ->pluck('ghe_id')
+                    ->toArray();
+                
+                $gheKhongKhaDung = array_unique(array_merge($gheDaDatTrongHang, $gheGiuTamTrongHang));
+                
+                $viTri = $ghesTrongHang->search(function($item) use ($gheId) {
+                    return $item->id == $gheId;
+                });
+                
+                // Đếm số ghế khả dụng liên tiếp bên trái
+                $soGheKhaDungBenTrai = 0;
+                for ($i = $viTri - 1; $i >= 0; $i--) {
+                    $gheCheck = $ghesTrongHang[$i];
+                    if (in_array($gheCheck->id, $gheKhongKhaDung) || $gheCheck->trang_thai === 'bao_tri') {
+                        break;
+                    }
+                    $soGheKhaDungBenTrai++;
+                }
+                
+                // Đếm số ghế khả dụng liên tiếp bên phải
+                $soGheKhaDungBenPhai = 0;
+                for ($i = $viTri + 1; $i < count($ghesTrongHang); $i++) {
+                    $gheCheck = $ghesTrongHang[$i];
+                    if (in_array($gheCheck->id, $gheKhongKhaDung) || $gheCheck->trang_thai === 'bao_tri') {
+                        break;
+                    }
+                    $soGheKhaDungBenPhai++;
+                }
+                
+                // Nếu có đúng 1 ghế khả dụng bên trái hoặc bên phải -> Không cho đặt
+                if ($soGheKhaDungBenTrai === 1) {
+                    $gheBenTrai = $ghesTrongHang[$viTri - 1];
+                    throw new \Exception('Đặt 1 vé ở vị trí này sẽ bỏ trống ghế ' . $gheBenTrai->so_ghe_ngoi . '. Vui lòng chọn ghế khác hoặc đặt thêm ghế.');
+                }
+                
+                if ($soGheKhaDungBenPhai === 1) {
+                    $gheBenPhai = $ghesTrongHang[$viTri + 1];
+                    throw new \Exception('Đặt 1 vé ở vị trí này sẽ bỏ trống ghế ' . $gheBenPhai->so_ghe_ngoi . '. Vui lòng chọn ghế khác hoặc đặt thêm ghế.');
                 }
             }
 
@@ -1239,15 +1365,8 @@ class BookingController extends Controller
                 // Xóa đơn đặt vé
                 $order->delete();
 
-                // Trả ghế về trạng thái trống trong GheSuatChieu
-                foreach ($gheIds as $gheId) {
-                    $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $suatChieuId)
-                        ->where('ghe_id', $gheId)
-                        ->first();
-                    if ($gheSuatChieu) {
-                        $gheSuatChieu->update(['trang_thai' => 'hoat_dong']);
-                    }
-                }
+                // Ghế sẽ tự động khả dụng vì không còn trong chi_tiet_ve
+                // Không cần cập nhật ghe_suat_chieu nữa vì đã xóa bảng này
 
                 Log::info('Auto-deleted expired unpaid order (completely removed)', [
                     'order_id' => $orderId,
@@ -1394,16 +1513,8 @@ class BookingController extends Controller
                 ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
                 ->delete();
 
-            // Trả ghế về trạng thái trống (hoat_dong) trong GheSuatChieu
-            foreach ($gheIds as $gheId) {
-                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
-                    ->where('ghe_id', $gheId)
-                    ->first();
-                if ($gheSuatChieu) {
-                    $gheSuatChieu->trang_thai = 'hoat_dong';
-                    $gheSuatChieu->save();
-                }
-            }
+            // Ghế sẽ tự động khả dụng vì không còn trong chi_tiet_ve
+            // Không cần cập nhật ghe_suat_chieu nữa vì đã xóa bảng này
 
             DB::commit();
 
@@ -1589,16 +1700,8 @@ class BookingController extends Controller
             // Xóa đơn đặt vé
             $donDatVe->delete();
 
-            // Trả ghế về trạng thái trống (hoat_dong) trong GheSuatChieu
-            foreach ($gheIds as $gheId) {
-                $gheSuatChieu = GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
-                    ->where('ghe_id', $gheId)
-                    ->first();
-                if ($gheSuatChieu) {
-                    $gheSuatChieu->trang_thai = 'hoat_dong';
-                    $gheSuatChieu->save();
-                }
-            }
+            // Ghế sẽ tự động khả dụng vì không còn trong chi_tiet_ve
+            // Không cần cập nhật ghe_suat_chieu nữa vì đã xóa bảng này
 
             DB::commit();
             Log::info('Booking completely deleted due to MoMo payment failure', [
@@ -1723,11 +1826,8 @@ public function vnpayReturn(Request $request)
         DB::table('don_dat_ve_combo')->where('don_dat_ve_id', $id)->delete();
         $donDatVe->delete();
 
-        foreach ($gheIds as $gheId) {
-            GheSuatChieu::where('suat_chieu_id', $donDatVe->suat_chieu_id)
-                ->where('ghe_id', $gheId)
-                ->update(['trang_thai' => 'hoat_dong']);
-        }
+        // Ghế sẽ tự động khả dụng vì không còn trong chi_tiet_ve
+        // Không cần cập nhật ghe_suat_chieu nữa vì đã xóa bảng này
         DB::commit();
     } catch (\Exception $e) {
         DB::rollback();

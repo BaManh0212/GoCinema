@@ -8,13 +8,15 @@ use App\Models\Phim;
 use App\Models\SuatChieu;
 use App\Models\Ghe;
 use App\Models\ChiTietVe;
-use App\Models\GheSuatChieu;
+
 use App\Models\Combo;
 use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -72,6 +74,15 @@ class DonDatVeController extends Controller
             ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
     }
 
+    // Check if screening time has passed and order is not yet checked in
+    $now = Carbon::now();
+    $thoiGianBatDau = Carbon::parse($donVe->suatChieu->gio_bat_dau);
+    
+    if ($now->gte($thoiGianBatDau) && $donVe->trang_thai !== 'da_checkin') {
+        return redirect()->route('staff.donve.index')
+            ->withErrors(['error' => 'Không thể in vé sau khi suất chiếu bắt đầu nếu chưa check-in.']);
+    }
+
     // Log print action using CheckinPrintLog within try-catch
     try {
         \App\Models\CheckinPrintLog::create([
@@ -81,6 +92,29 @@ class DonDatVeController extends Controller
         ]);
     } catch (\Throwable $e) {
         \Log::error('Failed to log print action in DonDatVeController: ' . $e->getMessage());
+    }
+
+    // Update order status to 'da_checkin' if currently 'da_thanh_toan'
+    if ($donVe->trang_thai === 'da_thanh_toan') {
+        DB::beginTransaction();
+        try {
+            // Update order status
+            $donVe->trang_thai = 'da_checkin';
+            $donVe->save();
+
+            // Update all seat details status to 'da_su_dung'
+            foreach ($donVe->chiTietVes as $ct) {
+                if ($ct->trang_thai !== 'da_su_dung') {
+                    $ct->trang_thai = 'da_su_dung';
+                    $ct->save();
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Failed to update status when printing: ' . $e->getMessage());
+        }
     }
 
     // Tạo writer dùng SVG backend
@@ -223,7 +257,15 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
     }
 
-    // Kiểm tra trạng thái thanh toán
+    // Check if already checked in
+    if ($don->trang_thai === 'da_checkin') {
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Đơn này đã được check-in rồi.'], 422);
+        }
+        return back()->withErrors(['ma_don' => 'Đơn này đã được check-in rồi.']);
+    }
+
+    // Kiểm tra trạng thái thanh toán - chỉ 'da_thanh_toan' mới được check-in
     if ($don->trang_thai !== 'da_thanh_toan') {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);
@@ -390,9 +432,9 @@ public function selectSeats($suat_chieu_id)
         ->get()
         ->groupBy('hang');
 
-    // Lấy trạng thái ghế theo suất chiếu
-    $gheStatuses = GheSuatChieu::where('suat_chieu_id', $suat_chieu_id)
-        ->pluck('trang_thai', 'ghe_id')
+    // Lấy trạng thái ghế theo phòng chiếu (bảo trì là thuộc tính của phòng)
+    $gheStatuses = Ghe::where('phong_id', $suatChieu->phong_id)
+        ->pluck('trang_thai', 'id')
         ->toArray();
 
     // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
@@ -497,14 +539,10 @@ public function selectSeats($suat_chieu_id)
                     throw new \Exception('Ghế ' . $ghe->so_ghe_ngoi . ' đang được giữ tạm.');
                 }
 
-                // Kiểm tra trạng thái ghế theo suất chiếu
-                $gheStatus = GheSuatChieu::where('suat_chieu_id', $suatChieuId)
-                    ->where('ghe_id', $gheId)
-                    ->value('trang_thai');
-
-                if ($gheStatus === 'bao_tri' || $gheStatus === 'vo_hieu_hoa') {
-                    $ghe = Ghe::find($gheId);
-                    throw new \Exception('Ghế ' . $ghe->so_ghe_ngoi . ' không khả dụng.');
+                // Kiểm tra trạng thái ghế (bảo trì là thuộc tính của phòng)
+                $ghe = Ghe::find($gheId);
+                if ($ghe->trang_thai === 'bao_tri') {
+                    throw new \Exception('Ghế ' . $ghe->so_ghe_ngoi . ' đang bảo trì.');
                 }
             }
 
@@ -539,26 +577,20 @@ public function selectSeats($suat_chieu_id)
 
             $tongTien = $tongTienVe + $tongTienCombo;
 
-            // Tạo đơn đặt vé với trạng thái đã thanh toán (thanh toán tại quầy)
+            // Always create booking with 'cho_thanh_toan' status
+            // Payment method will be selected on the payment page
             $donDatVe = DonDatVe::create([
                 'ma_don' => 'DV' . time() . rand(100, 999),
                 'nguoi_dung_id' => Auth::id() ?? 1, // Use logged-in user ID or fallback to 1 (system user)
                 'suat_chieu_id' => $suatChieuId,
                 'ma_giam_gia_id' => null, // Không áp dụng mã giảm giá cho đặt vé tại quầy
                 'tong_tien' => $tongTien,
-                'trang_thai' => 'da_thanh_toan', // Đã thanh toán ngay
-                'thoi_gian_thanh_toan' => Carbon::now(),
-                'phuong_thuc_thanh_toan' => $request->payment_method, // Phương thức thanh toán từ request
+                'trang_thai' => 'cho_thanh_toan', // Always pending payment initially
+                'thoi_gian_thanh_toan' => null,
+                'phuong_thuc_thanh_toan' => null, // Will be set on payment page
             ]);
 
-            // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
-            $diemTichLuy = floor($tongTien / 1000);
-            if ($diemTichLuy > 0) {
-                $user = $donDatVe->nguoiDung;
-                $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
-            }
-
-            // Tạo chi tiết vé với trạng thái đã thanh toán
+            // Tạo chi tiết vé with 'cho_thanh_toan' status
             foreach ($gheIds as $gheId) {
                 $ghe = Ghe::find($gheId);
                 ChiTietVe::create([
@@ -567,11 +599,11 @@ public function selectSeats($suat_chieu_id)
                     'ghe_id' => $gheId,
                     'gia' => $ghePrices[$gheId],
                     'loai_ghe' => $ghe->loai,
-                    'trang_thai' => 'da_thanh_toan',
+                    'trang_thai' => 'cho_thanh_toan',
                 ]);
             }
 
-            // Tạo chi tiết combo nếu có
+            // Tạo chi tiết combo nếu có (không trừ kho ngay, sẽ trừ khi thanh toán)
             if (!empty($donDatVeCombos)) {
                 foreach ($donDatVeCombos as $comboData) {
                     $combo = Combo::find($comboData['combo_id']);
@@ -584,8 +616,7 @@ public function selectSeats($suat_chieu_id)
                         'so_luong' => $comboData['so_luong'],
                         'gia' => $comboData['gia'],
                     ]);
-                    // Decrement combo quantity
-                    $combo->decrement('so_luong', $comboData['so_luong']);
+                    // Do NOT decrement combo quantity here - will be done on payment
                 }
             }
 
@@ -595,7 +626,7 @@ public function selectSeats($suat_chieu_id)
                 'success' => true,
                 'message' => 'Đặt vé thành công!',
                 'don_dat_ve_id' => $donDatVe->id,
-                'redirect' => route('staff.donve.confirm', $donDatVe->id),
+                'redirect' => route('staff.donve.payment', $donDatVe->id),
             ]);
 
         } catch (\Exception $e) {
@@ -703,5 +734,325 @@ public function selectSeats($suat_chieu_id)
         }
 
         return true;
+    }
+
+    /**
+     * Hiển thị trang chọn phương thức thanh toán (Momo)
+     */
+    public function payment($id)
+    {
+        $donDatVe = DonDatVe::with(['suatChieu.phim', 'suatChieu.phong.rap', 'chiTietVes'])
+            ->findOrFail($id);
+
+        if ($donDatVe->trang_thai !== 'cho_thanh_toan') {
+            return redirect()->route('staff.donve.show', $id)
+                ->with('info', 'Đơn này đã được thanh toán rồi.');
+        }
+
+        // Lấy combo đã đặt
+        $combos = DB::table('don_dat_ve_combo as ddvc')
+            ->join('combo', 'combo.id', '=', 'ddvc.combo_id')
+            ->where('ddvc.don_dat_ve_id', $id)
+            ->select('combo.ten', 'ddvc.so_luong', 'ddvc.gia')
+            ->get();
+
+        return view('staff.donve.payment', compact('donDatVe', 'combos'));
+    }
+
+    /**
+     * Xử lý yêu cầu thanh toán (Cash hoặc MoMo)
+     */
+    public function processPayment(Request $request, $id)
+    {
+        Log::info('Staff processPayment request', ['id' => $id, 'payment_method' => $request->payment_method]);
+        
+        $request->validate([
+            'payment_method' => 'required|in:cash,momo',
+        ]);
+
+        $donDatVe = DonDatVe::findOrFail($id);
+
+        if (!in_array($donDatVe->trang_thai, ['cho_thanh_toan', 'da_thanh_toan'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn này không thể thanh toán.',
+            ], 400);
+        }
+
+        $paymentMethod = $request->payment_method;
+
+        //===== Xử lý thanh toán tiền mặt ======//
+        if ($paymentMethod === 'cash') {
+            DB::beginTransaction();
+            try {
+                // Update booking status to paid
+                $donDatVe->update([
+                    'trang_thai' => 'da_thanh_toan',
+                    'thoi_gian_thanh_toan' => Carbon::now(),
+                    'phuong_thuc_thanh_toan' => 'cash',
+                ]);
+
+                // Update ticket details status
+                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+                // Decrement combo inventory
+                $donDatVe->load('combos');
+                foreach ($donDatVe->combos as $combo) {
+                    $soLuongMua = (int) ($combo->pivot->so_luong ?? 0);
+                    if ($soLuongMua <= 0) continue;
+                    if ($combo->so_luong < $soLuongMua) {
+                        throw new \Exception("Combo '{$combo->ten}' không đủ số lượng (cần {$soLuongMua}, còn {$combo->so_luong}).");
+                    }
+                    $combo->so_luong = $combo->so_luong - $soLuongMua;
+                    $combo->save();
+                }
+
+                // Process loyalty points: 1 point per 1000 VND
+                $diemTichLuy = floor($donDatVe->tong_tien / 1000);
+                if ($diemTichLuy > 0) {
+                    $user = $donDatVe->nguoiDung;
+                    $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+                }
+
+                DB::commit();
+
+                Log::info('Cash payment successful (Staff)', ['order_id' => $donDatVe->id]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Thanh toán tiền mặt thành công!',
+                    'redirect' => route('staff.donve.show', $donDatVe->id),
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Error processing cash payment (Staff): ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi xử lý thanh toán: ' . $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        //===== Xử lý thanh toán MoMo ======//
+        if ($paymentMethod === 'momo') {
+            $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+
+            $partnerCode = env('MOMO_PARTNER_CODE', 'MOMOBKUN20180529');
+            $accessKey = env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j');
+            $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
+
+            $orderId = 'STAFF_' . $donDatVe->id . '_' . time();
+            $amount = (int) round($donDatVe->tong_tien);
+            $orderInfo = 'Thanh toán đơn ' . $donDatVe->ma_don;
+            $redirectUrl = route('staff.donve.momo-return');
+            $ipnUrl = route('staff.donve.momo-callback');
+            $requestId = (string) time();
+            $requestType = 'payWithATM';
+            $extraData = '';
+
+            $rawHash = "accessKey={$accessKey}&amount={$amount}&extraData={$extraData}&ipnUrl={$ipnUrl}&orderId={$orderId}&orderInfo={$orderInfo}&partnerCode={$partnerCode}&redirectUrl={$redirectUrl}&requestId={$requestId}&requestType={$requestType}";
+            $signature = hash_hmac('sha256', $rawHash, $secretKey);
+
+            $data = [
+                'partnerCode' => $partnerCode,
+                'accessKey'   => $accessKey,
+                'requestId'   => $requestId,
+                'amount'      => (string)$amount,
+                'orderId'     => $orderId,
+                'orderInfo'   => $orderInfo,
+                'redirectUrl' => $redirectUrl,
+                'ipnUrl'      => $ipnUrl,
+                'lang'        => 'vi',
+                'extraData'   => $extraData,
+                'requestType' => $requestType,
+                'signature'   => $signature,
+            ];
+
+            Log::info('MoMo request (Staff)', ['orderId' => $orderId, 'amount' => $amount]);
+
+            try {
+                $response = Http::timeout(10)->post($endpoint, $data)->json();
+                Log::info('MoMo response (Staff)', $response);
+            } catch (\Exception $e) {
+                Log::error('MoMo request error (Staff): ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi kết nối MoMo: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            if (!empty($response) && isset($response['resultCode']) && $response['resultCode'] == 0 && !empty($response['payUrl'])) {
+                // Lưu phương thức thanh toán TRƯỚC khi redirect
+                DB::beginTransaction();
+                try {
+                    $donDatVe->update([
+                        'phuong_thuc_thanh_toan' => 'momo',
+                    ]);
+                    DB::commit();
+                    
+                    Log::info('MoMo payment initiated (Staff)', ['order_id' => $donDatVe->id, 'orderId' => $orderId]);
+                    
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => true, 'payUrl' => $response['payUrl']]);
+                    }
+                    return redirect()->away($response['payUrl']);
+                    
+                } catch (\Exception $e) {
+                    DB::rollback();
+                    Log::error('Error updating MoMo phuong_thuc (Staff): ' . $e->getMessage());
+                    return response()->json(['success' => false, 'message' => 'Lỗi cập nhật phương thức thanh toán'], 500);
+                }
+            }
+
+            Log::warning('MoMo create failed (Staff)', $response ?? []);
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tạo thanh toán MoMo: ' . ($response['message'] ?? 'Không xác định'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Xử lý callback từ MoMo IPN
+     */
+    public function momoCallback(Request $request)
+    {
+        Log::info('MoMo IPN received (Staff)', $request->all());
+
+        $orderId = $request->input('orderId');
+        $resultCode = $request->input('resultCode');
+
+        if (!$orderId) {
+            Log::warning('MoMo IPN missing orderId (Staff)', $request->all());
+            return response('Missing orderId', 400);
+        }
+
+        // Extract ID từ orderId (STAFF_23_timestamp)
+        $parts = explode('_', $orderId);
+        if (count($parts) < 2 || $parts[0] !== 'STAFF') {
+            Log::warning('MoMo IPN invalid orderId format (Staff): ' . $orderId);
+            return response('Invalid orderId', 400);
+        }
+        
+        $id = (int) $parts[1];
+        $donDatVe = DonDatVe::find($id);
+        
+        if (!$donDatVe) {
+            Log::warning('MoMo IPN order not found (Staff): ' . $orderId);
+            return response('Order not found', 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            // resultCode = 0: thành công
+            if ((string)$resultCode === '0') {
+                Log::info('MoMo IPN payment successful (Staff)', ['orderId' => $orderId]);
+                
+                // Chỉ cập nhật nếu chưa thanh toán
+                if ($donDatVe->trang_thai !== 'da_thanh_toan') {
+                    $donDatVe->update([
+                        'trang_thai' => 'da_thanh_toan',
+                        'thoi_gian_thanh_toan' => Carbon::now(),
+                        'phuong_thuc_thanh_toan' => 'momo',
+                    ]);
+                    $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+                    // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+                    $diemTichLuy = floor($donDatVe->tong_tien / 1000);
+                    if ($diemTichLuy > 0) {
+                        $user = $donDatVe->nguoiDung;
+                        $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+                    }
+
+                    Log::info('Order marked paid via MoMo callback (Staff)', ['orderId' => $orderId, 'don_dat_ve_id' => $id]);
+                } else {
+                    Log::info('Order already marked paid, skipping update (Staff)', ['orderId' => $orderId]);
+                }
+                
+                DB::commit();
+                return response('OK', 200);
+            }
+
+            // resultCode !== 0: thanh toán thất bại
+            Log::warning('MoMo IPN returned failure (Staff)', ['orderId' => $orderId, 'resultCode' => $resultCode]);
+            DB::commit();
+            return response('Ignored', 200);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error processing MoMo callback (Staff): ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            return response('Internal error', 500);
+        }
+    }
+
+    /**
+     * Xử lý redirect từ MoMo sau khi thanh toán
+     */
+    public function momoReturn(Request $request)
+    {
+        Log::info('MoMo return (GET redirect) (Staff)', $request->all());
+        
+        $orderId = $request->query('orderId');
+        $resultCode = $request->query('resultCode');
+
+        if (!$orderId) {
+            return redirect()->route('staff.donve.index')->with('error', 'Thiếu dữ liệu trả về từ MoMo.');
+        }
+
+        // Extract ID từ orderId
+        $parts = explode('_', $orderId);
+        if (count($parts) < 2 || $parts[0] !== 'STAFF') {
+            return redirect()->route('staff.donve.index')->with('error', 'Dữ liệu orderId không hợp lệ.');
+        }
+
+        $id = (int) $parts[1];
+        $donDatVe = DonDatVe::find($id);
+
+        if (!$donDatVe) {
+            return redirect()->route('staff.donve.index')->with('error', 'Đơn đặt vé không tồn tại.');
+        }
+
+        // ✅ FIX: resultCode = 0 => thanh toán thành công => CẬP NHẬT TRẠNG THÁI NGAY
+        if ((string)$resultCode === '0') {
+            Log::info('MoMo payment successful, updating status (Staff)', ['id' => $id, 'orderId' => $orderId]);
+            
+            DB::beginTransaction();
+            try {
+                // ✅ Cập nhật trạng thái ngay
+                $donDatVe->update([
+                    'trang_thai' => 'da_thanh_toan',
+                    'thoi_gian_thanh_toan' => Carbon::now(),
+                    'phuong_thuc_thanh_toan' => 'momo',
+                ]);
+                $donDatVe->chiTietVes()->update(['trang_thai' => 'da_thanh_toan']);
+
+                // Tích điểm cho người dùng: 1 điểm cho mỗi 1000 VND
+                $diemTichLuy = floor($donDatVe->tong_tien / 1000);
+                if ($diemTichLuy > 0) {
+                    $user = $donDatVe->nguoiDung;
+                    $user->themDiem($diemTichLuy, 'Tích điểm từ đơn đặt vé ' . $donDatVe->ma_don);
+                }
+
+                // Xóa ghế giữ tạm của người dùng cho suất chiếu này
+                DB::table('ghe_giu_tam')
+                    ->where('nguoi_dung_id', $donDatVe->nguoi_dung_id)
+                    ->where('suat_chieu_id', $donDatVe->suat_chieu_id)
+                    ->delete();
+                
+                DB::commit();
+                return redirect()->route('staff.donve.show', $id)->with('success', 'Thanh toán MoMo thành công!');
+                
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Error updating status in momoReturn (Staff): ' . $e->getMessage());
+                return redirect()->route('staff.donve.payment', $id)->with('error', 'Lỗi cập nhật trạng thái: ' . $e->getMessage());
+            }
+        }
+
+        // resultCode !== 0: thanh toán thất bại
+        Log::warning('MoMo payment failed (Staff)', ['orderId' => $orderId, 'resultCode' => $resultCode]);
+        return redirect()->route('staff.donve.payment', $id)
+            ->with('error', 'Thanh toán MoMo không thành công. Vui lòng thử lại hoặc chọn phương thức khác.');
     }
 }
