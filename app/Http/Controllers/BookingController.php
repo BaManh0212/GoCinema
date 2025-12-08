@@ -770,7 +770,7 @@ class BookingController extends Controller
             $accessKey = env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j');
             $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
 
-            $orderId = 'BOOKING_' . $donDatVe->id . '_' . time();
+            $orderId = 'BOOKING_' . $donDatVe->id . '_' . uniqid();
             $amount = (int) round($donDatVe->tong_tien); // MoMo yêu cầu integer
             $orderInfo = 'Thanh toán đơn ' . $donDatVe->ma_don;
             $redirectUrl = route('booking.momo-return'); // ✅ FIX: sử dụng momo-return route

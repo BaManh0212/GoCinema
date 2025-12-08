@@ -555,6 +555,78 @@ document.addEventListener('DOMContentLoaded', function() {
     let comboPrices = {!! json_encode($combos->pluck('gia', 'id')) !!};
     let comboNames = {!! json_encode($combos->pluck('ten', 'id')) !!};
 
+    // Hàm lấy trạng thái ghế từ server
+    function refreshSeatStatus() {
+        fetch('{{ route("staff.suatchieu.seatStatus", $suatChieu->id) }}')
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data); // DEBUG
+                if (data.success) {
+                    console.log('Ghế đã đặt:', data.ghe_da_dat); // DEBUG
+                    
+                    // Cập nhật trạng thái ghế
+                    document.querySelectorAll('.seat').forEach(seat => {
+                        const gheId = seat.dataset.gheId;
+                        if (!gheId) return;
+                        
+                        // Remove old status classes
+                        seat.classList.remove('seat-chon', 'seat-da-thanh-toan', 'seat-giu-tam', 'seat-bao-tri', 'seat-dat');
+                        
+                        // Thêm lại class seat-<loai>
+                        const loai = seat.dataset.loai;
+                        if (loai) {
+                            seat.classList.add(`seat-${loai}`);
+                        }
+                        
+                        // Xác định trạng thái mới
+                        let newTrangThai = 'hoat_dong';
+                        
+                        const gheIdInt = parseInt(gheId);
+                        const isBaoTri = data.ghe_statuses && data.ghe_statuses[gheIdInt] === 'bao_tri';
+                        
+                        if (isBaoTri) {
+                            seat.classList.add('seat-bao-tri');
+                            seat.style.cursor = 'not-allowed';
+                            seat.style.pointerEvents = 'none';
+                            newTrangThai = 'bao_tri';
+                        } else if (data.giu_tam_ids && data.giu_tam_ids.includes(gheIdInt)) {
+                            seat.classList.add('seat-giu-tam');
+                            seat.style.cursor = 'not-allowed';
+                            seat.style.pointerEvents = 'none';
+                            newTrangThai = 'giu_tam';
+                        } else if (data.ghe_da_dat && data.ghe_da_dat.includes(gheIdInt)) {
+                            console.log(`Ghế ${gheIdInt} đã đặt (từ API), adding class seat-da-thanh-toan`); // DEBUG
+                            seat.classList.add('seat-da-thanh-toan');
+                            seat.style.cursor = 'not-allowed';
+                            seat.style.pointerEvents = 'none';
+                            newTrangThai = 'da_dat';
+                            
+                            // Nếu ghế này đang trong selectedSeats, hãy bỏ chọn nó
+                            if (selectedSeats.has(gheId)) {
+                                selectedSeats.delete(gheId);
+                            }
+                        } else {
+                            // Ghế có sẵn - có thể click được
+                            seat.style.cursor = 'pointer';
+                            seat.style.pointerEvents = 'auto';
+                            seat.style.opacity = '1';
+                        }
+                        
+                        // Cập nhật data attribute
+                        seat.dataset.trangthai = newTrangThai;
+                    });
+                    
+                    // Cập nhật lại giao diện
+                    updateSelectedSeats();
+                    updateTotal();
+                }
+            })
+            .catch(error => console.log('Lỗi khi cập nhật trạng thái ghế:', error));
+    }
+
+    // Auto refresh trạng thái ghế mỗi 3 giây
+    setInterval(refreshSeatStatus, 3000);
+
     // Initialize combo quantities and attach change listeners
     Object.keys(comboQuantities).forEach(comboId => {
         const input = document.getElementById(`combo-${comboId}-qty`);
@@ -633,6 +705,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const seatId = seatElement.dataset.gheId;
         const seatNumber = `${seatElement.dataset.hang}${seatElement.dataset.cot}`;
         const seatType = seatElement.dataset.loai;
+        
+        // Kiểm tra xem ghế đã được đặt, giữ tạm hoặc bảo trì
+        if (seatElement.classList.contains('seat-da-thanh-toan') || 
+            seatElement.classList.contains('seat-giu-tam') || 
+            seatElement.classList.contains('seat-bao-tri') ||
+            seatElement.classList.contains('seat-dat')) {
+            alert('Ghế này không khả dụng');
+            return;
+        }
 
         if (seatElement.classList.contains('seat-chon')) {
             // Deselect seat
@@ -660,12 +741,23 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTotal();
     }
     
-    // Add click event listeners to all seats
-    seats.forEach(seat => {
-        seat.addEventListener('click', function() {
-            toggleSeatSelection(this);
+    // Add click event listeners to all seats - DON'T CLONE, just attach listeners
+    function attachSeatListeners() {
+        document.querySelectorAll('.seat').forEach(seat => {
+            seat.addEventListener('click', function() {
+                // Double check - chỉ cho phép click nếu ghế không phải là đã đặt, giữ tạm hoặc bảo trì
+                if (!this.classList.contains('seat-da-thanh-toan') && 
+                    !this.classList.contains('seat-giu-tam') && 
+                    !this.classList.contains('seat-bao-tri') &&
+                    !this.classList.contains('seat-dat')) {
+                    toggleSeatSelection(this);
+                }
+            });
         });
-    });
+    }
+    
+    // Initial attach
+    attachSeatListeners();
 
     // Update selected seats display
     function updateSelectedSeats() {
@@ -918,6 +1010,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // initialize displays
     updateTotal();
     updateSelectedCombos();
+    
+    // Gọi refreshSeatStatus ngay lúc load trang để lấy trạng thái ghế mới nhất
+    refreshSeatStatus();
 });
 </script>
 @endpush

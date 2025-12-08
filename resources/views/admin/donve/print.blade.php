@@ -186,7 +186,7 @@
             <h3>THÔNG TIN GHẾ NGỒI</h3>
             <div class="two-columns">
                 <div class="column">
-                    <p><strong>Ghế: {{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }} - {{ ucfirst($ct->loai_ghe) }}</p>
+                    <p><strong>Ghế: {{ $ct->ghe->hang ?? '' }}{{ $ct->ghe->cot ?? '' }} - {{ \App\Helpers\SeatHelper::getSeatTypeName($ct->loai_ghe) }}</p>
                 </div>
                 <div class="column">
                     <p><strong>Đơn giá: {{ number_format($ct->gia, 0, ',', '.') }} đ</p>

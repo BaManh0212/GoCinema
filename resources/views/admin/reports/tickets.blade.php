@@ -54,7 +54,7 @@
                                 <td>{{ $r->phim }}</td>
                                 <td>{{ $r->rap }}</td>
                                 <td class="text-end">{{ number_format($r->gia, 0, ',', '.') }}đ</td>
-                                <td>{{ $r->loai_ghe }}</td>
+                                <td>{{ \App\Helpers\SeatHelper::getSeatTypeName($r->loai_ghe) }}</td>
                                 <td>{{ $r->trang_thai }}</td>
                                 <td>{{ \Carbon\Carbon::parse($r->ngay_mua)->format('d/m/Y H:i') }}</td>
                             </tr>
