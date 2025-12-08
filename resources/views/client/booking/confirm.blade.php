@@ -120,8 +120,7 @@
                 //     'ngay_dat' => now()->format('Y-m-d H:i:s')
                 // ];
                 // $qrCode = QrCode::size(180)->generate(json_encode($qrData));
-                $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->generate($donDatVe->ma_don);
-            @endphp
+                    $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->generate($donDatVe->qrString());            @endphp
             <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 {!! $qrCode !!}
             </div>

@@ -53,4 +53,49 @@ public function gheDaDat()
 {
     return $this->hasMany(GheSuatChieu::class, 'don_dat_ve_id', 'id')->with('ghe');
 }
+
+// Trả về mảng payload chuẩn cho QR
+public function qrPayload()
+{
+    $this->loadMissing(['chiTietVes.ghe', 'suatChieu', 'combos']);
+
+    $createdAt = $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s');
+
+    // Ghép danh sách ghế dạng "B6", "C10", ...
+    $seats = $this->chiTietVes->map(function($ve) {
+        $hang = $ve->ghe->hang ?? '';
+        $cot  = $ve->ghe->cot ?? '';
+        return trim($hang . $cot);
+    })->filter()->values()->all();
+
+    // Combos: chỉ gửi id + so_luong (tên có thể chứa Unicode)
+    $combos = $this->combos->map(function($c) {
+        return [
+            'id' => (int) $c->id,
+            'so_luong' => (int) ($c->pivot->so_luong ?? 0),
+        ];
+    })->values()->all();
+
+    return [
+        'ma_don' => (string) $this->ma_don,
+        'ma_lay_ve' => strtoupper(substr(md5($this->id), 0, 7)),
+        'don_dat_id' => (int) $this->id,
+        'suat_chieu_id' => (int) $this->suat_chieu_id,
+        'ngay_dat' => $createdAt,
+        'seats' => $seats,
+        'combos' => $combos,
+        'tong_tien' => (float) $this->tong_tien,
+        'trang_thai' => (string) ($this->trang_thai ?? ''),
+    ];
+}
+
+// Trả về chuỗi JSON (không escape Unicode) để dùng làm nội dung QR
+public function qrString()
+{
+    $payload = [
+        'ma_don' => $this->ma_don,
+        'ma_lay_ve' => strtoupper(substr(md5($this->id), 0, 7)),
+    ];
+    return json_encode($payload, JSON_UNESCAPED_UNICODE);
+}
 }

@@ -117,22 +117,19 @@ class DonDatVeController extends Controller
         }
     }
 
-    // Tạo writer dùng SVG backend
+    // Tạo writer dùng SVG backend (dùng payload chuẩn từ model để đồng bộ QR)
     $renderer = new ImageRenderer(
-        new RendererStyle(200, 1), // size=200, margin=1
-        new SvgImageBackEnd()
+        // new RendererStyle(200, 1), // size=200, margin=1
+        // new SvgImageBackEnd()
     );
     $writer = new Writer($renderer);
 
+    // Dùng qrString() từ model để đồng bộ với email và web confirm
+    $qrString = $donVe->qrString();
+
     $qrCodes = [];
     foreach ($donVe->chiTietVes as $ct) {
-        $qrData = [
-            'ma_don' => $donVe->ma_don,
-            'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
-            'ngay_dat' => now()->format('Y-m-d H:i:s'),
-        ];
-
-        $qrSvg = $writer->writeString(json_encode($qrData));
+        $qrSvg = $writer->writeString($qrString);
         $qrCodes[$ct->id] = $qrSvg;
     }
 
