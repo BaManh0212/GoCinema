@@ -31,15 +31,15 @@
             <p><strong>Trạng thái:</strong> {{ $donDatVe->trang_thai === 'da_thanh_toan' ? 'Đã thanh toán' : 'Chờ thanh toán' }}</p>
             
             <div class="qr-code">
-    <p><strong>Mã QR của bạn:</strong></p>
-    <div style="text-align: center; margin: 20px 0;">
-        @if(!empty($qrCode))
-            <img src="{{ $qrCode }}" alt="QR Code" style="max-width:260px; height:auto; display:block; margin:0 auto;">
-        @else
-            <p><em>Không thể tạo mã QR. Vui lòng liên hệ bộ phận hỗ trợ.</em></p>
-        @endif
-    </div>
-</div>
+                <p><strong>Mã QR của bạn:</strong></p>
+                <div style="text-align: center; margin: 20px 0;">
+                    @if(!empty($qrCode))
+                        <img src="{{ $qrCode }}" alt="QR Code" style="max-width:260px; height:auto; display:block; margin:0 auto;">
+                    @else
+                        <p><em>Không thể tạo mã QR. Vui lòng liên hệ bộ phận hỗ trợ.</em></p>
+                    @endif
+                </div>
+            </div>
             
             <p>Vui lòng xuất trình mã QR này khi đến rạp để nhận vé.</p>
         </div>

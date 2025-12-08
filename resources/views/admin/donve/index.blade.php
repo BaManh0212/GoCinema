@@ -90,7 +90,7 @@
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
                     <tr class="text-center">
-                        <th style="width: 60px;">#</th>
+                        <th style="width: 60px;">STT</th>
                         <th>Mã đơn</th>
                         <th>Khách hàng</th>
                         <th>Phim</th>
