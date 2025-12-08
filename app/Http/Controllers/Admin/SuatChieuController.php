@@ -246,9 +246,11 @@ class SuatChieuController extends Controller
         return back()->with('error', '⚠️ Không thể xóa suất chiếu đã bắt đầu hoặc đã kết thúc.');
     }
 
-    // Kiểm tra nếu suất chiếu đã có vé
-    if ($suatchieu->chiTietVe()->exists()) {
-        return back()->with('error', '⚠️ Suất chiếu đã có vé, không thể xóa. Vui lòng hủy suất chiếu nếu cần.');
+    // Kiểm tra số vé đã bán
+    $ticketCount = $suatchieu->chiTietVe()->count();
+    
+    if ($ticketCount > 0) {
+        return back()->with('error', '⚠️ Suất chiếu đã bán ' . $ticketCount . ' vé, không thể xóa. Vui lòng hủy suất chiếu nếu cần.');
     }
 
     $suatchieu->delete();

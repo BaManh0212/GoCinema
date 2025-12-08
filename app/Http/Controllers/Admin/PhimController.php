@@ -329,52 +329,76 @@ class PhimController extends Controller
     }
 
     /**
+     * Kiểm tra xem phim đã có suất chiếu chưa
+     */
+    private function hasShowtimes($phimId)
+    {
+        // Dùng withTrashed() để lấy phim ngay cả khi đã xóa mềm
+        $phim = Phim::withTrashed()->with('suatChieus')->findOrFail($phimId);
+        
+        $showtimeCount = $phim->suatChieus->count();
+        
+        return [
+            'hasShowtimes' => $showtimeCount > 0,
+            'showtimeCount' => $showtimeCount
+        ];
+    }
+
+    /**
      * Kiểm tra xem phim đã bán vé chưa
      */
     private function hasSoldTickets($phimId)
     {
-        $phim = Phim::with(['suatChieus.chiTietVe'])->findOrFail($phimId);
+        // Dùng withTrashed() để lấy phim ngay cả khi đã xóa mềm
+        $phim = Phim::withTrashed()->with(['suatChieus.chiTietVe'])->findOrFail($phimId);
         
+        $totalTickets = 0;
         foreach ($phim->suatChieus as $suatChieu) {
-            if ($suatChieu->chiTietVe->count() > 0) {
-                return [
-                    'hasTickets' => true,
-                    'ticketCount' => $suatChieu->chiTietVe->count()
-                ];
-            }
+            $ticketCount = $suatChieu->chiTietVe->count();
+            $totalTickets += $ticketCount;
         }
         
-        return ['hasTickets' => false, 'ticketCount' => 0];
+        return [
+            'hasSoldTickets' => $totalTickets > 0,
+            'ticketCount' => $totalTickets
+        ];
     }
     
     /**
-     * Xóa mềm phim (chỉ xóa khi chưa có vé bán)
+     * Xóa mềm phim (chỉ xóa khi chưa có suất chiếu)
      */
     public function destroy($id)
     {
-        // Kiểm tra xem có vé bán chưa
-        $checkTickets = $this->hasSoldTickets($id);
+        // Kiểm tra xem có suất chiếu chưa
+        $checkShowtimes = $this->hasShowtimes($id);
         
-        if ($checkTickets['hasTickets']) {
-            return redirect()->back()
-                ->with('error', 'Không thể xóa phim vì đã có ' . $checkTickets['ticketCount'] . ' vé được bán. Vui lòng hủy các suất chiếu trước khi xóa phim.');
+        if ($checkShowtimes['hasShowtimes']) {
+            // Kiểm tra thêm số vé đã bán
+            $checkTickets = $this->hasSoldTickets($id);
+            
+            $message = 'Không thể xóa phim vì đã có ' . $checkShowtimes['showtimeCount'] . ' suất chiếu';
+            if ($checkTickets['hasSoldTickets']) {
+                $message .= ' và ' . $checkTickets['ticketCount'] . ' vé đã bán ra';
+            }
+            $message .= '. Vui lòng xóa các suất chiếu trước khi xóa phim.';
+            
+            return redirect()->back()->with('error', $message);
         }
         
-        // Nếu chưa có vé bán, thực hiện xóa mềm
-        $phim = Phim::findOrFail($id);
+        // Nếu chưa có suất chiếu, thực hiện xóa mềm
+        $phim = Phim::with(['danhMucs'])->findOrFail($id);
         
-        // Xóa ảnh poster nếu có
-        if ($phim->anh_poster) {
-            Storage::disk('public')->delete($phim->anh_poster);
-        }
+        // Không xóa ảnh poster và banner - giữ lại cho thùng rác
+        // if ($phim->anh_poster) {
+        //     Storage::disk('public')->delete($phim->anh_poster);
+        // }
         
-        // Xóa ảnh banner nếu có
-        if ($phim->banner) {
-            Storage::disk('public')->delete($phim->banner);
-        }
+        // if ($phim->banner) {
+        //     Storage::disk('public')->delete($phim->banner);
+        // }
         
-        // Xóa các mối quan hệ trước khi xóa phim
-        $phim->danhMucs()->detach();
+        // Giữ lại các mối quan hệ danh mục - không xóa trước khi xóa mềm
+        // $phim->danhMucs()->detach();
         
         // Xóa mềm phim
         $phim->delete();
@@ -391,24 +415,41 @@ class PhimController extends Controller
     }
 
     /**
-     * Xóa cứng phim (chỉ xóa khi chưa có vé bán)
+     * Xóa cứng phim (chỉ xóa khi chưa có suất chiếu)
      */
     public function forceDelete($id)
     {
-        // Kiểm tra xem có vé bán chưa
-        $checkTickets = $this->hasSoldTickets($id);
+        // Kiểm tra xem có suất chiếu chưa
+        $checkShowtimes = $this->hasShowtimes($id);
         
-        if ($checkTickets['hasTickets']) {
-            return redirect()->back()
-                ->with('error', 'Không thể xóa vĩnh viễn phim vì đã có ' . $checkTickets['ticketCount'] . ' vé được bán. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.');
+        if ($checkShowtimes['hasShowtimes']) {
+            // Kiểm tra thêm số vé đã bán
+            $checkTickets = $this->hasSoldTickets($id);
+            
+            $message = 'Không thể xóa vĩnh viễn phim vì đã có ' . $checkShowtimes['showtimeCount'] . ' suất chiếu';
+            if ($checkTickets['hasSoldTickets']) {
+                $message .= ' và ' . $checkTickets['ticketCount'] . ' vé đã bán ra';
+            }
+            $message .= '. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.';
+            
+            return redirect()->back()->with('error', $message);
         }
         
-        $phim = Phim::withTrashed()->findOrFail($id);
+        $phim = Phim::withTrashed()->with(['danhMucs'])->findOrFail($id);
         
         // Xóa ảnh poster nếu có
         if ($phim->anh_poster && Storage::disk('public')->exists($phim->anh_poster)) {
             Storage::disk('public')->delete($phim->anh_poster);
         }
+        
+        // Xóa ảnh banner nếu có
+        if ($phim->banner && Storage::disk('public')->exists($phim->banner)) {
+            Storage::disk('public')->delete($phim->banner);
+        }
+        
+        // Xóa các mối quan hệ danh mục trước khi xóa cứng
+        $phim->danhMucs()->detach();
+        
         $phim->forceDelete();
         return redirect()->route('admin.phim.trashed')->with('success', 'Đã xóa vĩnh viễn phim.');
     }
