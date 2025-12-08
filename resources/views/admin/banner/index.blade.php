@@ -19,7 +19,7 @@
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
                     <tr class="text-center">
-                        <th>#</th>
+                        <th>STT</th>
                         <th>Tiêu đề</th>
                         <th>Type</th>
                         <th>Ảnh/Video</th>

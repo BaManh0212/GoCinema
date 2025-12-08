@@ -44,7 +44,7 @@
             <table class="table align-middle mb-0">
                 <thead class="table-header text-white">
                     <tr class="text-center">
-                        <th>#</th>
+                        <th>STT</th>
                         <th class="text-start">Người gửi</th>
                         <th class="text-start">Email</th>
                         <th class="text-start">Nội dung</th>
