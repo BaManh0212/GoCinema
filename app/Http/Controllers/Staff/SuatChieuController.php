@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuatChieu;
 use App\Models\Phim;
 use App\Models\PhongChieu;
+use App\Models\Ghe;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -271,6 +272,18 @@ class SuatChieuController extends Controller
             ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
             ->pluck('ghe_id')
             ->toArray();
+
+        // Debug logging: record counts and samples to laravel.log to help debugging
+        try {
+            \Illuminate\Support\Facades\Log::info("seatStatus called for suat_chieu_id={$id}", [
+                'ghe_statuses_count' => is_array($gheStatuses) ? count($gheStatuses) : 0,
+                'giu_tam_count' => is_array($giuTamIds) ? count($giuTamIds) : 0,
+                'ghe_da_dat_count' => is_array($gheDaDat) ? count($gheDaDat) : 0,
+                'ghe_da_dat_sample' => array_slice($gheDaDat, 0, 10),
+            ]);
+        } catch (\Exception $e) {
+            // swallow logging errors to avoid breaking API
+        }
 
         return response()->json([
             'success' => true,

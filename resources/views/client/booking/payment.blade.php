@@ -68,7 +68,7 @@
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-primary text-sm">{{ $chiTietVe->ghe->so_ghe_ngoi ?: ($chiTietVe->ghe->hang . $chiTietVe->ghe->cot) }}</p>
-                                    <p class="text-sm text-gray-600">{{ ucfirst($chiTietVe->loai_ghe) }}</p>
+                                    <p class="text-sm text-gray-600">{{ \App\Helpers\SeatHelper::getSeatTypeName($chiTietVe->loai_ghe) }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="font-semibold text-blue-600">{{ number_format($chiTietVe->gia) }}đ</p>

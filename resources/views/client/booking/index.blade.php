@@ -1059,11 +1059,38 @@ $(document).ready(function() {
         })
         .done(function(response) {
             if (response.success) {
-                // Stop timer on successful booking
+                // ✅ Stop timer on successful booking
                 stopHoldTimer();
-                window.location.href = response.redirect;
+                
+                // ✅ Update seat status on UI immediately
+                selectedSeats.forEach(gheId => {
+                    const seat = $(`.seat[data-ghe-id="${gheId}"]`);
+                    seat.removeClass('seat-chon seat-giu-tam');
+                    seat.addClass('seat-da-thanh-toan disabled');
+                    seat.prop('disabled', true);
+                    seat.css('pointer-events', 'none');
+                });
+                
+                // ✅ Clear selected seats
+                const bookedSeatsCount = selectedSeats.length;
+                selectedSeats = [];
+                updateSelectedSeatsDisplay();
+                updateTotals();
+                toggleBookButton();
+                
+                // ✅ Hide confirmation modal
+                $('#confirmModal').modal('hide');
+                
+                // ✅ Show success message
+                showSuccessMessage('Đặt vé thành công! Đang chuyển đến trang xác nhận...');
+                
+                // ✅ Redirect after 2 seconds
+                setTimeout(function() {
+                    window.location.href = response.redirect;
+                }, 2000);
             } else {
                 showError(response.message);
+                $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
                 if (response.redirect) {
                     setTimeout(() => {
                         window.location.href = response.redirect;
@@ -1077,10 +1104,7 @@ $(document).ready(function() {
                 : 'Có lỗi xảy ra khi đặt vé!';
             showError(errorMessage);
             stopHoldTimer(); // Stop timer on booking failure
-        })
-        .always(function() {
             $('#confirm-book').prop('disabled', false).text('Xác nhận đặt vé');
-            $('#confirmModal').modal('hide');
         });
     });
 });
@@ -1090,6 +1114,25 @@ function showError(message) {
     $('#errorMessage').text(message);
     const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
     errorModal.show();
+}
+
+// Hiển thị thông báo thành công
+function showSuccessMessage(message) {
+    // Create success alert if not exists
+    if ($('#successAlert').length === 0) {
+        $('body').append(`
+            <div id="successAlert" class="alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3" 
+                 style="z-index: 9999; min-width: 300px; display: none;">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span id="successAlertMessage"></span>
+                </div>
+            </div>
+        `);
+    }
+    
+    $('#successAlertMessage').text(message);
+    $('#successAlert').fadeIn().delay(3000).fadeOut();
 }
 
 function updateSelectedSeatsDisplay() {
