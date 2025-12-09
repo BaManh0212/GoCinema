@@ -71,8 +71,9 @@ class BookingController extends Controller
             ->toArray();
 
         // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
+        // ✅ FIX: Thêm 'da_su_dung' vì khi check-in, chi_tiet_ve.trang_thai = 'da_su_dung'
         $gheDaDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
-            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
             ->pluck('ghe_id')
             ->toArray();
 
@@ -228,7 +229,7 @@ class BookingController extends Controller
                 // Kiểm tra ghế đã đặt
                 $daDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung', 'cho_thanh_toan'])
                     ->exists();
 
                 if ($daDat) {
@@ -269,7 +270,7 @@ class BookingController extends Controller
                 $gheIdsInRow = $ghesTrongHang->pluck('id')->toArray();
                 $gheDaDatTrongHang = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->whereIn('ghe_id', $gheIdsInRow)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung', 'cho_thanh_toan'])
                     ->pluck('ghe_id')
                     ->toArray();
                 
@@ -436,7 +437,7 @@ class BookingController extends Controller
                 // Kiểm tra ghế đã đặt
                 $daDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
                     ->exists();
 
                 if ($daDat) {
@@ -471,7 +472,7 @@ class BookingController extends Controller
                 $gheIdsInRow = $ghesTrongHang->pluck('id')->toArray();
                 $gheDaDatTrongHang = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->whereIn('ghe_id', $gheIdsInRow)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'cho_thanh_toan'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung', 'cho_thanh_toan'])
                     ->pluck('ghe_id')
                     ->toArray();
                 

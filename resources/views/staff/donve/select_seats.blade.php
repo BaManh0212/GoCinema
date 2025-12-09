@@ -9,17 +9,25 @@
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+        align-items: center;
+        max-width: 100%;
+        overflow-x: auto;
+        --cols: 20;
+        --seat-size: clamp(24px, calc((100% - 100px) / var(--cols)), 36px);
     }
 
     .seat {
-        width: 36px;
-        height: 36px;
+        width: var(--seat-size, 36px);
+        height: var(--seat-size, 36px);
         margin: 3px;
         border-radius: 4px;
         border: none;
         text-align: center;
-        line-height: 36px;
-        font-size: 11px;
+        line-height: var(--seat-size, 36px);
+        font-size: calc(var(--seat-size, 36px) * 0.3);
         font-weight: 600;
         cursor: pointer;
         color: #000;
@@ -40,7 +48,7 @@
     
     .seat-doi { 
         background: linear-gradient(135deg, #98FB98, #98FB98);
-        width: 75px;
+        width: calc(var(--seat-size,36px) * 2 + 6px);
     }
     
     .seat-chon { 
@@ -158,6 +166,53 @@
         text-align: center;
     }
 
+    /* Prevent overflow: allow horizontal scrolling for rows and keep seats from shrinking */
+    .row-seats { 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        display: flex; 
+        flex-wrap: nowrap; 
+        align-items: center;
+        grid-column: 2;
+    }
+    .row-seats .seat { flex: 0 0 auto; }
+    
+    .row-seats::-webkit-scrollbar { height: 6px; }
+    .row-seats::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 3px; }
+
+    .row-label-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 36px;
+        grid-column: 1;
+    }
+
+    .screen-row {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+    }
+
+    .entrance-row {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-start;
+        padding-left: 50px;
+    }
+
+    .exit-row {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 50px;
+    }
+
+    .space-row {
+        grid-column: 1 / -1;
+        height: 20px;
+    }
+
     @media (max-width: 768px) {
         .seat {
             width: 30px;
@@ -262,23 +317,30 @@
                         </div>
                     </div>
 
-                    <!-- Screen -->
-                    <div class="screen mb-4">MÀN HÌNH</div>
-
-                    <!-- Entrance -->
-                    <div class="text-start mb-3">
-                        <div class="seat-preview seat-entrance">VÀO</div>
-                    </div>
-
                     <!-- Seating Area -->
-                    <div class="seat-map">
+                    <div class="seat-map" style="--cols: {{ $suatChieu->phong->so_cot }}; --seat-size: clamp(24px, calc((100% - 100px) / var(--cols)), 36px);">
+                        <!-- Screen Row -->
+                        <div class="screen-row mb-4">
+                            <div class="screen">MÀN HÌNH</div>
+                        </div>
+
+                        <!-- Entrance Row -->
+                        <div class="entrance-row mb-3">
+                            <div class="seat-preview seat-entrance">VÀO</div>
+                        </div>
+
                         @php
                             $hangLetters = range('A', chr(ord('A') + $suatChieu->phong->so_hang - 1));
                         @endphp
 
                         @foreach ($hangLetters as $hang)
-                            <div class="d-flex justify-content-center align-items-center mb-2">
-                                <div class="row-label me-3">{{ $hang }}</div>
+                            <!-- Row Label -->
+                            <div class="row-label-cell">
+                                <span class="row-label">{{ $hang }}</span>
+                            </div>
+
+                            <!-- Row Seats -->
+                            <div class="row-seats mb-2">
                                 @php
                                     $danhSachGhe = $ghes->get($hang, collect());
                                     $cot = 1;
@@ -352,14 +414,14 @@
                             </div>
 
                             @if ($hang == chr(ord('A') + floor($suatChieu->phong->so_hang / 2) - 1))
-                                <div style="height: 20px;"></div>
+                                <div class="space-row"></div>
                             @endif
                         @endforeach
-                    </div>
 
-                    <!-- Exit -->
-                    <div class="text-end mt-3">
-                        <div class="seat-preview seat-exit">RA</div>
+                        <!-- Exit Row -->
+                        <div class="exit-row mt-3">
+                            <div class="seat-preview seat-exit">RA</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -610,6 +672,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             seat.style.cursor = 'pointer';
                             seat.style.pointerEvents = 'auto';
                             seat.style.opacity = '1';
+
+                            // ✅ FIX: Nếu ghế đang được chọn, hãy giữ lại class seat-chon
+                            if (selectedSeats.has(gheId)) {
+                                seat.classList.add('seat-chon');
+                            }
                         }
                         
                         // Cập nhật data attribute
