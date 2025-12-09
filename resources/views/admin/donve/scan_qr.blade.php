@@ -31,6 +31,7 @@
 <script>
 let html5QrCode;
 const resultEl = document.getElementById('result');
+const ordersUrl = "{{ route('admin.donve.index') }}"; // URL chuyển về trang quản lý đơn
 
 function onScanSuccess(decodedText) {
     resultEl.innerHTML = "<span class='text-primary fw-bold'>Đang kiểm tra đơn...</span>";
@@ -55,9 +56,9 @@ function onScanSuccess(decodedText) {
             resultEl.innerHTML = "<span class='text-success fw-bold'>Đơn hợp lệ! Chuyển trang...</span>";
             setTimeout(() => {
                 window.location.href = data.redirect;
-            }, 800); // delay để thấy thông báo
+            }, 800);
         } else {
-            resultEl.innerHTML = "<span class='text-danger fw-bold'>" + data.message + "</span>";
+            resultEl.innerHTML = "<span class='text-danger fw-bold'>" + (data.message || 'Đơn không hợp lệ') + "</span>";
         }
     })
     .catch(err => {
@@ -98,10 +99,25 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
 });
 
 document.getElementById('stopScan').addEventListener('click', () => {
-    if(html5QrCode){
+    if (html5QrCode) {
+        // Dừng quét camera trước, sau đó chuyển về trang quản lý đơn
         html5QrCode.stop().then(() => {
-            resultEl.innerHTML = "<span class='text-muted fw-bold'>Quét đã dừng</span>";
-        }).catch(err => console.error(err));
+            resultEl.innerHTML = "<span class='text-muted fw-bold'>Quét đã dừng. Đang chuyển về quản lý đơn...</span>";
+            // delay nhỏ để hiển thị trạng thái cho người dùng
+            setTimeout(() => {
+                window.location.href = ordersUrl;
+            }, 400);
+        }).catch(err => {
+            console.error('Lỗi khi dừng quét:', err);
+            // Nếu dừng thất bại vẫn chuyển về trang quản lý để tránh kẹt giao diện
+            resultEl.innerHTML = "<span class='text-danger fw-bold'>Không thể dừng camera. Chuyển trang...</span>";
+            setTimeout(() => {
+                window.location.href = ordersUrl;
+            }, 800);
+        });
+    } else {
+        // Nếu scanner chưa khởi tạo, chuyển thẳng về trang quản lý
+        window.location.href = ordersUrl;
     }
 });
 </script>
