@@ -4,9 +4,10 @@
 
 @section('content')
 <div class="container my-5">
+    {{-- Thông tin phim và suất chiếu + Chọn ghế --}}
     <div class="row">
-        {{-- Thông tin phim và suất chiếu --}}
-        <div class="col-lg-8">
+        <div class="col-12">
+            {{-- Thông tin phim --}}
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
@@ -71,7 +72,7 @@
             </div>
 
             {{-- Chọn ghế --}}
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-5">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-person-square me-2"></i>
@@ -132,27 +133,22 @@
                                         $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
                                         $disabled = false;
 
-                                        // ✅ FIX: Kiểm tra ghế đã đặt/thanh toán/check-in TRƯỚC để đảm bảo không bị override
-                                        // Ghế đã đặt/thanh toán/check-in KHÔNG BAO GIỜ được chọn lại, kể cả là của user hiện tại
                                         if ($ghe && in_array($ghe->id, $gheDaDat)) {
                                             $trangthai = 'da_dat';
                                             $disabled = true;
-                                            $isMyHeldSeat = false; // Force reset để đảm bảo không bị override
+                                            $isMyHeldSeat = false;
                                         } else {
-                                            // Kiểm tra xem ghế có phải của user hiện tại đang giữ không (chỉ khi chưa đặt)
                                             $isMyHeldSeat = $ghe && auth()->check() && isset($myHeldSeats) && in_array($ghe->id, $myHeldSeats);
                                             
                                             if ($ghe && in_array($ghe->id, $gheChoThanhToan)) {
                                                 $trangthai = 'cho_thanh_toan';
                                                 $disabled = true;
                                             } elseif ($ghe && in_array($ghe->id, $giuTamIds) && !$isMyHeldSeat) {
-                                                // Ghế đang được user khác giữ tạm -> disabled
                                                 $trangthai = 'giu_tam';
                                                 $disabled = true;
                                             } elseif ($ghe && in_array($ghe->id, $giuTamIds) && $isMyHeldSeat) {
-                                                // Ghế đang được user hiện tại giữ -> có thể bỏ chọn
                                                 $trangthai = 'giu_tam';
-                                                $disabled = false; // Cho phép bỏ chọn
+                                                $disabled = false;
                                             } elseif ($trangthai === 'bao_tri') {
                                                 $disabled = true;
                                             } elseif ($trangthai === 'vo_hieu_hoa') {
@@ -168,10 +164,8 @@
                                         } elseif ($trangthai === 'cho_thanh_toan') {
                                             $classes = 'seat seat-giu-tam disabled';
                                         } elseif ($trangthai === 'giu_tam' && $isMyHeldSeat) {
-                                            // Ghế của user hiện tại đang giữ -> hiển thị như đã chọn, không disabled
                                             $classes = 'seat seat-giu-tam seat-chon';
                                         } elseif ($trangthai === 'giu_tam' && !$isMyHeldSeat) {
-                                            // Ghế của user khác đang giữ -> disabled
                                             $classes = 'seat seat-giu-tam disabled';
                                         } elseif ($trangthai === 'vo_hieu_hoa') {
                                             $classes = 'seat seat-vo-hieu-hoa disabled';
@@ -191,7 +185,7 @@
                                             {{ $isMyHeldSeat ? 'data-my-held="true"' : '' }}>
                                         @if($isDouble)
                                             💑
-                                            @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
+                                            @php $cot += 1; @endphp
                                         @else
                                             {{ $hang }}{{ $cot }}
                                         @endif
@@ -215,7 +209,7 @@
 
                     {{-- Ghế đã chọn --}}
                     <div class="mt-4">
-                        <h6>Ghế đã chọn: <span id="selected-seats">Chưa chọn ghế nào</span></h6>
+                        <h6 class="fw-bold mb-2"><i class="bi bi-check-circle text-success me-2"></i>Ghế đã chọn: <span id="selected-seats" class="text-success">Chưa chọn ghế nào</span></h6>
                         <div id="selected-seats-list" class="d-flex flex-wrap gap-2"></div>
 
                         {{-- Countdown timer --}}
@@ -234,183 +228,192 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- Thanh toán --}}
-        <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-warning">
+    {{-- Thanh toán / Tóm tắt đơn hàng (FULL WIDTH, DƯỚI PHẦN CHỌN GHẾ) --}}
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-gradient-warning text-dark fw-bold py-3">
                     <h5 class="mb-0">
-                        <i class="bi bi-receipt me-2"></i>
-                        Thanh toán
+                        <i class="bi bi-receipt-cutoff me-2"></i>
+                        Tóm tắt & Thanh toán
                     </h5>
                 </div>
-                <div class="card-body">
-                    {{-- Vé --}}
-                    <div class="mb-3">
-                        <h6>Vé phim</h6>
-                        <div id="ticket-summary">
-                            <p class="text-muted">Chưa chọn ghế</p>
+                                    <div class="row g-4">
+                        {{-- Vé phim --}}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="summary-box h-100 p-4 bg-light rounded-3 border border-2 border-primary">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-primary text-white rounded-circle p-3 me-3">
+                                        <i class="bi bi-ticket-perforated fs-5"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-dark">Vé phim</h6>
+                                </div>
+                                <div id="ticket-summary" class="text-sm mb-3" style="font-size: 0.9rem;">
+                                    <p class="text-dark fw-medium mb-0">Chưa chọn ghế</p>
+                                </div>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-medium text-dark">Tổng vé:</span>
+                                    <span id="ticket-total" class="fw-bold text-primary fs-5">0đ</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span>Tổng vé:</span>
-                            <span id="ticket-total">0đ</span>
-                        </div>
-                    </div>
 
-                    <hr>
-
-                    {{-- Combo --}}
-                    <div class="mb-3">
-                        <h6>Combo & Đồ ăn</h6>
-                        <div id="combo-list"></div>
-                        @if($combos->count() > 0)
-                            <div class="mt-2">
-                                @foreach($combos as $combo)
-                                    @if($combo->so_luong > 0) {{-- Chỉ hiển thị combo còn hàng --}}
-                                    <div class="card mb-2" data-combo-id="{{ $combo->id }}">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-0">{{ $combo->ten }}</h6>
-                                                    <small class="text-muted">{{ number_format($combo->gia, 0, ',', '.') }}đ</small>
-                                                    <div class="text-success">
-                                                        <small>Còn lại: {{ $combo->so_luong }} cái</small>
+                        {{-- Combo & Đồ ăn --}}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="summary-box h-100 p-4 bg-light rounded-3 border border-2 border-success">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-success text-white rounded-circle p-3 me-3">
+                                        <i class="bi bi-basket-fill fs-5"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-dark">Combo & Ăn</h6>
+                                </div>
+                                
+                                {{-- Danh sách combo --}}
+                                @if($combos->count() > 0)
+                                    <div class="combo-selector mb-3">
+                                        @foreach($combos as $combo)
+                                            @if($combo->so_luong > 0)
+                                            <div class="combo-item mb-2 p-2 bg-white rounded-2 border-start border-success border-3" data-combo-id="{{ $combo->id }}">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="flex-grow-1">
+                                                        <strong class="d-block text-dark" style="font-size: 0.95rem;">{{ $combo->ten }}</strong>
+                                                        <small class="text-dark fw-medium">{{ number_format($combo->gia, 0, ',', '.') }}₫</small>
                                                     </div>
                                                 </div>
-                                                <div class="d-flex align-items-center">
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-decrease" 
-                                                            data-combo-id="{{ $combo->id }}" 
-                                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
-                                                        <i class="bi bi-dash"></i>
-                                                    </button>
-                                                    <input type="number" 
-                                                           class="form-control form-control-sm text-center mx-1 hide-spinner" 
-                                                           id="combo-{{ $combo->id }}-qty" 
-                                                           value="0" 
-                                                           min="0" 
-                                                           max="{{ $combo->so_luong }}" 
-                                                           style="width: 50px; -moz-appearance: textfield;"
-                                                           onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                                           data-combo-id="{{ $combo->id }}"
-                                                           {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-outline-primary btn-increase" 
-                                                            data-combo-id="{{ $combo->id }}"
-                                                            {{ $combo->so_luong <= 0 ? 'disabled' : '' }}>
-                                                        <i class="bi bi-plus"></i>
-                                                    </button>
+                                                <div class="d-flex align-items-center gap-2 justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-decrease rounded-2" data-combo-id="{{ $combo->id }}" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="bi bi-dash-lg fs-6"></i>
+                                                        </button>
+                                                        <input type="number" class="form-control form-control-sm text-center hide-spinner fw-bold" id="combo-{{ $combo->id }}-qty" value="0" min="0" max="{{ $combo->so_luong }}" data-combo-id="{{ $combo->id }}" style="width: 50px; font-size: 0.9rem; border-radius: 6px;">
+                                                        <button type="button" class="btn btn-sm btn-success btn-increase rounded-2" data-combo-id="{{ $combo->id }}" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="bi bi-plus-lg fs-6"></i>
+                                                        </button>
+                                                    </div>
+                                                    {{-- <span class="combo-item-total fw-bold text-success" style="font-size: 0.9rem; min-width: 60px; text-align: right;">0đ</span> --}}
                                                 </div>
                                             </div>
-                                        </div>
+                                            @endif
+                                        @endforeach
                                     </div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-muted">Hiện không có combo nào khả dụng.</p>
-                        @endif
-                        <div class="d-flex justify-content-between mt-2">
-                            <span>Tổng combo:</span>
-                            <span id="combo-total">0đ</span>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    {{-- Mã giảm giá --}}
-                    <div class="mb-3">
-                        <h6>Mã giảm giá</h6>
-                        
-                        {{-- Danh sách voucher khả dụng --}}
-                        <div class="mb-2">
-                            <label class="form-label small text-muted">Chọn từ mã giảm giá có sẵn:</label>
-                            <select class="form-select mb-2" id="voucher-select">
-                                <option value="" selected>-- Chọn mã giảm giá --</option>
-                                @if(isset($availableVouchers) && count($availableVouchers) > 0)
-                                    @foreach($availableVouchers as $voucher)
-                                        <option 
-                                            value="{{ $voucher->ma }}" 
-                                            data-min="{{ $voucher->gia_tri_don_hang_toi_thieu }}"
-                                            data-type="{{ $voucher->loai }}"
-                                            data-value="{{ $voucher->gia_tri }}"
-                                            data-max="{{ $voucher->giam_toi_da }}">
-                                            {{ $voucher->ma }} - Giảm 
-                                            @if($voucher->loai == 'phan_tram')
-                                                {{ $voucher->gia_tri }}%
-                                                @if($voucher->giam_toi_da)
-                                                    (Tối đa {{ number_format($voucher->giam_toi_da, 0, ',', '.') }}đ)
-                                                @endif
-                                            @else
-                                                {{ number_format($voucher->gia_tri, 0, ',', '.') }}đ
-                                            @endif
-                                            @if($voucher->gia_tri_don_hang_toi_thieu)
-                                                (Đơn tối thiểu {{ number_format($voucher->gia_tri_don_hang_toi_thieu, 0, ',', '.') }}đ)
-                                            @endif
-                                        </option>
-                                    @endforeach
+                                @else
+                                    <p class="text-dark fw-medium small mb-3">Không có combo khả dụng</p>
                                 @endif
-                            </select>
+
+                                {{-- Danh sách combo đã chọn --}}
+                                {{-- <div id="selected-combos" class="mb-3 p-2 bg-light rounded-2" style="border: 1px dashed #28a745; min-height: 60px;">
+                                    <small class="text-dark fw-medium d-block mb-2">Đã chọn:</small>
+                                    <div id="selected-combo-items" class="text-dark" style="font-size: 0.85rem;">
+                                        <p class="text-muted mb-0">-</p>
+                                    </div>
+                                </div> --}}
+
+                                {{-- <hr class="my-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-medium text-dark">Tổng combo:</span>
+                                    <span id="combo-total" class="fw-bold text-success fs-5">0đ</span>
+                                </div> --}}
+                            </div>
                         </div>
-                        
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="me-2 small">hoặc</span>
-                            <hr class="flex-grow-1 my-0">
+
+                        {{-- Mã giảm giá --}}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="summary-box h-100 p-4 bg-light rounded-3 border border-2 border-danger">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-danger text-white rounded-circle p-3 me-3">
+                                        <i class="bi bi-tag-fill fs-5"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-dark">Mã giảm giá</h6>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-medium text-dark mb-2">Chọn hoặc nhập mã:</label>
+                                    <select class="form-select form-select-sm rounded-2 mb-2" id="voucher-select" style="font-size: 0.9rem; border: 2px solid #dee2e6; color: #333;">
+                                        <option value="" selected>-- Chọn mã --</option>
+                                        @if(isset($availableVouchers) && count($availableVouchers) > 0)
+                                            @foreach($availableVouchers as $voucher)
+                                            <option value="{{ $voucher->ma }}" data-min="{{ $voucher->gia_tri_don_hang_toi_thieu }}" data-type="{{ $voucher->loai }}" data-value="{{ $voucher->gia_tri }}" data-max="{{ $voucher->giam_toi_da }}">
+                                                {{ $voucher->ma }} - Giảm @if($voucher->loai == 'phan_tram'){{ $voucher->gia_tri }}%@else{{ number_format($voucher->gia_tri, 0, ',', '.') }}đ@endif
+                                            </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                                <div class="input-group input-group-sm mb-2">
+                                    <input type="text" class="form-control rounded-start-2" id="voucher-code" placeholder="Nhập mã..." style="border-radius: 6px 0 0 6px; border: 2px solid #dee2e6; color: #333;">
+                                    <button class="btn btn-outline-danger fw-medium rounded-end-2" type="button" id="apply-voucher" style="border-radius: 0 6px 6px 0; border: 2px solid #dee2e6;">
+                                        <i class="bi bi-check-lg me-1"></i>Áp dụng
+                                    </button>
+                                </div>
+                                <div id="voucher-message"></div>
+                                <div id="applied-voucher-info" class="mt-2 d-none">
+                                    <div class="alert alert-success p-2 mb-0 rounded-2 border-success border">
+                                        <small class="text-dark fw-medium">
+                                            <i class="bi bi-check-circle text-success me-1"></i>
+                                            <span id="applied-voucher-code"></span>
+                                            <span id="applied-voucher-desc"></span>
+                                            <button type="button" class="btn-close btn-sm ms-2" id="remove-voucher" aria-label="Xóa"></button>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="voucher-code" placeholder="Nhập mã giảm giá">
-                            <button class="btn btn-outline-primary" type="button" id="apply-voucher">Áp dụng</button>
-                        </div>
-                        <div id="voucher-message"></div>
-                        
-                        {{-- Thông tin voucher đã áp dụng --}}
-                    <div id="applied-voucher-info" class="mt-2 d-none">
-                        <div class="alert alert-success p-2 mb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span id="applied-voucher-text"></span>
-                                <button type="button" class="btn-close" id="remove-voucher" aria-label="Xóa mã giảm giá"></button>
+
+                        {{-- Tóm tắt tiền --}}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="summary-box h-100 p-4 bg-light rounded-3 border border-2 border-primary">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-primary text-white rounded-circle p-3 me-3">
+                                        <i class="bi bi-calculator-fill fs-5"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-dark">TỔNG CỘNG</h6>
+                                </div>
+                                <div class="mb-3 pb-3 border-bottom border-secondary border-opacity-25">
+                                    <div class="d-flex justify-content-between small mb-2" style="font-size: 0.95rem;">
+                                        <span class="text-dark">Vé:</span>
+                                        <span id="display-ticket-total" class="fw-bold text-dark" style="font-size: 1rem;">0đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small mb-2" style="font-size: 0.95rem;">
+                                        <span class="text-dark">Combo:</span>
+                                        <span id="display-combo-total" class="fw-bold text-dark" style="font-size: 1rem;">0đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small" style="font-size: 0.95rem;">
+                                        <span class="text-dark">Giảm giá:</span>
+                                        <span id="discount-amount" class="fw-bold text-danger" style="font-size: 1rem;">-0đ</span>
+                                    </div>
+                                </div>
+                               <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded-2" style="background: #f0f0f0; border: 2px solid #dee2e6; gap: 1rem;">
+                                    <span class="fw-bold text-dark" style="font-size: 1rem;">TỔNG:</span>
+                                    <span id="grand-total" class="fw-bold text-primary" style="font-size: 1.8rem; white-space: nowrap; text-align: right;">0đ</span>
+                                </div>
+                                <form id="booking-form" method="POST" action="{{ route('booking.store') }}" class="mb-0">
+                                    @csrf
+                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="suat_chieu_id" value="{{ $suatChieu->id }}">
+                                    <input type="hidden" name="ghe_ids" id="selected-seats-input" value="">
+                                    <input type="hidden" name="ma_giam_gia" id="ma-giam-gia-input" value="">
+                                    <input type="hidden" name="voucher_nd_id" id="voucher-nd-id" value="">
+                                    <input type="hidden" name="combos" id="combos-input" value="">
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="book-btn" class="btn btn-light fw-bold py-3 rounded-2 shadow-sm transition-all" style="font-size: 1rem; letter-spacing: 0.5px; color: #333;" disabled>
+                                            <i class="bi bi-ticket-perforated-fill me-2"></i>
+                                            ĐẶT VÉ NGAY
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                @if(!auth()->check())
+                                    <div class="alert alert-warning mt-3 mb-0 small rounded-2 border-warning border" style="background: rgba(255,193,7,0.3); color: #000;">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        <a href="{{ route('login') }}" class="fw-bold text-dark text-decoration-none">Đăng nhập</a> để đặt vé
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
-
-                    <hr>
-
-                    {{-- Số tiền giảm giá --}}
-                    <div class="d-flex justify-content-between fs-6 fw-bold text-success">
-                        <span>Giảm giá:</span>
-                        <span id="discount-amount">0đ</span>
-                    </div>
-
-                    <hr>
-
-                    {{-- Tổng cộng --}}
-                    <div class="d-flex justify-content-between fs-5 fw-bold">
-                        <span>Tổng cộng:</span>
-                        <span id="grand-total">0đ</span>
-                    </div>
-
-                    {{-- Form đặt vé --}}
-                    <form id="booking-form" method="POST" action="{{ route('booking.store') }}" class="mt-3">
-                        @csrf
-                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="suat_chieu_id" value="{{ $suatChieu->id }}">
-                        <input type="hidden" name="ghe_ids" id="selected-seats-input" value="">
-                        <input type="hidden" name="ma_giam_gia" id="ma-giam-gia-input" value="">
-                        <input type="hidden" name="voucher_nd_id" id="voucher-nd-id" value="">
-                        <input type="hidden" name="combos" id="combos-input" value="">
-                        
-                        <button type="button" id="book-btn" class="btn btn-danger w-100" disabled>
-                        <i class="bi bi-ticket-perforated-fill me-2"></i>
-                        Đặt vé
-                    </button>
-
-                    @if(!auth()->check())
-                        <p class="text-muted mt-2 mb-0 small">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt vé
-                        </p>
-                    @endif
-                </div>
             </div>
         </div>
     </div>
@@ -437,31 +440,19 @@
     </div>
 </div>
 
-<style>
-/* Ẩn mũi tên lên/xuống trong input number */
-.hide-spinner::-webkit-outer-spin-button,
-.hide-spinner::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
 
-/* Firefox */
-.hide-spinner {
-    -moz-appearance: textfield;
-}
-</style>
 
 {{-- Modal xác nhận --}}
 <div class="modal fade" id="confirmModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Xác nhận đặt vé</h5>
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-bold text-dark">Xác nhận đặt vé</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Bạn có chắc chắn muốn đặt vé với thông tin sau?</p>
-                <div id="confirm-details"></div>
+                <p class="text-dark fw-medium mb-3">Bạn có chắc chắn muốn đặt vé với thông tin sau?</p>
+                <div id="confirm-details" class="text-dark"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -492,6 +483,7 @@
 
 @push('styles')
 <style>
+/* ============ SEAT STYLING ============ */
 .seat {
     width: var(--seat-size, 45px);
     height: var(--seat-size, 45px);
@@ -507,9 +499,11 @@
     user-select: none;
     transition: all 0.2s;
 }
+
 .double-seat {
-    width: calc(var(--seat-size,45px) * 2 + 8px) !important; /* two seats side-by-side plus margins */
+    width: calc(var(--seat-size,45px) * 2 + 8px) !important;
 }
+
 .seat-vip { background-color: #FFD700; }
 .seat-doi { background-color: #98FB98; }
 .seat-thuong { background-color: #87CEFA; }
@@ -518,8 +512,13 @@
 .seat-giu-tam { background-color: #FFA500 !important; cursor: not-allowed; pointer-events: none; }
 .seat-bao-tri { background-color: #d1d5db !important; cursor: not-allowed; pointer-events: none; }
 .seat-vo-hieu-hoa { background-color: #6B7280 !important; cursor: not-allowed; pointer-events: none; }
-.seat-chon { background-color: #28a745 !important; color: white; }
+.seat-chon { background-color: #28a745 !important; color: white; box-shadow: 0 0 10px rgba(40,167,69,0.4); }
 .seat.disabled { cursor: not-allowed !important; pointer-events: none; }
+
+.seat:not(.disabled):hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
 
 .seat-preview {
     width: 35px;
@@ -540,6 +539,7 @@
     color: white;
     border-color: #ff6b6b;
 }
+
 .seat-exit {
     background: #4ecdc4;
     color: white;
@@ -548,7 +548,8 @@
 
 .legend-box {
     display: inline-block;
-    width: 25px; height: 25px;
+    width: 25px;
+    height: 25px;
     margin-right: 6px;
     border-radius: 6px;
     border: 1px solid #ccc;
@@ -567,83 +568,201 @@
     letter-spacing: 2px;
 }
 
-/* Prevent overflow: allow horizontal scrolling for wide rows and keep seats from shrinking */
-.seat-map { overflow-x: auto; }
-.row-seats { overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; flex-wrap: nowrap; align-items: center; }
-.row-seats .seat { flex: 0 0 auto; }
+.seat-map {
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-.row-seats::-webkit-scrollbar { height: 8px; }
-.row-seats::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
+.row-seats {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 60px;
+    -webkit-overflow-scrolling: touch;
+}
 
-.seat:not(.disabled):hover {
-    transform: scale(1.06);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+.row-seats .seat {
+    flex: 0 0 auto;
+}
+
+.row-seats::-webkit-scrollbar {
+    height: 8px;
+}
+
+.row-seats::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.08);
+    border-radius: 4px;
 }
 
 .selected-seat-badge {
     background-color: #28a745;
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
     font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(40,167,69,0.3);
 }
-p{
+
+/* ============ SUMMARY BOX STYLING ============ */
+.summary-box {
+    background: #fff !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.summary-box:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.combo-item {
+    transition: all 0.2s ease;
+    background: #fff !important;
+}
+
+.combo-item:hover {
+    box-shadow: 0 2px 8px rgba(25,135,84,0.15);
+    transform: translateX(2px);
+}
+
+/* ============ FORM CONTROLS ============ */
+.form-select-sm,
+.form-control-sm,
+.input-group-sm .form-control,
+.input-group-sm .btn {
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.form-select-sm:focus,
+.form-control-sm:focus,
+.input-group-sm .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* ============ BUTTON STYLING ============ */
+.btn-decrease,
+.btn-increase {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 2px solid #dee2e6;
+}
+
+#book-btn {
+    border-radius: 12px;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(220,53,69,0.2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+#book-btn:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(220,53,69,0.4);
+}
+
+#book-btn:disabled {
+    background: #ccc !important;
+    border-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ============ UTILITY ============ */
+.hide-spinner::-webkit-outer-spin-button,
+.hide-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.hide-spinner {
+    -moz-appearance: textfield;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+}
+
+/* ============ TEXT COLOR OVERRIDES ============ */
+p {
     color: black;
 }
-h5{
+
+h5 {
     color: black;
 }
 
-.voucher-option {
-    display: block;
-    padding: 8px 12px;
-    border: 1px solid #dee2e6;
-    margin-bottom: 5px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #000;
-}
-
-/* Modal text colors */
-#confirmModal .modal-content {
-    color: #fbf6f6ff;
-}
-
-#confirmModal .modal-title,
-#confirmModal .modal-body,
-#confirmModal .modal-footer {
-    color: #000;
-}
-
-/* Voucher section text colors */
-#voucher-select,
-#voucher-code,
-#voucher-message,
-#applied-voucher-info,
-#applied-voucher-code,
-#applied-voucher-desc,
-#applied-voucher-info .alert,
-#applied-voucher-info .alert * {
-    color: #000 !important;
-}
-
-/* Form labels and text */
 .form-label,
 .small,
 .text-muted,
 .form-select,
 .form-control {
-    color: #f7f5f5ff !important;
+    color: #333 !important;
 }
 
-/* Make sure dropdown options are also black */
 option {
     color: #000;
     background-color: #fff;
 }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+    .summary-box {
+        margin-bottom: 1rem;
+    }
+    
+    .combo-item .d-flex {
+        flex-direction: column;
+    }
+    
+    .combo-item .d-flex .d-flex {
+        flex-direction: row;
+        margin-top: 0.5rem;
+    }
+    
+    #book-btn {
+        font-size: 0.95rem;
+        padding: 0.75rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .summary-box {
+        padding: 1.5rem !important;
+    }
+    
+    .icon-box {
+        width: 40px;
+        height: 40px;
+    }
+}
 </style>
 @endpush
-
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -679,7 +798,7 @@ $(document).on('click', '.btn-increase', function() {
         value++;
         input.val(value);
         comboQuantities[comboId] = value;
-        updateComboSummary();
+        updateTotals();
     }
     
     // Enable/disable buttons
@@ -698,7 +817,7 @@ $(document).on('click', '.btn-decrease', function() {
         value--;
         input.val(value);
         comboQuantities[comboId] = value;
-        updateComboSummary();
+        updateTotals();
     }
     
     // Enable/disable buttons
@@ -718,7 +837,7 @@ $(document).on('change', 'input[type="number"].hide-spinner', function() {
     
     $(this).val(value);
     comboQuantities[comboId] = value;
-    updateComboSummary();
+    updateTotals();
     
     // Enable/disable buttons
     $(`.btn-decrease[data-combo-id="${comboId}"]`).prop('disabled', value <= 0);
@@ -795,37 +914,43 @@ function applyVoucher(code) {
     });
 }
 
-function updateComboSummary() {
-    let total = 0;
-    let comboList = [];
-    
-    combosData.forEach(combo => {
-        const qty = comboQuantities[combo.id] || 0;
-        if (qty > 0) {
-            total += combo.gia * qty;
-            comboList.push({
-                id: combo.id,
-                name: combo.ten,
-                price: combo.gia,
-                quantity: qty,
-                total: combo.gia * qty
-            });
-        }
+function updateTotals() {
+    let ticketTotal = 0;
+    let ticketSummaryHtml = '';
+
+    if (selectedSeats.length > 0) {
+        selectedSeats.forEach(gheId => {
+            const seatId = parseInt(gheId);
+            const seat = $(`.seat[data-ghe-id="${seatId}"]`);
+            if (seat.length) {
+                const seatType = seat.data('loai');
+                const seatLabel = seat.data('hang') + seat.data('cot');
+                const price = getSeatPrice(seatType);
+                ticketTotal += price;
+                ticketSummaryHtml += '<div class="text-dark fw-medium">' + seatLabel + ' (' + getSeatTypeName(seatType) + ') = ' + formatCurrency(price) + '</div>';
+            }
+        });
+    } else {
+        ticketSummaryHtml = '<p class="text-dark fw-medium mb-0">Chưa chọn ghế</p>';
+    }
+
+    $('#ticket-summary').html(ticketSummaryHtml);
+    $('#ticket-total').text(formatCurrency(ticketTotal));
+    $('#display-ticket-total').text(formatCurrency(ticketTotal));
+
+    let comboTotal = 0;
+    getComboItems().forEach(item => {
+        const combo = combosData.find(c => c.id == item.combo_id);
+        comboTotal += combo.gia * item.so_luong;
     });
     
-    // Update combo list display
-    let comboHtml = '';
-    comboList.forEach(combo => {
-        comboHtml += `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>${combo.name} x${combo.quantity}</div>
-                <div>${combo.total.toLocaleString('vi-VN')}đ</div>
-            </div>`;
-    });
-    
-    $('#combo-list').html(comboList.length > 0 ? comboHtml : '<p class="text-muted small mb-0">Chưa chọn combo</p>');
-    $('#combo-total').text(total.toLocaleString('vi-VN') + 'đ');
-    updateTotals();
+    $('#combo-total').text(formatCurrency(comboTotal));
+    $('#display-combo-total').text(formatCurrency(comboTotal));
+
+    // Calculate grand total
+    const grandTotal = ticketTotal + comboTotal - voucherDiscount;
+    $('#discount-amount').text('-' + formatCurrency(voucherDiscount));
+    $('#grand-total').text(formatCurrency(grandTotal));
 }
 
 $(document).ready(function() {
@@ -1258,30 +1383,29 @@ function updateTotals() {
                 const seatLabel = seat.data('hang') + seat.data('cot');
                 const price = getSeatPrice(seatType);
                 ticketTotal += price;
-                ticketSummaryHtml += '<div>' + seatLabel + ' (' + getSeatTypeName(seatType) + ') = ' + formatCurrency(price) + '</div>';
+                ticketSummaryHtml += '<div class="text-dark fw-medium">' + seatLabel + ' (' + getSeatTypeName(seatType) + ') = ' + formatCurrency(price) + '</div>';
             }
         });
     } else {
-        ticketSummaryHtml = '<p class="text-muted">Chưa chọn ghế</p>';
+        ticketSummaryHtml = '<p class="text-dark fw-medium mb-0">Chưa chọn ghế</p>';
     }
 
     $('#ticket-summary').html(ticketSummaryHtml);
     $('#ticket-total').text(formatCurrency(ticketTotal));
+    $('#display-ticket-total').text(formatCurrency(ticketTotal));
 
     let comboTotal = 0;
-    let comboListHtml = '';
     getComboItems().forEach(item => {
         const combo = combosData.find(c => c.id == item.combo_id);
         comboTotal += combo.gia * item.so_luong;
-        comboListHtml += '<div>' + combo.ten + ' x' + item.so_luong + ' = ' + formatCurrency(combo.gia * item.so_luong) + '</div>';
     });
-    $('#combo-list').html(comboListHtml);
+    
     $('#combo-total').text(formatCurrency(comboTotal));
+    $('#display-combo-total').text(formatCurrency(comboTotal));
 
-    // Update discount display
-    $('#discount-amount').text(formatCurrency(voucherDiscount));
-
-    const grandTotal = calculateTotal();
+    // Calculate grand total
+    const grandTotal = ticketTotal + comboTotal - voucherDiscount;
+    $('#discount-amount').text('-' + formatCurrency(voucherDiscount));
     $('#grand-total').text(formatCurrency(grandTotal));
 }
 

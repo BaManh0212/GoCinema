@@ -38,8 +38,8 @@
             <div class="seat-list">
                 @foreach($donDatVe->chiTietVes as $ve)
                     <div class="info-row">
-                        <span><strong>Ghế:</strong> {{ $ve->ghe->hang ?? 'N/A' }}{{ $ve->ghe->cot ?? '' }}</span> 
-                        <span><strong>Loại:</strong> {{ \App\Helpers\SeatHelper::getSeatTypeName($ve->loai_ghe) }}</span>
+                        <span><strong>Ghế:</strong> {{ $ve->ghe->hang ?? 'N/A' }}{{ $ve->ghe->cot ?? '' }} | </span> 
+                        <span><strong>Loại:</strong> {{ \App\Helpers\SeatHelper::getSeatTypeName($ve->loai_ghe) }} | </span>
                         <span><strong>Giá:</strong> {{ number_format($ve->gia, 0, ',', '.') }} đ</span>
                     </div>
                 @endforeach
