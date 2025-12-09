@@ -8,7 +8,7 @@ use App\Models\Phim;
 use App\Models\SuatChieu;
 use App\Models\Ghe;
 use App\Models\ChiTietVe;
-
+use App\Models\CheckinPrintLog;
 use App\Models\Combo;
 use Barryvdh\DomPDF\Facade\Pdf; // cần cài DomPDF
 use Illuminate\Http\Request;
@@ -83,16 +83,13 @@ class DonDatVeController extends Controller
             ->withErrors(['error' => 'Không thể in vé sau khi suất chiếu bắt đầu nếu chưa check-in.']);
     }
 
-    // Log print action using CheckinPrintLog within try-catch
-    try {
-        \App\Models\CheckinPrintLog::create([
-            'user_id' => \Illuminate\Support\Facades\Auth::id(),
-            'don_dat_ve_id' => $donVe->id,
-            'action_type' => 'print',
-        ]);
-    } catch (\Throwable $e) {
-        \Log::error('Failed to log print action in DonDatVeController: ' . $e->getMessage());
-    }
+    // Log print action
+    $user = Auth::user();
+    CheckinPrintLog::create([
+        'user_id' => $user->id,
+        'don_dat_ve_id' => $donVe->id,
+        'action_type' => 'print',
+    ]);
 
     // Update order status to 'da_checkin' if currently 'da_thanh_toan'
     if ($donVe->trang_thai === 'da_thanh_toan') {
@@ -117,19 +114,22 @@ class DonDatVeController extends Controller
         }
     }
 
-    // Tạo writer dùng SVG backend (dùng payload chuẩn từ model để đồng bộ QR)
+    // Tạo writer dùng SVG backend
     $renderer = new ImageRenderer(
-        // new RendererStyle(200, 1), // size=200, margin=1
-        // new SvgImageBackEnd()
+        new RendererStyle(200, 1), // size=200, margin=1
+        new SvgImageBackEnd()
     );
     $writer = new Writer($renderer);
 
-    // Dùng qrString() từ model để đồng bộ với email và web confirm
-    $qrString = $donVe->qrString();
-
     $qrCodes = [];
     foreach ($donVe->chiTietVes as $ct) {
-        $qrSvg = $writer->writeString($qrString);
+        $qrData = [
+            'ma_don' => $donVe->ma_don,
+            'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
+            'ngay_dat' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $qrSvg = $writer->writeString(json_encode($qrData));
         $qrCodes[$ct->id] = $qrSvg;
     }
 
@@ -436,7 +436,7 @@ public function selectSeats($suat_chieu_id)
 
     // Lấy ghế đã đặt hoặc đã thanh toán hoặc đã check-in
     $gheDaDat = ChiTietVe::where('suat_chieu_id', $suat_chieu_id)
-        ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+        ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
         ->pluck('ghe_id')
         ->toArray();
 
@@ -516,7 +516,7 @@ public function selectSeats($suat_chieu_id)
                 // Kiểm tra ghế đã đặt
                 $daDat = ChiTietVe::where('suat_chieu_id', $suatChieuId)
                     ->where('ghe_id', $gheId)
-                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+                    ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
                     ->exists();
 
                 if ($daDat) {

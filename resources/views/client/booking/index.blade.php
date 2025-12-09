@@ -91,9 +91,9 @@
                     </div>
 
                     {{-- Sơ đồ ghế --}}
-                    <div class="seat-map p-4 border rounded bg-light" style="display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center;">
+                    <div class="seat-map p-4 border rounded bg-light" style="display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; max-width:100%; --cols: {{ $suatChieu->phong->so_cot }}; --seat-size: clamp(28px, calc((100% - 120px) / var(--cols)), 45px);">
                         {{-- Màn hình --}}
-                        <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $suatChieu->phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
+                        <div class="screen mb-4" style="grid-column: 1 / -1; width: min({{ $suatChieu->phong->so_cot * 45 + 40 }}px, 100%); justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
                         {{-- Lối vào --}}
                         <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
@@ -132,27 +132,32 @@
                                         $trangthai = $ghe ? ($gheStatuses[$ghe->id] ?? 'hoat_dong') : 'hoat_dong';
                                         $disabled = false;
 
-                                        // Kiểm tra xem ghế có phải của user hiện tại đang giữ không
-                                        $isMyHeldSeat = $ghe && auth()->check() && isset($myHeldSeats) && in_array($ghe->id, $myHeldSeats);
-                                        
+                                        // ✅ FIX: Kiểm tra ghế đã đặt/thanh toán/check-in TRƯỚC để đảm bảo không bị override
+                                        // Ghế đã đặt/thanh toán/check-in KHÔNG BAO GIỜ được chọn lại, kể cả là của user hiện tại
                                         if ($ghe && in_array($ghe->id, $gheDaDat)) {
                                             $trangthai = 'da_dat';
                                             $disabled = true;
-                                        } elseif ($ghe && in_array($ghe->id, $gheChoThanhToan)) {
-                                            $trangthai = 'cho_thanh_toan';
-                                            $disabled = true;
-                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds) && !$isMyHeldSeat) {
-                                            // Ghế đang được user khác giữ tạm -> disabled
-                                            $trangthai = 'giu_tam';
-                                            $disabled = true;
-                                        } elseif ($ghe && in_array($ghe->id, $giuTamIds) && $isMyHeldSeat) {
-                                            // Ghế đang được user hiện tại giữ -> có thể bỏ chọn
-                                            $trangthai = 'giu_tam';
-                                            $disabled = false; // Cho phép bỏ chọn
-                                        } elseif ($trangthai === 'bao_tri') {
-                                            $disabled = true;
-                                        } elseif ($trangthai === 'vo_hieu_hoa') {
-                                            $disabled = true;
+                                            $isMyHeldSeat = false; // Force reset để đảm bảo không bị override
+                                        } else {
+                                            // Kiểm tra xem ghế có phải của user hiện tại đang giữ không (chỉ khi chưa đặt)
+                                            $isMyHeldSeat = $ghe && auth()->check() && isset($myHeldSeats) && in_array($ghe->id, $myHeldSeats);
+                                            
+                                            if ($ghe && in_array($ghe->id, $gheChoThanhToan)) {
+                                                $trangthai = 'cho_thanh_toan';
+                                                $disabled = true;
+                                            } elseif ($ghe && in_array($ghe->id, $giuTamIds) && !$isMyHeldSeat) {
+                                                // Ghế đang được user khác giữ tạm -> disabled
+                                                $trangthai = 'giu_tam';
+                                                $disabled = true;
+                                            } elseif ($ghe && in_array($ghe->id, $giuTamIds) && $isMyHeldSeat) {
+                                                // Ghế đang được user hiện tại giữ -> có thể bỏ chọn
+                                                $trangthai = 'giu_tam';
+                                                $disabled = false; // Cho phép bỏ chọn
+                                            } elseif ($trangthai === 'bao_tri') {
+                                                $disabled = true;
+                                            } elseif ($trangthai === 'vo_hieu_hoa') {
+                                                $disabled = true;
+                                            }
                                         }
 
                                         $classes = 'seat seat-' . $currentLoai;
@@ -488,14 +493,14 @@
 @push('styles')
 <style>
 .seat {
-    width: 45px;
-    height: 45px;
+    width: var(--seat-size, 45px);
+    height: var(--seat-size, 45px);
     margin: 4px;
     border-radius: 8px;
     border: 1px solid #ccc;
     text-align: center;
-    line-height: 45px;
-    font-size: 12px;
+    line-height: var(--seat-size, 45px);
+    font-size: calc(var(--seat-size, 45px) * 0.26);
     cursor: pointer;
     font-weight: 500;
     color: #222;
@@ -503,7 +508,7 @@
     transition: all 0.2s;
 }
 .double-seat {
-    width: 94px !important; /* 45px * 2 + margin */
+    width: calc(var(--seat-size,45px) * 2 + 8px) !important; /* two seats side-by-side plus margins */
 }
 .seat-vip { background-color: #FFD700; }
 .seat-doi { background-color: #98FB98; }
@@ -562,8 +567,16 @@
     letter-spacing: 2px;
 }
 
+/* Prevent overflow: allow horizontal scrolling for wide rows and keep seats from shrinking */
+.seat-map { overflow-x: auto; }
+.row-seats { overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; flex-wrap: nowrap; align-items: center; }
+.row-seats .seat { flex: 0 0 auto; }
+
+.row-seats::-webkit-scrollbar { height: 8px; }
+.row-seats::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
+
 .seat:not(.disabled):hover {
-    transform: scale(1.08);
+    transform: scale(1.06);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
@@ -852,8 +865,21 @@ $(document).ready(function() {
 
     // Click ghế - cho phép click cả ghế đã giữ tạm của user hiện tại
     $('.seat-map').on('click', '.seat', function() {
-        // Bỏ qua nếu ghế bị disabled và không phải ghế đã chọn của user hiện tại
-        if ($(this).hasClass('disabled') && !$(this).hasClass('seat-chon')) {
+        // ✅ FIX: Kiểm tra trạng thái ghế từ data attribute
+        const trangthai = $(this).data('trangthai');
+        const isMyHeld = $(this).data('my-held') === 'true' || $(this).data('my-held') === true;
+        
+        // ✅ Ngăn chặn click vào ghế đã đặt/thanh toán/check-in
+        if (trangthai === 'da_dat') {
+            return; // Ghế đã đặt/thanh toán/check-in không thể chọn
+        }
+        
+        // Cho phép click vào:
+        // 1. Ghế đang được user hiện tại giữ (isMyHeld = true hoặc có class seat-chon)
+        // 2. Ghế chưa bị disabled
+        const canClick = isMyHeld || $(this).hasClass('seat-chon') || !$(this).hasClass('disabled');
+        
+        if (!canClick) {
             return;
         }
         
@@ -1082,7 +1108,7 @@ $(document).ready(function() {
                 $('#confirmModal').modal('hide');
                 
                 // ✅ Show success message
-                showSuccessMessage('Đặt vé thành công! Đang chuyển đến trang xác nhận...');
+                showSuccessMessage('Đang chuyển đến trang xác nhận...');
                 
                 // ✅ Redirect after 2 seconds
                 setTimeout(function() {

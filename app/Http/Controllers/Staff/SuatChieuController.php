@@ -241,7 +241,7 @@ class SuatChieuController extends Controller
         // Lấy ghế đã đặt
         $gheDaDat = DB::table('chi_tiet_ve')
             ->where('suat_chieu_id', $id)
-            ->where('trang_thai', 'da_dat')
+            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
             ->pluck('ghe_id')
             ->toArray();
 
@@ -269,7 +269,7 @@ class SuatChieuController extends Controller
 
         $gheDaDat = DB::table('chi_tiet_ve')
             ->where('suat_chieu_id', $id)
-            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin'])
+            ->whereIn('trang_thai', ['da_dat', 'da_thanh_toan', 'da_checkin', 'da_su_dung'])
             ->pluck('ghe_id')
             ->toArray();
 

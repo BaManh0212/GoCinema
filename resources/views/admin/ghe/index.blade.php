@@ -25,9 +25,9 @@
     </div>
 
     {{-- Sơ đồ ghế --}}
-    <div class="seat-map p-4 border rounded bg-white shadow-sm" style="display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: center;">
+    <div class="seat-map p-4 border rounded bg-white shadow-sm" style="display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: center; max-width:100%;">
         {{-- Màn hình --}}
-        <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
+        <div class="screen mb-4" style="grid-column: 1 / -1; width: min({{ $phong->so_cot * 45 + 40 }}px, 100%); justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
         {{-- Lối vào --}}
         <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
@@ -130,6 +130,14 @@
 .seat-doi { background-color: #b6ffb7ff; }
 .seat-thuong { background-color: #87CEFA; }
 .seat-bao-tri { background-color: #d1d5db !important; }
+
+/* Prevent overflow: allow horizontal scrolling for wide rows and keep seats from shrinking */
+.seat-map { overflow-x: auto; }
+.row-seats { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.row-seats .seat { flex: 0 0 auto; }
+
+.row-seats::-webkit-scrollbar { height: 8px; }
+.row-seats::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
 
 .legend-box {
     display: inline-block;
