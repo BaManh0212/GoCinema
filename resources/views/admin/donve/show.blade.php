@@ -111,7 +111,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center">#</th>
+                            <th class="text-center">STT</th>
                             <th>Ghế</th>
                             <th>Loại ghế</th>
                             <th class="text-end">Đơn giá</th>
@@ -178,7 +178,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center">#</th>
+                            <th class="text-center">STT</th>
                             <th>Tên combo</th>
                             <th class="text-end">Đơn giá</th>
                             <th class="text-center">Số lượng</th>
