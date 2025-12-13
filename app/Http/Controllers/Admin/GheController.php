@@ -154,9 +154,12 @@ class GheController extends Controller
             $seatIds = Ghe::where('phong_id', $phong_id)->pluck('id');
             if ($seatIds->count() > 0) {
                 DB::table('chi_tiet_ve')->whereIn('ghe_id', $seatIds)->delete();
+
+                // Xóa các bản ghi giữ tạm (prevent FK constraint)
+                DB::table('ghe_giu_tam')->whereIn('ghe_id', $seatIds)->delete();
             }
 
-            // Xóa tất cả ghế cũ của phòng
+            // Bây giờ xóa tất cả ghế cũ của phòng
             Ghe::where('phong_id', $phong_id)->delete();
 
             // Tạo ghế mới từ ma trận
@@ -298,6 +301,10 @@ class GheController extends Controller
 
                 // Xóa tất cả ghế thừa (bao gồm ghế lẻ cuối cùng)
                 if (!empty($toDelete)) {
+                    // Xóa dữ liệu con trước
+                    DB::table('ghe_giu_tam')->whereIn('ghe_id', $toDelete)->delete();
+
+                    // Rồi xóa ghế
                     Ghe::whereIn('id', $toDelete)->delete();
                 }
             }

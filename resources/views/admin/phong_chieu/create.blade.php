@@ -215,10 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
         seatPreview.appendChild(screen);
 
         // ⛳ Lối vào
-        const entranceWrap = document.createElement('div');
-        entranceWrap.className = "seat-entrance-row";
-        entranceWrap.innerHTML = `<div class="seat-preview seat-entrance">VÀO</div>`;
-        seatPreview.appendChild(entranceWrap);
+        // const entranceWrap = document.createElement('div');
+        // entranceWrap.className = "seat-entrance-row";
+        // entranceWrap.innerHTML = `<div class="seat-preview seat-entrance">VÀO</div>`;
+        // seatPreview.appendChild(entranceWrap);
 
         // 🎫 GHẾ + LỐI ĐI
         for (let r = 0; r < soHang; r++) {
@@ -242,10 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ⛳ Lối ra
-        const exitWrap = document.createElement('div');
-        exitWrap.className = "seat-exit-row";
-        exitWrap.innerHTML = `<div class="seat-preview seat-exit">RA</div>`;
-        seatPreview.appendChild(exitWrap);
+        // const exitWrap = document.createElement('div');
+        // exitWrap.className = "seat-exit-row";
+        // exitWrap.innerHTML = `<div class="seat-preview seat-exit">RA</div>`;
+        // seatPreview.appendChild(exitWrap);
     }
 
     soHangInput.addEventListener('input', updateTongGhe);

@@ -72,55 +72,15 @@ public function print($id)
         'chiTietVes.ghe'
     ])->findOrFail($id);
 
-    $allowedToPrint = ['da_thanh_toan', 'da_checkin'];
-    if (!in_array($donVe->trang_thai, $allowedToPrint)) {
-        return redirect()->route('admin.donve.index')
-            ->withErrors(['error' => 'Chỉ có đơn đã thanh toán hoặc đã check-in mới được in vé.']);
+    // Chỉ cho in khi đã check-in
+    if ($donVe->trang_thai !== 'da_checkin') {
+        return redirect()->route('admin.donve.show', $donVe->id)
+            ->withErrors(['error' => 'Vui lòng check-in qua mã QR hoặc mã đơn trước khi in vé.']);
     }
 
-    // Check if screening time has passed and order is not yet checked in
-    $now = Carbon::now();
-    $thoiGianBatDau = Carbon::parse($donVe->suatChieu->gio_bat_dau);
-    
-    if ($now->gte($thoiGianBatDau) && $donVe->trang_thai !== 'da_checkin') {
-        return redirect()->route('admin.donve.index')
-            ->withErrors(['error' => 'Không thể in vé sau khi suất chiếu bắt đầu nếu chưa check-in.']);
-    }
-
-    // Log print action
-    $user = Auth::user();
-    CheckinPrintLog::create([
-        'user_id' => $user->id,
-        'don_dat_ve_id' => $donVe->id,
-        'action_type' => 'print',
-    ]);
-
-    // Update order status to 'da_checkin' if currently 'da_thanh_toan'
-    if ($donVe->trang_thai === 'da_thanh_toan') {
-        DB::beginTransaction();
-        try {
-            // Update order status
-            $donVe->trang_thai = 'da_checkin';
-            $donVe->save();
-
-            // Update all seat details status to 'da_su_dung'
-            foreach ($donVe->chiTietVes as $ct) {
-                if ($ct->trang_thai !== 'da_su_dung') {
-                    $ct->trang_thai = 'da_su_dung';
-                    $ct->save();
-                }
-            }
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            \Log::error('Failed to update status when printing: ' . $e->getMessage());
-        }
-    }
-
-    // Tạo writer dùng SVG backend
+    // Tạo QR cho từng vé
     $renderer = new ImageRenderer(
-        new RendererStyle(200, 1), // size=200, margin=1
+        new RendererStyle(200, 1),
         new SvgImageBackEnd()
     );
     $writer = new Writer($renderer);
@@ -132,10 +92,16 @@ public function print($id)
             'ghe' => ($ct->ghe->hang ?? '') . ($ct->ghe->cot ?? ''),
             'ngay_dat' => now()->format('Y-m-d H:i:s'),
         ];
-
-        $qrSvg = $writer->writeString(json_encode($qrData));
-        $qrCodes[$ct->id] = $qrSvg;
+        $qrCodes[$ct->id] = $writer->writeString(json_encode($qrData));
     }
+
+    // Log hành động in
+    $user = Auth::user();
+    CheckinPrintLog::create([
+        'user_id' => $user->id,
+        'don_dat_ve_id' => $donVe->id,
+        'action_type' => 'print',
+    ]);
 
     $pdf = Pdf::loadView('admin.donve.print', compact('donVe', 'qrCodes'));
     return $pdf->stream("Ve_{$donVe->ma_don}.pdf");

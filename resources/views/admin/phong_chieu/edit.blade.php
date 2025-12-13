@@ -167,10 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
         screen.appendChild(screenBox);
         seatPreview.appendChild(screen);
 
-        const entranceWrap = document.createElement('div');
-        entranceWrap.className = "seat-entrance-row";
-        entranceWrap.innerHTML = `<div class="seat-preview seat-entrance">VÀO</div>`;
-        seatPreview.appendChild(entranceWrap);
+        // const entranceWrap = document.createElement('div');
+        // entranceWrap.className = "seat-entrance-row";
+        // entranceWrap.innerHTML = `<div class="seat-preview seat-entrance">VÀO</div>`;
+        // seatPreview.appendChild(entranceWrap);
 
         for (let r = 0; r < soHang; r++) {
             const row = document.createElement('div');
@@ -191,10 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
             seatPreview.appendChild(row);
         }
 
-        const exitWrap = document.createElement('div');
-        exitWrap.className = "seat-exit-row";
-        exitWrap.innerHTML = `<div class="seat-preview seat-exit">RA</div>`;
-        seatPreview.appendChild(exitWrap);
+        // const exitWrap = document.createElement('div');
+        // exitWrap.className = "seat-exit-row";
+        // exitWrap.innerHTML = `<div class="seat-preview seat-exit">RA</div>`;
+        // seatPreview.appendChild(exitWrap);
     }
 
     soHangInput.addEventListener('input', updateTongGhe);

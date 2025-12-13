@@ -25,14 +25,18 @@
     </div>
 
     {{-- Sơ đồ ghế --}}
-    <div class="seat-map p-4 border rounded bg-white shadow-sm" style="display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: center; max-width:100%;">
+    <div class="seat-map p-4 border rounded bg-white shadow-sm"
+     style="display: grid; grid-template-columns: 50px 1fr; gap: var(--seat-gap,8px); align-items: center; max-width:100%; --cols: {{ $phong->so_cot }}; --seat-size: clamp(28px, calc((100% - 120px) / var(--cols)), 45px); --seat-gap: 8px;">
         {{-- Màn hình --}}
-        <div class="screen mb-4" style="grid-column: 1 / -1; width: min({{ $phong->so_cot * 45 + 40 }}px, 100%); justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
+        <div class="screen mb-4"
+     style="grid-column: 2 / -1; width: min(calc(var(--cols) * var(--seat-size) + (var(--cols) - 1) * var(--seat-gap) + 20px), 100%); justify-self: center;">
+    🎥 MÀN HÌNH CHIẾU
+</div>
 
         {{-- Lối vào --}}
-        <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
-            <div class="seat-preview seat-entrance">VÀO</div>
-        </div>
+            {{-- <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
+                <div class="seat-preview seat-entrance">VÀO</div>
+            </div> --}}
 
         @php
             $hangLetters = range('A', chr(ord('A') + $phong->so_hang - 1));
@@ -76,8 +80,8 @@
                          data-cot="{{ $cot }}"
                          data-loai="{{ $currentLoai }}"
                          data-trangthai="{{ $currentTrangThai }}">
-                        @if($isDouble)
-                            💑
+                       @if($isDouble)
+                            <div class="double-label">{{ $hang }}{{ $cot }}-{{ $hang }}{{ $cot + 1 }}</div>
                             @php $cot += 1; @endphp {{-- Bỏ qua ghế tiếp theo --}}
                         @else
                             {{ $hang }}{{ $cot }}
@@ -95,9 +99,9 @@
         @endforeach
 
         {{-- Lối ra --}}
-        <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
-            <div class="seat-preview seat-exit">RA</div>
-        </div>
+            {{-- <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
+                <div class="seat-preview seat-exit">RA</div>
+            </div> --}}
     </div>
 
     {{-- Nút lưu sơ đồ --}}
@@ -133,7 +137,20 @@
 
 /* Prevent overflow: allow horizontal scrolling for wide rows and keep seats from shrinking */
 .seat-map { overflow-x: auto; }
-.row-seats { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.row-seats {
+    display: grid; /* giữ layout ghế theo cột */
+    grid-auto-flow: column;
+    grid-auto-columns: var(--seat-size);
+    gap: var(--seat-gap,8px);
+    align-items: center;
+    justify-content: center; /* căn đều các ô ghế trong hàng */
+    justify-self: center;     /* đưa cả hàng vào chính giữa cột ghế */
+    padding-left: 0;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+}
+
+/* nếu dùng flex thay grid cho hàng thì đảm bảo justify-self vẫn có hiệu lực; hiện giữ grid-auto-flow cho khoảng cách đều */
 .row-seats .seat { flex: 0 0 auto; }
 
 .row-seats::-webkit-scrollbar { height: 8px; }
@@ -191,6 +208,21 @@
 
 @push('scripts')
 <script>
+// Helper render label cho mỗi seat
+function renderSeatLabel(el) {
+    const hang = el.dataset.hang || '';
+    const cot = parseInt(el.dataset.cot, 10) || 0;
+    const loai = el.dataset.loai || '';
+    if (loai === 'doi') {
+        el.innerHTML = `<div class="double-label">${hang}${cot}-${hang}${cot + 1}</div>`;
+    } else {
+        el.textContent = `${hang}${cot}`;
+    }
+}
+
+// Initial fixup: render label cho tất cả seat khi trang load
+document.querySelectorAll('.seat').forEach(s => renderSeatLabel(s));
+
 // Toggle trạng thái ghế
 document.querySelectorAll('.seat').forEach(seat => {
     seat.addEventListener('click', () => {
@@ -205,6 +237,13 @@ document.querySelectorAll('.seat').forEach(seat => {
             seat.classList.remove('seat-vip', 'seat-doi', 'seat-thuong');
             seat.classList.add('seat-bao-tri');
         }
+
+        // Render label/biểu tượng sau khi cập nhật trạng thái
+        if (seat.dataset.trangthai === 'bao_tri') {
+            seat.innerHTML = '🔧';
+        } else {
+            renderSeatLabel(seat);
+        }
     });
 
     // Double-click để chuyển đổi loại ghế
@@ -218,12 +257,8 @@ document.querySelectorAll('.seat').forEach(seat => {
             seat.classList.remove('seat-bao-tri');
             seat.classList.add('seat-' + currentLoai);
 
-            // Cập nhật text hiển thị
-            if (currentLoai === 'doi') {
-                seat.textContent = '💑';
-            } else {
-                seat.textContent = seat.dataset.hang + seat.dataset.cot;
-            }
+            // Cập nhật label hiển thị
+            renderSeatLabel(seat);
         } else {
             // Nếu đang hoạt động, chuyển đổi loại ghế
             let newLoai;
@@ -236,7 +271,7 @@ document.querySelectorAll('.seat').forEach(seat => {
                 seat.dataset.trangthai = 'bao_tri';
                 seat.classList.remove('seat-doi');
                 seat.classList.add('seat-bao-tri');
-                seat.textContent = '🔧';
+                seat.innerHTML = '🔧';
                 return;
             }
 
@@ -245,7 +280,7 @@ document.querySelectorAll('.seat').forEach(seat => {
                 seat.dataset.loai = newLoai;
                 seat.classList.remove('seat-thuong', 'seat-vip');
                 seat.classList.add('seat-' + newLoai);
-                seat.textContent = seat.dataset.hang + seat.dataset.cot;
+                renderSeatLabel(seat);
             }
         }
     });
