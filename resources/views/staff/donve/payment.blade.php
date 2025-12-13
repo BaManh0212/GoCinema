@@ -1,4 +1,4 @@
-@extends('staff.layouts.staff')
+    @extends('staff.layouts.staff')
 
 @section('title', 'Thanh toán - Đơn Đặt Vé Tại Quầy')
 

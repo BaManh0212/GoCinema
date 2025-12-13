@@ -88,8 +88,8 @@
                     @foreach($combos as $combo)
                     <div class="flex justify-between items-center py-2">
                         <div>
-                            <p cclass="text-primary text-sm">{{ $combo->ten }}</p>
-                            <p class="text-sm text-gray-600">Số lượng: {{ $combo->so_luong }}</p>
+                            <p class="text-sm font-semibold text-black">{{ $combo->ten }}</p>
+                            <p class="text-sm text-black">Số lượng: {{ $combo->so_luong }}</p>
                         </div>
                         <div class="text-right">
                             <p class="font-semibold text-blue-600">{{ number_format($combo->gia * $combo->so_luong) }}đ</p>
@@ -140,8 +140,8 @@
                                 <div class="flex items-center">
                                     <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Square-1024x1024.png" alt="MoMo" class="w-8 h-8 mr-3">
                                     <div>
-                                        <p class="font-semibold">Ví MoMo</p>
-                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua ví điện tử</p>
+                                        <p class="font-semibold text-black">Ví MoMo</p>
+                                        <p class="text-sm text-black">Thanh toán nhanh qua ví điện tử</p>
                                     </div>
                                 </div>
                             </label>
@@ -152,8 +152,8 @@
                                 <div class="flex items-center"> 
                                     <img src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg" alt="VNPay" class="w-8 h-8 mr-3"> 
                                     <div> 
-                                        <p class="font-semibold">VNPay</p> 
-                                        <p class="text-sm text-gray-600">Thanh toán nhanh qua cổng VNPay</p> 
+                                        <p class="font-semibold text-black">VNPay</p> 
+                                        <p class="text-sm text-black">Thanh toán nhanh qua cổng VNPay</p> 
                                     </div> 
                                 </div> 
                             </label> 
@@ -165,7 +165,7 @@
                         <button type="submit" id="payButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
                             Thanh toán {{ number_format($donDatVe->tong_tien) }}đ
                         </button>
-                        <p class="text-sm text-gray-600 mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
+                        <p class="text-sm text-black mt-2">Bằng cách nhấn thanh toán, bạn đồng ý với điều khoản sử dụng</p>
                     </div>
                 </form>
             </div>

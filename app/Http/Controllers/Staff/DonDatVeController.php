@@ -245,7 +245,7 @@ public function checkInByCode(Request $request)
     ]);
 
     $maDon = trim($validated['ma_don']);
-    $don = DonDatVe::with('chiTietVes')->where('ma_don', $maDon)->first();
+    $don = DonDatVe::with(['chiTietVes.ghe', 'suatChieu'])->where('ma_don', $maDon)->first();
 
     if (! $don) {
         if ($request->wantsJson()) {
@@ -254,7 +254,6 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Mã đơn không tồn tại.']);
     }
 
-    // Check if already checked in
     if ($don->trang_thai === 'da_checkin') {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đơn này đã được check-in rồi.'], 422);
@@ -262,7 +261,6 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Đơn này đã được check-in rồi.']);
     }
 
-    // Kiểm tra trạng thái thanh toán - chỉ 'da_thanh_toan' mới được check-in
     if ($don->trang_thai !== 'da_thanh_toan') {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đơn chưa được thanh toán nên không thể check-in.'], 422);
@@ -270,10 +268,8 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => 'Đơn chưa được thanh toán nên không thể check-in.']);
     }
 
-    // Kiểm tra thời gian suất chiếu
     $now = now();
     $suatChieu = $don->suatChieu;
-
     if (!$suatChieu) {
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Không tìm thấy thông tin suất chiếu.'], 404);
@@ -282,23 +278,18 @@ public function checkInByCode(Request $request)
     }
 
     $thoiGianBatDau = \Carbon\Carbon::parse($suatChieu->gio_bat_dau);
-    $thoiGianBatDauCheckin = $thoiGianBatDau->copy()->subMinutes(45);  // Được phép check-in từ 45 phút trước
-    $thoiGianKetThucCheckin = $thoiGianBatDau->copy()->subMinutes(10);  // Đến 10 phút trước khi phim bắt đầu
+    $startAllowed = $thoiGianBatDau->copy()->subMinutes(45);
+    $endAllowed = $thoiGianBatDau->copy()->subMinutes(10);
 
-    // Kiểm tra thời gian check-in hợp lệ (từ 45p đến 10p trước khi phim bắt đầu)
-    if ($now->lt($thoiGianBatDauCheckin)) {
-        // Nếu còn sớm hơn thời gian bắt đầu cho phép check-in
-        $thoiGianConLai = $now->diffForHumans($thoiGianBatDauCheckin, [
-            'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW,
-            'options' => \Carbon\CarbonInterface::JUST_NOW | \Carbon\CarbonInterface::ONE_DAY_WORDS | \Carbon\CarbonInterface::TWO_DAY_WORDS
-        ]);
-        $message = "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu. Vui lòng quay lại sau $thoiGianConLai.";
+    if ($now->lt($startAllowed)) {
+        $message = "Chỉ được phép check-in từ 45 phút đến 10 phút trước khi phim bắt đầu.";
         if ($request->wantsJson()) {
             return response()->json(['success' => false, 'message' => $message], 400);
         }
         return back()->withErrors(['ma_don' => $message]);
-    } elseif ($now->gt($thoiGianKetThucCheckin)) {
-        // Nếu đã quá thời gian cho phép check-in (ít hơn 10 phút trước khi phim bắt đầu)
+    }
+
+    if ($now->gt($endAllowed) || $now->gt($thoiGianBatDau)) {
         $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ nhân viên để được hỗ trợ.';
         if ($request->wantsJson()) {
             return response()->json(['success' => false, 'message' => $message], 400);
@@ -306,19 +297,8 @@ public function checkInByCode(Request $request)
         return back()->withErrors(['ma_don' => $message]);
     }
 
-    // Nếu đã quá thời gian bắt đầu phim
-    if ($now->gt($thoiGianBatDau)) {
-        $message = 'Đã quá thời gian cho phép check-in. Vui lòng liên hệ quầy vé để được hỗ trợ.';
-
-        if ($request->wantsJson()) {
-            return response()->json(['message' => $message], 422);
-        }
-        return back()->withErrors(['ma_don' => $message]);
-    }
-
     DB::beginTransaction();
     try {
-        // ✅ Cập nhật trạng thái chi tiết vé
         foreach ($don->chiTietVes as $ct) {
             if ($ct->trang_thai !== 'da_su_dung') {
                 $ct->trang_thai = 'da_su_dung';
@@ -326,28 +306,25 @@ public function checkInByCode(Request $request)
             }
         }
 
-        // ✅ Cập nhật trạng thái đơn vé tổng
         $don->trang_thai = 'da_checkin';
         $don->save();
 
+        CheckinPrintLog::create([
+            'user_id' => Auth::id(),
+            'don_dat_ve_id' => $don->id,
+            'action_type' => 'checkin',
+        ]);
+
         DB::commit();
 
-        // Log checkin action using CheckinPrintLog within try-catch
-        try {
-            \App\Models\CheckinPrintLog::create([
-                'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                'don_dat_ve_id' => $don->id,
-                'action_type' => 'checkin',
-            ]);
-        } catch (\Throwable $e) {
-            \Log::error('Failed to log checkin action in DonDatVeController: ' . $e->getMessage());
-        }
-
         if ($request->wantsJson()) {
-            return response()->json(['message' => 'Check-in thành công.', 'ma_don' => $maDon]);
+            return response()->json([
+                'message' => 'Check-in thành công.',
+                'redirect' => route('staff.donve.show', $don->id)
+            ]);
         }
 
-        return back()->with('success', "✅ Check-in thành công cho mã đơn $maDon");
+        return redirect()->route('staff.donve.show', $don->id)->with('success', "✅ Check-in thành công cho mã đơn $maDon");
     } catch (\Throwable $e) {
         DB::rollBack();
         \Log::error('Lỗi khi check-in theo mã đơn: ' . $e->getMessage());

@@ -7,13 +7,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-primary mb-0">🎫 Chi tiết đơn: {{ $donVe->ma_don }}</h2>
         <div class="d-flex gap-2">
-            @php $canPrint = in_array($donVe->trang_thai, ['da_thanh_toan','da_checkin']); @endphp
+            @php $canPrint = ($donVe->trang_thai === 'da_checkin'); @endphp
             @if($canPrint)
                 <a href="{{ route('admin.donve.print', $donVe->id) }}" class="btn btn-success">
                     <i class="bi bi-printer"></i> In vé
                 </a>
             @else
-                <button class="btn btn-outline-secondary" disabled title="Chỉ in khi đơn đã thanh toán hoặc đã check-in">
+                <button class="btn btn-outline-secondary" disabled title="Phải check-in qua mã QR hoặc mã đơn trước khi in vé">
                     <i class="bi bi-printer"></i> In vé
                 </button>
             @endif

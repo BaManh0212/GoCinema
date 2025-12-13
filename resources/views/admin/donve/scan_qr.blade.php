@@ -17,9 +17,6 @@
                     <button id="stopScan" class="btn btn-outline-secondary mt-3">
                         <i class="bi bi-x-circle"></i> Dừng quét
                     </button>
-                    {{-- <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-primary mt-3 ms-2">
-                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                    </a> --}}
                 </div>
             </div>
         </div>
@@ -30,10 +27,69 @@
 
 <script>
 let html5QrCode;
+let currentCameraId = null;
+let scanning = false;
 const resultEl = document.getElementById('result');
-const ordersUrl = "{{ route('admin.donve.index') }}"; // URL chuyển về trang quản lý đơn
+
+// Tính base path dựa trên location để hỗ trợ /admin/scan-qr hoặc /admin/admin/scan-qr
+const basePath = window.location.pathname.replace(/\/scan-qr\/?$/, '');
+const ordersUrl = "{{ route('admin.donve.index') }}";
+const checkUrl = basePath + '/scan-qr/check';
+
+function proceedFetch(maDon) {
+    fetch(checkUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({ ma_don: maDon })
+    })
+    .then(async res => {
+        const text = await res.text();
+        try {
+            const data = JSON.parse(text);
+            if (res.ok && data.status && data.redirect) {
+                resultEl.innerHTML = "<span class='text-success fw-bold'>Đơn hợp lệ! Chuyển trang...</span>";
+                setTimeout(() => window.location.href = data.redirect, 600);
+                return;
+            } else {
+                resultEl.innerHTML = "<span class='text-danger fw-bold'>" + (data.message || 'Đơn không hợp lệ') + "</span>";
+            }
+        } catch (parseErr) {
+            console.error('Non-JSON response:', text);
+            resultEl.innerHTML = "<span class='text-danger fw-bold'>Lỗi server! (Xem console)</span>";
+        }
+
+        // Nếu không thành công, cho phép quét lại (restart)
+        tryRestartScanner();
+    })
+    .catch(err => {
+        console.error('Fetch error:', err);
+        resultEl.innerHTML = "<span class='text-danger fw-bold'>Lỗi server!</span>";
+        tryRestartScanner();
+    });
+}
+
+function tryRestartScanner() {
+    scanning = false;
+    if (!html5QrCode || !currentCameraId) return;
+    html5QrCode.start(
+        currentCameraId,
+        { fps: 10, qrbox: 250 },
+        onScanSuccess
+    ).then(() => {
+        resultEl.innerHTML = "<span class='text-info fw-bold'>Camera đã sẵn sàng. Hãy quét QR code.</span>";
+    }).catch(err => {
+        console.error('Không thể khởi động lại camera:', err);
+        resultEl.innerHTML = "<span class='text-danger fw-bold'>Không thể khởi động camera: " + (err.message||err) + "</span>";
+    });
+}
 
 function onScanSuccess(decodedText) {
+    if (scanning) return; // chặn callback lặp
+    scanning = true;
+
     resultEl.innerHTML = "<span class='text-primary fw-bold'>Đang kiểm tra đơn...</span>";
 
     let maDon = decodedText;
@@ -42,29 +98,21 @@ function onScanSuccess(decodedText) {
         maDon = data.ma_don || decodedText;
     } catch(e){}
 
-    fetch("{{ route('admin.admin.scan.qr.check') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-        },
-        body: JSON.stringify({ ma_don: maDon })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status && data.redirect) {
-            resultEl.innerHTML = "<span class='text-success fw-bold'>Đơn hợp lệ! Chuyển trang...</span>";
-            setTimeout(() => {
-                window.location.href = data.redirect;
-            }, 800);
-        } else {
-            resultEl.innerHTML = "<span class='text-danger fw-bold'>" + (data.message || 'Đơn không hợp lệ') + "</span>";
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        resultEl.innerHTML = "<span class='text-danger fw-bold'>Lỗi server!</span>";
-    });
+    // Nếu payload có dạng "MA_DON:1" -> lấy phần trước dấu ':'
+    if (typeof maDon === 'string' && maDon.includes(':')) {
+        maDon = maDon.split(':')[0].trim();
+    }
+
+    // Dừng scanner ngay để tránh gửi nhiều request
+    if (html5QrCode) {
+        html5QrCode.stop().catch(()=>{}).finally(() => {
+            // clear UI camera view to release resources (không bắt buộc nhưng tốt)
+            try { html5QrCode.clear(); } catch(_) {}
+            proceedFetch(maDon);
+        });
+    } else {
+        proceedFetch(maDon);
+    }
 }
 
 // Request camera permission first
@@ -76,15 +124,16 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
     Html5Qrcode.getCameras().then(cameras => {
         if(cameras && cameras.length){
             html5QrCode = new Html5Qrcode("reader");
+            currentCameraId = cameras[0].id;
             html5QrCode.start(
-                cameras[0].id,
+                currentCameraId,
                 { fps: 10, qrbox: 250 },
                 onScanSuccess
             ).then(() => {
                 resultEl.innerHTML = "<span class='text-info fw-bold'>Camera đã sẵn sàng. Hãy quét QR code.</span>";
             }).catch(err => {
                 console.error(err);
-                resultEl.innerHTML = "<span class='text-danger fw-bold'>Không thể khởi động camera: " + err.message + "</span>";
+                resultEl.innerHTML = "<span class='text-danger fw-bold'>Không thể khởi động camera: " + (err.message||err) + "</span>";
             });
         } else {
             resultEl.innerHTML = "<span class='text-warning fw-bold'>Không tìm thấy camera</span>";
@@ -97,6 +146,7 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
     console.error(err);
     resultEl.innerHTML = "<span class='text-danger fw-bold'>Quyền truy cập camera bị từ chối: " + err.message + "</span>";
 });
+
 
 document.getElementById('stopScan').addEventListener('click', () => {
     if (html5QrCode) {

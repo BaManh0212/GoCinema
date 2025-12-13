@@ -92,14 +92,17 @@
                     </div>
 
                     {{-- Sơ đồ ghế --}}
-                    <div class="seat-map p-4 border rounded bg-light" style="display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; max-width:100%; --cols: {{ $suatChieu->phong->so_cot }}; --seat-size: clamp(28px, calc((100% - 120px) / var(--cols)), 45px);">
+                    <div class="seat-map p-4 border rounded bg-light"
+                        style="display: grid; grid-template-columns: 40px 1fr; gap: var(--seat-gap, 8px); align-items: center; max-width:100%; --cols: {{ $suatChieu->phong->so_cot }}; --seat-size: clamp(28px, calc((100% - 120px) / var(--cols)), 45px); --seat-gap: 8px;">                        
                         {{-- Màn hình --}}
-                        <div class="screen mb-4" style="grid-column: 1 / -1; width: min({{ $suatChieu->phong->so_cot * 45 + 40 }}px, 100%); justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
-
-                        {{-- Lối vào --}}
-                        <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
-                            <div class="seat-preview seat-entrance">VÀO</div>
+                        <div class="screen mb-4"
+                            style="grid-column: 2 / -1; width: min(calc(var(--cols) * var(--seat-size) + (var(--cols) - 1) * var(--seat-gap) + 20px), 100%); justify-self: center;">
+                            🎥 MÀN HÌNH CHIẾU
                         </div>
+                        {{-- Lối vào --}}
+                        {{-- <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
+                            <div class="seat-preview seat-entrance">VÀO</div>
+                        </div> --}}
 
                         @php
                             $hangLetters = range('A', chr(ord('A') + $suatChieu->phong->so_hang - 1));
@@ -184,7 +187,7 @@
                                             {{ $disabled ? 'disabled="disabled" style="pointer-events: none;"' : '' }}
                                             {{ $isMyHeldSeat ? 'data-my-held="true"' : '' }}>
                                         @if($isDouble)
-                                            💑
+                                            <div class="double-label">{{ $hang }}{{ $cot }}-{{ $hang }}{{ $cot + 1 }}</div>
                                             @php $cot += 1; @endphp
                                         @else
                                             {{ $hang }}{{ $cot }}
@@ -202,9 +205,9 @@
                         @endforeach
 
                         {{-- Lối ra --}}
-                        <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
+                        {{-- <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
                             <div class="seat-preview seat-exit">RA</div>
-                        </div>
+                        </div> --}}
                     </div>
 
                     {{-- Ghế đã chọn --}}
@@ -576,17 +579,23 @@
 }
 
 .row-seats {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--seat-size);
+    gap: var(--seat-gap);
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    min-height: 60px;
+    padding-left: 6px;
+    min-height: calc(var(--seat-size));
     -webkit-overflow-scrolling: touch;
 }
 
 .row-seats .seat {
-    flex: 0 0 auto;
+    width: var(--seat-size);
+    height: var(--seat-size);
+    line-height: var(--seat-size);
+    flex: none;
+    margin: 0;
 }
 
 .row-seats::-webkit-scrollbar {

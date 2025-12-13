@@ -172,8 +172,8 @@
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #1a237e;">BẮP NƯỚC</h3>
             @foreach($combos as $combo)
                 <div style="margin-bottom: 5px;">
-                    <div style="font-weight: 500;">{{ $combo->ten }} (x{{ $combo->so_luong }})</div>
-                    <div style="color: #757575; font-size: 14px;">{{ $combo->mo_ta ?? '' }}</div>
+                    <div style="font-weight: 500; color: #000;">{{ $combo->ten }} (x{{ $combo->so_luong }})</div>
+                    <div style="color: #000; font-size: 14px;">{{ $combo->mo_ta ?? '' }}</div>
                 </div>
             @endforeach
         </div>
@@ -197,7 +197,7 @@
             @endif
 
             @if(isset($combos) && $combos->count() > 0)
-            <div class="price-row">
+            <div class="price-row" style="color: #000">
                 <span>Combo bắp nước</span>
                 <span>{{ number_format($comboTotal, 0, ',', '.') }} đ</span>
             </div>
