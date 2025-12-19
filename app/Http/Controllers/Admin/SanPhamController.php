@@ -33,7 +33,7 @@ class SanPhamController extends Controller
                 break;
         }
 
-        $sanPhams = $query->paginate(10);;
+        $sanPhams = $query->paginate(10)->withQueryString();
         $filters = $request->only(['q', 'sort']);
 
         return view('admin.san_pham.index', compact('sanPhams', 'filters'));

@@ -62,7 +62,7 @@ class SuatChieuController extends Controller
                 $query->orderBy('gio_bat_dau', 'asc');
         }
 
-        $suatchieus = $query->paginate(10);
+        $suatchieus = $query->paginate(10)->withQueryString();
         $phims = Phim::orderBy('tieu_de')->get();
         $phongs = PhongChieu::orderBy('ten')->get();
 
@@ -122,15 +122,10 @@ class SuatChieuController extends Controller
     }
 
     // 🎯 Kiểm tra trùng thời gian chiếu trong cùng phòng
+    // Logic: Một suất chiếu bị trùng nếu (S1 < E2) và (E1 > S2)
     $trung = SuatChieu::where('phong_id', $phong_id)
-        ->where(function ($query) use ($gio_bat_dau, $gio_ket_thuc) {
-            $query->whereBetween('gio_bat_dau', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhereBetween('gio_ket_thuc', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhere(function ($q) use ($gio_bat_dau, $gio_ket_thuc) {
-                      $q->where('gio_bat_dau', '<=', $gio_bat_dau)
-                        ->where('gio_ket_thuc', '>=', $gio_ket_thuc);
-                  });
-        })
+        ->where('gio_bat_dau', '<', $gio_ket_thuc)
+        ->where('gio_ket_thuc', '>', $gio_bat_dau)
         ->exists();
 
     if ($trung) {
@@ -188,9 +183,14 @@ class SuatChieuController extends Controller
         return back()->withInput()->with('error', '⚠️ Vui lòng chọn phòng hợp lệ.');
     }
 
+    $ngay_chieu = $request->input('ngay_chieu');
+    if (!$ngay_chieu) {
+        return back()->withInput()->with('error', '⚠️ Vui lòng chọn ngày chiếu.');
+    }
+
     try {
-        $gio_bat_dau = Carbon::parse($request->input('gio_bat_dau'));
-        $gio_ket_thuc = Carbon::parse($request->input('gio_ket_thuc'));
+        $gio_bat_dau = Carbon::parse($ngay_chieu . ' ' . $request->input('gio_bat_dau'));
+        $gio_ket_thuc = Carbon::parse($ngay_chieu . ' ' . $request->input('gio_ket_thuc'));
     } catch (\Exception $e) {
         return back()->withInput()->with('error', '⚠️ Ngày/giờ không hợp lệ.');
     }
@@ -205,16 +205,11 @@ class SuatChieuController extends Controller
     }
 
     // Kiểm tra trùng suất (bỏ qua chính suất đang update)
+    // Logic: Một suất chiếu bị trùng nếu (S1 < E2) và (E1 > S2)
     $trung = SuatChieu::where('phong_id', $phong_id)
         ->where('id', '!=', $suatchieu->id)
-        ->where(function ($query) use ($gio_bat_dau, $gio_ket_thuc) {
-            $query->whereBetween('gio_bat_dau', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhereBetween('gio_ket_thuc', [$gio_bat_dau, $gio_ket_thuc])
-                  ->orWhere(function ($q) use ($gio_bat_dau, $gio_ket_thuc) {
-                      $q->where('gio_bat_dau', '<=', $gio_bat_dau)
-                        ->where('gio_ket_thuc', '>=', $gio_ket_thuc);
-                  });
-        })
+        ->where('gio_bat_dau', '<', $gio_ket_thuc)
+        ->where('gio_ket_thuc', '>', $gio_bat_dau)
         ->exists();
 
     if ($trung) {
