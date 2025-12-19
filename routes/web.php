@@ -410,6 +410,12 @@ Route::prefix('staff')
         Route::resource('combo', StaffComboController::class)->names('combo');
         // Check-in vé (nhân viên)
         Route::prefix('donve')->name('donve.')->group(function () {
+            // QR scan
+            Route::get('/staff/scan-qr', [\App\Http\Controllers\Staff\QRController::class, 'scanPage'])
+                ->name('staff.scan.qr');
+
+            Route::post('/staff/scan-qr/check', [\App\Http\Controllers\Staff\QRController::class, 'check'])
+                ->name('staff.scan.qr.check');
             // Các route CRUD cơ bản
             Route::get('/', [StaffDonDatVeController::class, 'index'])->name('index');
             // Tạo đơn vé tại quầy

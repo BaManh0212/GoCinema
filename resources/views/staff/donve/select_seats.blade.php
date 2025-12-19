@@ -325,9 +325,9 @@
                         </div>
 
                         <!-- Entrance Row -->
-                        <div class="entrance-row mb-3">
+                        {{-- <div class="entrance-row mb-3">
                             <div class="seat-preview seat-entrance">VÀO</div>
-                        </div>
+                        </div> --}}
 
                         @php
                             $hangLetters = range('A', chr(ord('A') + $suatChieu->phong->so_hang - 1));
@@ -419,9 +419,9 @@
                         @endforeach
 
                         <!-- Exit Row -->
-                        <div class="exit-row mt-3">
+                        {{-- <div class="exit-row mt-3">
                             <div class="seat-preview seat-exit">RA</div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
