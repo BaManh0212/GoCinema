@@ -30,9 +30,9 @@
         <div class="screen mb-4" style="grid-column: 1 / -1; width: {{ $phong->so_cot * 45 + 40 }}px; justify-self: center;">🎥 MÀN HÌNH CHIẾU</div>
 
         {{-- Lối vào --}}
-        <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
+        {{-- <div class="d-flex justify-content-start mb-3" style="grid-column: 1 / -1; padding-left: 50px;">
             <div class="seat-preview seat-entrance">VÀO</div>
-        </div>
+        </div> --}}
 
         @php
             $hangLetters = range('A', chr(ord('A') + $phong->so_hang - 1));
@@ -95,9 +95,9 @@
         @endforeach
 
         {{-- Lối ra --}}
-        <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
+        {{-- <div class="d-flex justify-content-end mt-3" style="grid-column: 1 / -1; padding-right: 50px;">
             <div class="seat-preview seat-exit">RA</div>
-        </div>
+        </div> --}}
     </div>
 
     {{-- Nút lưu sơ đồ --}}
