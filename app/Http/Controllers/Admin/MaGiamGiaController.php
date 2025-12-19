@@ -24,7 +24,7 @@ class MaGiamGiaController extends Controller
             $query->where('kich_hoat', $request->kich_hoat);
         }
 
-        $maGiamGia = $query->orderByDesc('id')->paginate(10);
+        $maGiamGia = $query->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('admin.ma_giam_gia.index', compact('maGiamGia'));
     }
@@ -134,7 +134,7 @@ class MaGiamGiaController extends Controller
      */
     public function trash()
     {
-        $maGiamGia = MaGiamGia::onlyTrashed()->orderByDesc('deleted_at')->paginate(10);
+        $maGiamGia = MaGiamGia::onlyTrashed()->orderByDesc('deleted_at')->paginate(10)->withQueryString();
         return view('admin.ma_giam_gia.trash', compact('maGiamGia'));
     }
 

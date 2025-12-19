@@ -43,7 +43,7 @@ class NguoiDungController extends Controller
         $sortDirection = $request->get('sort_direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
-        $nguoiDung = $query->paginate(10);
+        $nguoiDung = $query->paginate(10)->withQueryString();
         $vaiTros = VaiTro::all();
 
         return view('admin.nguoi-dung.index', compact('nguoiDung', 'vaiTros'));
@@ -104,7 +104,7 @@ class NguoiDungController extends Controller
         // Lấy lịch sử điểm
         $lichSuDiem = LichSuDiem::where('nguoi_dung_id', $id)
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)->withQueryString();
 
         // Thống kê
         $tongTichLuy = LichSuDiem::where('nguoi_dung_id', $id)
